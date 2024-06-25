@@ -70,12 +70,17 @@
 
 		const tfmodel = createTFModel($model);
 		// Train the model using the data.
-		tfmodel.fit(xs, ys, { epochs }).then(() => {
-			// Use the model to do inference on a data point the model hasn't seen before:
-			console.log(tfmodel.predict(tf.tensor2d([5], [1, 1])).toString());
-			// Open the browser devtools to see the output
-			toast.success(`Training complete! Open the browser devtools (F12) to see the output.`);
-		});
+		tfmodel
+			.fit(xs, ys, { epochs })
+			.then(() => {
+				// Use the model to do inference on a data point the model hasn't seen before:
+				console.log(tfmodel.predict(tf.tensor2d([5], [1, 1])).toString());
+				// Open the browser devtools to see the output
+				toast.success(`Training complete! Open the browser devtools (F12) to see the output.`);
+			})
+			.catch((e) => {
+				toast.error(`Error while training: ${e}. Make sure the last layer has only 1 node.`);
+			});
 		console.log($model);
 		toast.loading(`Training for ${epochs} epochs...`);
 	};
@@ -90,8 +95,8 @@
 </script>
 
 <svelte:head>
-	<title>Home</title>
-	<meta name="description" content="Svelte demo app" />
+	<title>NeuralLab</title>
+	<meta name="description" content="Design and visualize neural networks in your browser." />
 </svelte:head>
 
 <div class="container flex h-full max-w-screen-2xl flex-col gap-4 py-4">
