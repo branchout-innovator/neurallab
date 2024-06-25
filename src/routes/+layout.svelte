@@ -1,6 +1,6 @@
 <script>
 	import '../app.css';
-	import Header from './Header.svelte';
+	import Header from './header.svelte';
 	import { ModeWatcher } from 'mode-watcher';
 </script>
 
@@ -15,6 +15,4 @@
 	<slot></slot>
 </main>
 
-<footer>
-	<p>visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit</p>
-</footer>
+<footer></footer>

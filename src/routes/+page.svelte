@@ -2,6 +2,9 @@
 	import Counter from './Counter.svelte';
 	import welcome from '$lib/images/svelte-welcome.webp';
 	import welcome_fallback from '$lib/images/svelte-welcome.png';
+
+	import * as Select from '$lib/components/ui/select';
+	import Label from '$lib/components/ui/label/label.svelte';
 </script>
 
 <svelte:head>
@@ -9,13 +12,24 @@
 	<meta name="description" content="Svelte demo app" />
 </svelte:head>
 
-<section>
-	<h2>
-		try editing <strong>src/routes/+page.svelte</strong>
-	</h2>
+<div class="container flex h-full max-w-screen-2xl flex-col gap-4 py-4">
+	<div class="flex flex-col gap-2">
+		<Label class="text-xs">Activation Function</Label>
+		<Select.Root selected={{ value: 'relu', label: 'ReLU' }}>
+			<Select.Trigger class="w-[180px]">
+				<Select.Value></Select.Value>
+			</Select.Trigger>
+			<Select.Content>
+				<Select.Item value="relu">ReLU</Select.Item>
+				<Select.Item value="sigmoid">Sigmoid</Select.Item>
+			</Select.Content>
+		</Select.Root>
+	</div>
 
-	<Counter />
-</section>
+	<div class="flex h-full flex-row items-center justify-center rounded-lg border p-10 text-sm">
+		Neural net editor will go here
+	</div>
+</div>
 
 <style>
 	section {
