@@ -17,9 +17,9 @@ export type ActivationIdentifier =
 	| 'gelu'
 	| 'gelu_new';
 
-export type Layer = {
+export interface Layer {
 	type: string;
-};
+}
 
 export type DenseLayer = Layer & {
 	type: 'dense';
