@@ -1,4 +1,21 @@
-import tf from '@tensorflow/tfjs';
+import * as tf from '@tensorflow/tfjs';
+
+export type ActivationIdentifier =
+	| 'elu'
+	| 'hardSigmoid'
+	| 'linear'
+	| 'relu'
+	| 'relu6'
+	| 'selu'
+	| 'sigmoid'
+	| 'softmax'
+	| 'softplus'
+	| 'softsign'
+	| 'tanh'
+	| 'swish'
+	| 'mish'
+	| 'gelu'
+	| 'gelu_new';
 
 export type Layer = {
 	type: string;
@@ -9,22 +26,7 @@ export type DenseLayer = Layer & {
 	/** How many neurons there will be in this layer */
 	units: number;
 	inputShape: number[];
-	activation:
-		| 'elu'
-		| 'hardSigmoid'
-		| 'linear'
-		| 'relu'
-		| 'relu6'
-		| 'selu'
-		| 'sigmoid'
-		| 'softmax'
-		| 'softplus'
-		| 'softsign'
-		| 'tanh'
-		| 'swish'
-		| 'mish'
-		| 'gelu'
-		| 'gelu_new';
+	activation: ActivationIdentifier;
 };
 
 export type SequentialModel = {
@@ -35,13 +37,14 @@ export type SequentialModel = {
 
 export const layerToTF = (layer: Layer): tf.layers.Layer => {
 	switch (layer.type) {
-		case 'dense':
+		case 'dense': {
 			const denseLayer = layer as DenseLayer;
 			return tf.layers.dense({
 				units: denseLayer.units,
 				inputShape: denseLayer.inputShape,
 				activation: denseLayer.activation
 			});
+		}
 		// Add more cases for other layer types as needed
 		default:
 			throw new Error(`Unsupported layer type: ${layer.type}`);
