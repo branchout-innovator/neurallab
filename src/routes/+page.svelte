@@ -83,7 +83,6 @@
 			.catch((e) => {
 				toast.error(`Error while training: ${e}. Make sure the last layer has only 1 node.`);
 			});
-		console.log($model);
 		toast.loading(`Training for ${epochs} epochs...`);
 	};
 
@@ -96,12 +95,8 @@
 	}
 
 	function getWeightsBetweenLayers(model: SequentialModel, layerIndex: number): tf.Tensor {
-		console.log('updating weights');
-		console.log(model);
-
 		const tfModel = createTFModel(model);
 		const weights = tfModel.layers[layerIndex].getWeights();
-		console.log(weights[0].toString());
 		return weights[0]; // Assuming the first tensor in weights array is the weight matrix
 	}
 	let canvasWidth = 150;
