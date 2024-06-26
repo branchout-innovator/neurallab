@@ -43,7 +43,7 @@
 			} as DenseLayer
 		],
 		loss: 'meanSquaredError',
-		optimizer: tf.train.adam(0.01)
+		optimizer: tf.train.sgd(0.01)
 	});
 	setContext('model', model);
 
@@ -75,7 +75,14 @@
 		updateTFModel($model);
 	};
 
+	let currentEpoch = 0;
+
 	const trainModel = async () => {
+		// The model needs to be "big enough" to benefit from GPU acceleration
+		// So with the small models in the Tensorflow playground its actually faster to use CPU
+		// await tf.setBackend('webgl');
+		await tf.setBackend('cpu');
+		console.log(tf.getBackend());
 		function generateData(numPoints: number, range: { max: number; min: number }) {
 			const xs = [];
 			const ys = [];
@@ -100,27 +107,40 @@
 		}
 
 		// Generate some synthetic data for training.
-		const data = generateData(300, { min: -5, max: 5 });
+		const data = generateData(1000, { min: -10, max: 10 });
+		const { xs, ys } = data;
 
 		toast.loading(`Training for ${epochs} epochs...`);
 
 		// Train the model using the data.
-		await tfModel.fit(data.xs, data.ys, { epochs: Number(epochs) }).catch((e) => {
+		currentEpoch = 0;
+
+		try {
+			await tfModel.fit(xs, ys, {
+				epochs: Number(epochs),
+				callbacks: {
+					onEpochEnd(epoch, logs) {
+						currentEpoch = epoch + 1;
+					}
+				}
+			});
+			console.log(tfModel);
+			console.log($model);
+
+			// Make predictions and denormalize
+			const input = tf.tensor2d([Number(testPred)], [1, 1]);
+			const normalizedInput = input.sub(data.xMin).div(data.xMax.sub(data.xMin));
+			const prediction = tfModel.predict(normalizedInput) as tf.Tensor; // Assert that this is a single tensor
+			const denormalizedPrediction = prediction.mul(data.yMax.sub(data.yMin)).add(data.yMin);
+			denormalizedPrediction.print(); // Should print a value close to 4 (2^2)
+
+			// Open the browser devtools to see the output
+			toast.success(`Training complete! Open the browser devtools (F12) to see the output.`);
+			tfModel = tfModel;
+		} catch (e) {
+			console.error(e);
 			toast.error(`Error while training: ${e}. Make sure the last layer has only 1 node.`);
-		});
-		console.log(tfModel);
-		console.log($model);
-
-		// Make predictions and denormalize
-		const input = tf.tensor2d([Number(testPred)], [1, 1]);
-		const normalizedInput = input.sub(data.xMin).div(data.xMax.sub(data.xMin));
-		const prediction = tfModel.predict(normalizedInput) as tf.Tensor; // Assert that this is a single tensor
-		const denormalizedPrediction = prediction.mul(data.yMax.sub(data.yMin)).add(data.yMin);
-		denormalizedPrediction.print(); // Should print a value close to 4 (2^2)
-
-		// Open the browser devtools to see the output
-		toast.success(`Training complete! Open the browser devtools (F12) to see the output.`);
-		tfModel = tfModel;
+		}
 	};
 
 	$: {
@@ -166,7 +186,7 @@
 </svelte:head>
 
 <div class="container flex h-full max-w-screen-2xl flex-col gap-4 py-4">
-	<div class="flex flex-row items-end gap-4">
+	<div class="flex flex-row flex-wrap items-end gap-4">
 		<div class="flex flex-col gap-2">
 			<Label class="flex gap-2 text-xs">
 				<Activity class="h-4 w-4"></Activity>
@@ -194,10 +214,13 @@
 			<Input type="number" bind:value={testPred} placeholder="2" />
 		</div>
 		<div class="flex-1"></div>
-		<Button on:click={trainModel}>
-			<Brain class="mr-2 h-4 w-4"></Brain>
-			Train
-		</Button>
+		<div class="flex flex-col gap-2">
+			<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
+			<Button on:click={trainModel}>
+				<Brain class="mr-2 h-4 w-4"></Brain>
+				Train
+			</Button>
+		</div>
 	</div>
 
 	<div class="flex h-full flex-col items-center justify-center gap-6 rounded-lg border p-6 text-sm">
