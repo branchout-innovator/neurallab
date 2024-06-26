@@ -27,7 +27,7 @@
 		return Math.max(...arr.map(getMaxAbsWeight));
 	}
 
-	const updateSvg = async () => {
+	const updateSvg = async (weights: tf.Tensor) => {
 		if (!browser) return;
 		const weightsArray = await weights.array();
 		if (typeof weightsArray === 'number') return;
@@ -61,8 +61,7 @@
 	};
 
 	$: {
-		weights;
-		updateSvg();
+		updateSvg(weights);
 	}
 
 	function getColor(normalizedWeight: number): string {

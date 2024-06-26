@@ -25,8 +25,8 @@ export type DenseLayer = Layer & {
 	type: 'dense';
 	/** How many neurons there will be in this layer */
 	units: number;
-	inputShape: number[];
-	activation: ActivationIdentifier;
+	inputShape?: number[];
+	activation?: ActivationIdentifier;
 };
 
 export type SequentialModel = {

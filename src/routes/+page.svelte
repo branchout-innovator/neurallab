@@ -32,13 +32,12 @@
 	};
 
 	let selectedActivation = { value: 'relu' as ActivationIdentifier, label: 'ReLU' };
-	let epochs = 500;
+	let epochs = 50;
 
 	const model = writable<SequentialModel>({
 		layers: [
 			{
 				type: 'dense',
-				activation: selectedActivation.value as ActivationIdentifier,
 				units: 1,
 				inputShape: [1]
 			} as DenseLayer
@@ -50,56 +49,96 @@
 
 	const addLayer = () => {
 		const lastLayer = $model.layers[$model.layers.length - 1] as DenseLayer;
+		// if (lastLayer.type === 'dense')
+		// 	($model.layers[$model.layers.length - 1] as DenseLayer).activation =
+		// 		selectedActivation.value as ActivationIdentifier;
 		$model.layers = [
 			...$model.layers,
 			{
 				type: 'dense',
-				activation: selectedActivation.value as ActivationIdentifier,
 				units: 1,
 				inputShape: [lastLayer?.units ?? 1]
 			} as DenseLayer
 		];
+		console.log($model.layers);
+		updateTFModel($model);
 	};
 
 	const removeLayer = () => {
 		$model.layers = [...$model.layers.slice(0, $model.layers.length - 1)];
+		if ($model.layers.length > 0) {
+			const lastLayer = $model.layers[$model.layers.length - 1];
+			if (lastLayer.type === 'dense') {
+				($model.layers[$model.layers.length - 1] as DenseLayer).activation = undefined;
+			}
+		}
+		console.log($model);
+		updateTFModel($model);
 	};
 
-	const trainModel = () => {
-		// Generate some synthetic data for training.
-		const xs = tf.tensor2d([1, 2, 3, 4], [4, 1]);
-		const ys = tf.tensor2d([1, 3, 5, 7], [4, 1]);
+	const trainModel = async () => {
+		function generateData(numPoints: number, range: { max: number; min: number }) {
+			const xs = [];
+			const ys = [];
+			for (let i = 0; i < numPoints; i++) {
+				const x = Math.random() * (range.max - range.min) + range.min;
+				xs.push(x);
+				ys.push(x * x);
+			}
+			return { xs: tf.tensor2d(xs, [numPoints, 1]), ys: tf.tensor2d(ys, [numPoints, 1]) };
+		}
 
-		const tfmodel = createTFModel($model);
-		// Train the model using the data.
-		tfmodel
-			.fit(xs, ys, { epochs })
-			.then(() => {
-				// Use the model to do inference on a data point the model hasn't seen before:
-				console.log(tfmodel.predict(tf.tensor2d([5], [1, 1])).toString());
-				// Open the browser devtools to see the output
-				toast.success(`Training complete! Open the browser devtools (F12) to see the output.`);
-			})
-			.catch((e) => {
-				toast.error(`Error while training: ${e}. Make sure the last layer has only 1 node.`);
-			});
+		// Generate some synthetic data for training.
+		const { xs, ys } = generateData(100, { min: -10, max: 10 });
+
 		toast.loading(`Training for ${epochs} epochs...`);
+
+		// Train the model using the data.
+		await tfModel.fit(xs, ys, { epochs }).catch((e) => {
+			toast.error(`Error while training: ${e}. Make sure the last layer has only 1 node.`);
+		});
+		console.log(tfModel);
+		console.log($model);
+
+		// Use the model to do inference on a data point the model hasn't seen before:
+		console.log(tfModel.predict(tf.tensor2d([2], [1, 1])).toString());
+		console.log(tfModel.predict(tf.tensor2d([-2], [1, 1])).toString());
+		// Open the browser devtools to see the output
+		toast.success(`Training complete! Open the browser devtools (F12) to see the output.`);
+		tfModel = tfModel;
 	};
 
 	$: {
-		for (const layer of $model.layers) {
-			if (layer.type === 'dense') {
+		for (let i = 0; i < $model.layers.length; i++) {
+			const layer = $model.layers[i];
+			if (layer.type === 'dense' && i < $model.layers.length - 1) {
 				(layer as DenseLayer).activation = selectedActivation.value;
 			}
 		}
+		updateTFModel($model);
 	}
 
-	function getWeightsBetweenLayers(model: SequentialModel, layerIndex: number): tf.Tensor {
-		const tfModel = createTFModel(model);
-		const weights = tfModel.layers[layerIndex].getWeights();
+	function getWeightsBetweenLayers(model: tf.Sequential, layerIndex: number): tf.Tensor {
+		const weights = model.layers[layerIndex].getWeights();
 		return weights[0]; // Assuming the first tensor in weights array is the weight matrix
 	}
 	let canvasWidth = 150;
+
+	let tfModel: tf.Sequential;
+
+	const updateTFModel = (model: SequentialModel) => {
+		if (!tfModel) {
+			tfModel = createTFModel(model);
+		} else {
+			// TODO: preserve old weights when creating model with new structure
+			const newModel = createTFModel(model);
+			tfModel = newModel;
+		}
+	};
+
+	$: {
+		updateTFModel($model);
+	}
 
 	// to draw weight connections: https://github.com/tensorflow/playground/blob/02469bd3751764b20486015d4202b792af5362a6/src/playground.ts#L538
 </script>
@@ -157,7 +196,7 @@
 				{#if i < $model.layers.length - 1}
 					{@const leftLayerHeights = getNodeYPositions(layer)}
 					{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
-					{@const weights = getWeightsBetweenLayers($model, i + 1)}
+					{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
 					<ConnectionsVis {leftLayerHeights} {rightLayerHeights} {canvasWidth} {weights} />
 				{/if}
 			{/each}
