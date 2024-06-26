@@ -32,7 +32,7 @@ export type DenseLayer = Layer & {
 export type SequentialModel = {
 	layers: Layer[];
 	loss: string;
-	optimizer: string;
+	optimizer: string | tf.Optimizer;
 };
 
 export const layerToTF = (layer: Layer): tf.layers.Layer => {

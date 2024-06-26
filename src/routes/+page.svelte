@@ -43,7 +43,7 @@
 			} as DenseLayer
 		],
 		loss: 'meanSquaredError',
-		optimizer: 'sgd'
+		optimizer: tf.train.sgd(0.01)
 	});
 	setContext('model', model);
 
@@ -56,8 +56,7 @@
 			...$model.layers,
 			{
 				type: 'dense',
-				units: 1,
-				inputShape: [lastLayer?.units ?? 1]
+				units: 1
 			} as DenseLayer
 		];
 		console.log($model.layers);
@@ -85,24 +84,39 @@
 				xs.push(x);
 				ys.push(x * x);
 			}
-			return { xs: tf.tensor2d(xs, [numPoints, 1]), ys: tf.tensor2d(ys, [numPoints, 1]) };
+			// Normalize the data
+			const xTensor = tf.tensor2d(xs, [numPoints, 1]);
+			const yTensor = tf.tensor2d(ys, [numPoints, 1]);
+			const xMin = xTensor.min();
+			const xMax = xTensor.max();
+			const yMin = yTensor.min();
+			const yMax = yTensor.max();
+
+			const normalizedXs = xTensor.sub(xMin).div(xMax.sub(xMin));
+			const normalizedYs = yTensor.sub(yMin).div(yMax.sub(yMin));
+
+			return { xs: normalizedXs, ys: normalizedYs, xMin, xMax, yMin, yMax };
 		}
 
 		// Generate some synthetic data for training.
-		const { xs, ys } = generateData(100, { min: -10, max: 10 });
+		const data = generateData(100, { min: -10, max: 10 });
 
 		toast.loading(`Training for ${epochs} epochs...`);
 
 		// Train the model using the data.
-		await tfModel.fit(xs, ys, { epochs }).catch((e) => {
+		await tfModel.fit(data.xs, data.ys, { epochs: Number(epochs) }).catch((e) => {
 			toast.error(`Error while training: ${e}. Make sure the last layer has only 1 node.`);
 		});
 		console.log(tfModel);
 		console.log($model);
 
-		// Use the model to do inference on a data point the model hasn't seen before:
-		console.log(tfModel.predict(tf.tensor2d([2], [1, 1])).toString());
-		console.log(tfModel.predict(tf.tensor2d([-2], [1, 1])).toString());
+		// Make predictions and denormalize
+		const input = tf.tensor2d([Number(testPred)], [1, 1]);
+		const normalizedInput = input.sub(data.xMin).div(data.xMax.sub(data.xMin));
+		const prediction = tfModel.predict(normalizedInput) as tf.Tensor; // Assert that this is a single tensor
+		const denormalizedPrediction = prediction.mul(data.yMax.sub(data.yMin)).add(data.yMin);
+		denormalizedPrediction.print(); // Should print a value close to 4 (2^2)
+
 		// Open the browser devtools to see the output
 		toast.success(`Training complete! Open the browser devtools (F12) to see the output.`);
 		tfModel = tfModel;
@@ -140,6 +154,8 @@
 		updateTFModel($model);
 	}
 
+	let testPred = 2;
+
 	// to draw weight connections: https://github.com/tensorflow/playground/blob/02469bd3751764b20486015d4202b792af5362a6/src/playground.ts#L538
 </script>
 
@@ -171,6 +187,10 @@
 				Epochs
 			</Label>
 			<Input type="number" bind:value={epochs} placeholder="1000" min={1} />
+		</div>
+		<div class="flex flex-col gap-2">
+			<Label class="flex gap-2 text-xs">Test Prediction</Label>
+			<Input type="number" bind:value={testPred} placeholder="2" />
 		</div>
 		<div class="flex-1"></div>
 		<Button on:click={trainModel}>

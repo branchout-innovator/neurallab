@@ -14,10 +14,10 @@
 
 	const setUnits = (units: number) => {
 		($model.layers[index] as DenseLayer).units = units;
-		const nextLayer = $model.layers[index + 1] as DenseLayer;
-		if (nextLayer) {
-			nextLayer.inputShape = [layer.units];
-		}
+		// const nextLayer = $model.layers[index + 1] as DenseLayer;
+		// if (nextLayer) {
+		// 	nextLayer.inputShape = [layer.units];
+		// }
 	};
 </script>
 

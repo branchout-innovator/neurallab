@@ -9,7 +9,13 @@
 	export let weights: tf.Tensor;
 
 	let svgElement: SVGSVGElement;
-	let paths: { d: string; color: string; strokeWidth: number }[] = [];
+	let paths: {
+		d: string;
+		color: string;
+		strokeWidth: number;
+		weight: number;
+		normalizedWeight: number;
+	}[] = [];
 
 	function getMaxAbsWeight(
 		arr:
@@ -55,7 +61,7 @@
 				const color = getColor(normalizedWeight);
 				const strokeWidth = Math.abs(normalizedWeight) * 3 + 0.5;
 
-				paths.push({ d, color, strokeWidth });
+				paths.push({ d, color, strokeWidth, weight, normalizedWeight });
 			}
 		}
 	};
@@ -75,7 +81,13 @@
 
 <svg bind:this={svgElement} width={canvasWidth} height={canvasHeight} class="mt-[4.25rem]">
 	{#each paths as path}
-		<path d={path.d} stroke={path.color} fill="none" stroke-width={path.strokeWidth} />
+		<path
+			d={path.d}
+			stroke={path.color}
+			fill="none"
+			stroke-width={path.strokeWidth}
+			title={`Weight: ${path.weight}`}
+		/>
 	{/each}
 
 	<!-- {#each leftLayerHeights as height, i}
