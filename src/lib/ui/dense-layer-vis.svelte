@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte';
 	import type { DenseLayer, SequentialModel } from '$lib/structures';
+	import { remToPx } from '$lib/utils';
 	import Minus from 'lucide-svelte/icons/minus';
 	import Plus from 'lucide-svelte/icons/plus';
 	import { getContext } from 'svelte';
@@ -12,7 +13,7 @@
 	const model: Writable<SequentialModel> = getContext('model');
 
 	const setUnits = (units: number) => {
-		layer.units = units;
+		($model.layers[index] as DenseLayer).units = units;
 		const nextLayer = $model.layers[index + 1] as DenseLayer;
 		if (nextLayer) {
 			nextLayer.inputShape = [layer.units];

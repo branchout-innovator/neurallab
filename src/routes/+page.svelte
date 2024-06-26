@@ -24,6 +24,8 @@
 	import { writable } from 'svelte/store';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { toast } from 'svelte-sonner';
+	import ConnectionsVis from '$lib/ui/connections-vis.svelte';
+	import { getNodeYPositions } from '$lib/ui/connections-vis';
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
@@ -92,6 +94,19 @@
 			}
 		}
 	}
+
+	function getWeightsBetweenLayers(model: SequentialModel, layerIndex: number): tf.Tensor {
+		console.log('updating weights');
+		console.log(model);
+
+		const tfModel = createTFModel(model);
+		const weights = tfModel.layers[layerIndex].getWeights();
+		console.log(weights[0].toString());
+		return weights[0]; // Assuming the first tensor in weights array is the weight matrix
+	}
+	let canvasWidth = 150;
+
+	// to draw weight connections: https://github.com/tensorflow/playground/blob/02469bd3751764b20486015d4202b792af5362a6/src/playground.ts#L538
 </script>
 
 <svelte:head>
@@ -141,9 +156,15 @@
 			<span class="ml-2 leading-none text-muted-foreground">{$model.layers.length} Layers</span>
 		</div>
 
-		<div class="flex flex-grow flex-row items-start gap-6">
+		<div class="flex flex-grow flex-row items-start">
 			{#each $model.layers as layer, i (i)}
 				<svelte:component this={layerComponents[layer.type]} {layer} index={i}></svelte:component>
+				{#if i < $model.layers.length - 1}
+					{@const leftLayerHeights = getNodeYPositions(layer)}
+					{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
+					{@const weights = getWeightsBetweenLayers($model, i + 1)}
+					<ConnectionsVis {leftLayerHeights} {rightLayerHeights} {canvasWidth} {weights} />
+				{/if}
 			{/each}
 		</div>
 	</div>
