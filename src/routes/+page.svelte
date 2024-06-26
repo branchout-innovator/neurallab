@@ -43,7 +43,7 @@
 			} as DenseLayer
 		],
 		loss: 'meanSquaredError',
-		optimizer: tf.train.sgd(0.01)
+		optimizer: tf.train.adam(0.01)
 	});
 	setContext('model', model);
 
@@ -80,7 +80,8 @@
 			const xs = [];
 			const ys = [];
 			for (let i = 0; i < numPoints; i++) {
-				const x = Math.random() * (range.max - range.min) + range.min;
+				// const x = Math.random() * (range.max - range.min) + range.min;
+				const x = range.min + (i / numPoints) * (range.max - range.min);
 				xs.push(x);
 				ys.push(x * x);
 			}
@@ -99,7 +100,7 @@
 		}
 
 		// Generate some synthetic data for training.
-		const data = generateData(100, { min: -10, max: 10 });
+		const data = generateData(300, { min: -5, max: 5 });
 
 		toast.loading(`Training for ${epochs} epochs...`);
 

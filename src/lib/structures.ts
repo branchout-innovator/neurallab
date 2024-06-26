@@ -42,7 +42,8 @@ export const layerToTF = (layer: Layer): tf.layers.Layer => {
 			return tf.layers.dense({
 				units: denseLayer.units,
 				inputShape: denseLayer.inputShape,
-				activation: denseLayer.activation
+				activation: denseLayer.activation,
+				kernelInitializer: 'glorotUniform'
 			});
 		}
 		// Add more cases for other layer types as needed
