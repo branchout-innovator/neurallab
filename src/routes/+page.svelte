@@ -32,18 +32,26 @@
 	};
 
 	let selectedActivation = { value: 'relu' as ActivationIdentifier, label: 'ReLU' };
-	let epochs = 50;
+	let epochs = 1000;
 
 	const model = writable<SequentialModel>({
 		layers: [
 			{
 				type: 'dense',
-				units: 1,
+				units: 10,
 				inputShape: [1]
+			} as DenseLayer,
+			{
+				type: 'dense',
+				units: 10
+			} as DenseLayer,
+			{
+				type: 'dense',
+				units: 1
 			} as DenseLayer
 		],
 		loss: 'meanSquaredError',
-		optimizer: tf.train.sgd(0.01)
+		optimizer: 'adam'
 	});
 	setContext('model', model);
 
@@ -95,15 +103,15 @@
 			// Normalize the data
 			const xTensor = tf.tensor2d(xs, [numPoints, 1]);
 			const yTensor = tf.tensor2d(ys, [numPoints, 1]);
-			const xMin = xTensor.min();
-			const xMax = xTensor.max();
-			const yMin = yTensor.min();
-			const yMax = yTensor.max();
+			// const xMin = xTensor.min();
+			// const xMax = xTensor.max();
+			// const yMin = yTensor.min();
+			// const yMax = yTensor.max();
 
-			const normalizedXs = xTensor.sub(xMin).div(xMax.sub(xMin));
-			const normalizedYs = yTensor.sub(yMin).div(yMax.sub(yMin));
+			// const normalizedXs = xTensor.sub(xMin).div(xMax.sub(xMin));
+			// const normalizedYs = yTensor.sub(yMin).div(yMax.sub(yMin));
 
-			return { xs: normalizedXs, ys: normalizedYs, xMin, xMax, yMin, yMax };
+			return { xs: xTensor, ys: yTensor };
 		}
 
 		// Generate some synthetic data for training.
@@ -121,6 +129,7 @@
 				callbacks: {
 					onEpochEnd(epoch, logs) {
 						currentEpoch = epoch + 1;
+						if (currentEpoch % 5 === 0) tfModel = tfModel;
 					}
 				}
 			});
@@ -129,10 +138,10 @@
 
 			// Make predictions and denormalize
 			const input = tf.tensor2d([Number(testPred)], [1, 1]);
-			const normalizedInput = input.sub(data.xMin).div(data.xMax.sub(data.xMin));
-			const prediction = tfModel.predict(normalizedInput) as tf.Tensor; // Assert that this is a single tensor
-			const denormalizedPrediction = prediction.mul(data.yMax.sub(data.yMin)).add(data.yMin);
-			denormalizedPrediction.print(); // Should print a value close to 4 (2^2)
+			// const normalizedInput = input.sub(data.xMin).div(data.xMax.sub(data.xMin));
+			const prediction = tfModel.predict(input) as tf.Tensor; // Assert that this is a single tensor
+			// const denormalizedPrediction = prediction.mul(data.yMax.sub(data.yMin)).add(data.yMin);
+			prediction.print(); // Should print a value close to 4 (2^2)
 
 			// Open the browser devtools to see the output
 			toast.success(`Training complete! Open the browser devtools (F12) to see the output.`);
