@@ -75,7 +75,7 @@
 		variant="ghost"
 		size="icon"
 		class="h-6 w-6"
-		on:click={() => setUnits(Math.max(layer.units - 1, 0))}
+		on:click={() => setUnits(Math.max(layer.units - 1, 1))}
 	>
 		<Minus class="h-4 w-4"></Minus>
 	</Button>

@@ -42,6 +42,7 @@
 		const maxWeight = getMaxAbsWeight(weightsArray);
 
 		paths = [];
+		// if (leftLayerHeights.length * rightLayerHeights.length > 500) return;
 
 		for (let i = 0; i < leftLayerHeights.length; i++) {
 			for (let j = 0; j < rightLayerHeights.length; j++) {
