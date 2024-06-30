@@ -26,6 +26,9 @@
 	import { toast } from 'svelte-sonner';
 	import ConnectionsVis from '$lib/ui/connections-vis.svelte';
 	import { getNodeYPositions } from '$lib/ui/connections-vis';
+	import { Switch } from '$lib/components/ui/switch/index.js';
+	import { browser } from '$app/environment';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
@@ -89,7 +92,6 @@
 		// The model needs to be "big enough" to benefit from GPU acceleration
 		// So with the small models in the Tensorflow playground its actually faster to use CPU
 		// await tf.setBackend('webgl');
-		await tf.setBackend('cpu');
 		console.log(tf.getBackend());
 		function generateData(numPoints: number, range: { max: number; min: number }) {
 			const xs = [];
@@ -188,6 +190,11 @@
 
 	let testPred = 2;
 
+	let useGPU = false;
+	$: {
+		if (browser) tf.setBackend(useGPU ? 'webgl' : 'cpu');
+	}
+
 	// to draw weight connections: https://github.com/tensorflow/playground/blob/02469bd3751764b20486015d4202b792af5362a6/src/playground.ts#L538
 </script>
 
@@ -229,6 +236,20 @@
 			<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
 		</div>
 		<div class="flex-1"></div>
+		<div class="flex flex-col gap-2">
+			<Label class="flex gap-2 text-xs">Hardware</Label>
+			<Tooltip.Root>
+				<Tooltip.Trigger class="flex h-9 items-center space-x-2">
+					<Label for="hardware-backend">CPU</Label>
+					<Switch id="hardware-backend" bind:checked={useGPU} />
+					<Label for="hardware-backend">GPU</Label>
+				</Tooltip.Trigger>
+				<Tooltip.Content class="max-w-52">
+					GPU is recommended for large models but slower for small models.
+				</Tooltip.Content>
+			</Tooltip.Root>
+		</div>
+
 		<div class="flex flex-col gap-2">
 			<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
 			<Button on:click={trainModel}>
