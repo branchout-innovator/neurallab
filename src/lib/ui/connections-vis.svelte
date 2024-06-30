@@ -37,7 +37,7 @@
 
 	const updateSvg = async (weights: tf.Tensor) => {
 		if (!browser) return;
-		const weightsArray = await weights.array();
+		const weightsArray = (await weights.array()) as number[][];
 		if (typeof weightsArray === 'number') return;
 		const maxWeight = getMaxAbsWeight(weightsArray);
 
@@ -45,7 +45,7 @@
 
 		for (let i = 0; i < leftLayerHeights.length; i++) {
 			for (let j = 0; j < rightLayerHeights.length; j++) {
-				const weight = (weightsArray[i] as number[])[j];
+				const weight = weightsArray[i][j];
 				const normalizedWeight = weight / maxWeight;
 
 				const startX = 0;
@@ -86,7 +86,7 @@
 			stroke={path.color}
 			fill="none"
 			stroke-width={path.strokeWidth}
-			opacity={Math.abs(path.weight)}
+			opacity={Math.abs(path.normalizedWeight)}
 		/>
 	{/each}
 

@@ -144,7 +144,7 @@
 			prediction.print(); // Should print a value close to 4 (2^2)
 
 			// Open the browser devtools to see the output
-			toast.success(`Training complete! Open the browser devtools (F12) to see the output.`);
+			toast.success(`Training complete! Try changing the input value and see the prediction.`);
 			tfModel = tfModel;
 		} catch (e) {
 			console.error(e);
@@ -184,6 +184,8 @@
 		updateTFModel($model);
 	}
 
+	$: predictedVal = tfModel?.predict(tf.tensor2d([Number(testPred)], [1, 1]));
+
 	let testPred = 2;
 
 	// to draw weight connections: https://github.com/tensorflow/playground/blob/02469bd3751764b20486015d4202b792af5362a6/src/playground.ts#L538
@@ -216,11 +218,15 @@
 				<RefreshCw class="h-4 w-4"></RefreshCw>
 				Epochs
 			</Label>
-			<Input type="number" bind:value={epochs} placeholder="1000" min={1} />
+			<Input type="number" bind:value={epochs} placeholder="1000" min={1} class="w-24" />
 		</div>
 		<div class="flex flex-col gap-2">
-			<Label class="flex gap-2 text-xs">Test Prediction</Label>
-			<Input type="number" bind:value={testPred} placeholder="2" />
+			<Label class="flex gap-2 text-xs">Input</Label>
+			<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
+		</div>
+		<div class="flex flex-col gap-2">
+			<Label class="flex gap-2 text-xs">Predicted value</Label>
+			<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
 		</div>
 		<div class="flex-1"></div>
 		<div class="flex flex-col gap-2">
@@ -245,7 +251,12 @@
 
 		<div class="flex flex-grow flex-row items-start">
 			{#each $model.layers as layer, i (i)}
-				<svelte:component this={layerComponents[layer.type]} {layer} index={i}></svelte:component>
+				<svelte:component
+					this={layerComponents[layer.type]}
+					{layer}
+					index={i}
+					tfLayer={tfModel.layers[i]}
+				></svelte:component>
 				{#if i < $model.layers.length - 1}
 					{@const leftLayerHeights = getNodeYPositions(layer)}
 					{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
