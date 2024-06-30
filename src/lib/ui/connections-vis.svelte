@@ -2,6 +2,8 @@
 	import { onMount } from 'svelte';
 	import * as tf from '@tensorflow/tfjs';
 	import { browser } from '$app/environment';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 
 	export let leftLayerHeights: number[];
 	export let rightLayerHeights: number[];
@@ -59,7 +61,7 @@
 				const d = `M ${startX} ${startY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${endX} ${endY}`;
 
 				const color = getColor(normalizedWeight);
-				const strokeWidth = Math.abs(normalizedWeight) * 3 + 0.5;
+				const strokeWidth = Math.abs(normalizedWeight) * 2 + 0.5;
 
 				paths.push({ d, color, strokeWidth, weight, normalizedWeight });
 			}
@@ -71,9 +73,7 @@
 	}
 
 	function getColor(normalizedWeight: number): string {
-		const r = normalizedWeight > 0 ? Math.round(normalizedWeight * 255) : 0;
-		const b = normalizedWeight < 0 ? Math.round(-normalizedWeight * 255) : 0;
-		return `rgb(${r}, 0, ${b})`;
+		return normalizedWeight > 0 ? '#EF4444' : '#3B82F6';
 	}
 
 	$: canvasHeight = Math.max(...leftLayerHeights, ...rightLayerHeights) + 20;
@@ -86,7 +86,7 @@
 			stroke={path.color}
 			fill="none"
 			stroke-width={path.strokeWidth}
-			title={`Weight: ${path.weight}`}
+			opacity={Math.abs(path.weight)}
 		/>
 	{/each}
 
