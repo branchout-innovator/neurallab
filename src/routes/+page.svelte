@@ -146,7 +146,9 @@
 			tfModel = tfModel;
 		} catch (e) {
 			console.error(e);
-			toast.error(`Error while training: ${e}. Make sure the last layer has only 1 node.`);
+			toast.error(`Error while training: ${e}. Make sure the last layer has only 1 node.`, {
+				duration: 100000
+			});
 		}
 	};
 
