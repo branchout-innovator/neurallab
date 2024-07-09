@@ -27,6 +27,8 @@
 	import { browser } from '$app/environment';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import FileInput from '$lib/components/ui/file-input/file-input.svelte';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import { buttonVariants } from '$lib/components/ui/button';
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
@@ -84,6 +86,37 @@
 		updateTFModel($model);
 	};
 
+	async function generateData(numPoints: number, range: { max: number; min: number }) {
+		const xs = [];
+		const ys = [];
+		for (let i = 0; i < numPoints; i++) {
+			// const x = Math.random() * (range.max - range.min) + range.min;
+			const x = range.min + (i / numPoints) * (range.max - range.min);
+			xs.push(x);
+			ys.push(x * x);
+		}
+		// Normalize the data
+		const xTensor = tf.tensor2d(xs, [numPoints, 1]);
+		const yTensor = tf.tensor2d(ys, [numPoints, 1]);
+		// const xMin = xTensor.min();
+		// const xMax = xTensor.max();
+		// const yMin = yTensor.min();
+		// const yMax = yTensor.max();
+
+		// const normalizedXs = xTensor.sub(xMin).div(xMax.sub(xMin));
+		// const normalizedYs = yTensor.sub(yMin).div(yMax.sub(yMin));
+
+		return { xs: await xTensor.array(), ys: await yTensor.array() };
+	}
+
+	async function generateDataset(): Promise<tf.data.Dataset<tf.TensorContainer>> {
+		const { xs, ys } = await generateData(1000, { min: -10, max: 10 });
+		const xDataset = tf.data.array(xs);
+		const yDataset = tf.data.array(ys);
+		const xyDataset = tf.data.zip({ xs: xDataset, ys: yDataset }).batch(64).shuffle(4);
+		return xyDataset;
+	}
+
 	let currentEpoch = 0;
 
 	const trainModel = async () => {
@@ -91,39 +124,8 @@
 		// So with the small models in the Tensorflow playground its actually faster to use CPU
 		// await tf.setBackend('webgl');
 		console.log(tf.getBackend());
-		async function generateData(numPoints: number, range: { max: number; min: number }) {
-			const xs = [];
-			const ys = [];
-			for (let i = 0; i < numPoints; i++) {
-				// const x = Math.random() * (range.max - range.min) + range.min;
-				const x = range.min + (i / numPoints) * (range.max - range.min);
-				xs.push(x);
-				ys.push(x * x);
-			}
-			// Normalize the data
-			const xTensor = tf.tensor2d(xs, [numPoints, 1]);
-			const yTensor = tf.tensor2d(ys, [numPoints, 1]);
-			// const xMin = xTensor.min();
-			// const xMax = xTensor.max();
-			// const yMin = yTensor.min();
-			// const yMax = yTensor.max();
 
-			// const normalizedXs = xTensor.sub(xMin).div(xMax.sub(xMin));
-			// const normalizedYs = yTensor.sub(yMin).div(yMax.sub(yMin));
-
-			return { xs: await xTensor.array(), ys: await yTensor.array() };
-		}
-
-		async function generateDataset(): Promise<tf.data.Dataset<tf.TensorContainer>> {
-			const { xs, ys } = await generateData(1000, { min: -10, max: 10 });
-			const xDataset = tf.data.array(xs);
-			const yDataset = tf.data.array(ys);
-			const xyDataset = tf.data.zip({ xs: xDataset, ys: yDataset }).batch(32).shuffle(4);
-			return xyDataset;
-		}
-
-		// Generate some synthetic data for training.
-		const data = csvDataset || (await generateDataset());
+		const data = dataset;
 
 		toast.loading(`Training for ${epochs} epochs...`);
 
@@ -204,14 +206,16 @@
 
 	let datasetUploadFiles: FileList;
 
-	let csvDataset: tf.data.Dataset<tf.TensorContainer>;
+	let dataset: tf.data.Dataset<tf.TensorContainer>;
 
 	$: {
-		if (datasetUploadFiles) {
-			(async () => {
-				csvDataset = await loadUploadedCsv(datasetUploadFiles[0], ['Squared Value']);
-			})();
-		}
+		(async () => {
+			if (datasetUploadFiles) {
+				dataset = await loadUploadedCsv(datasetUploadFiles[0], ['Squared Value']);
+			} else {
+				dataset = await generateDataset();
+			}
+		})();
 	}
 </script>
 
@@ -254,17 +258,36 @@
 			<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
 		</div>
 		<div class="flex flex-col gap-2">
-			<Label class="flex gap-2 text-xs" for="dataset-upload">Upload Dataset</Label>
-			<FileInput id="dataset-upload" class="w-32" bind:files={datasetUploadFiles} />
+			<div></div>
+			<Dialog.Root>
+				<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
+					>Upload Dataset</Dialog.Trigger
+				>
+				<Dialog.Content>
+					<Dialog.Header>
+						<Dialog.Title>Upload CSV Dataset</Dialog.Title>
+						<Dialog.Description class="flex flex-col gap-1">
+							<p>Upload a dataset from a .csv file.</p>
+							<div class="flex flex-col">
+								<Label class="flex gap-2 text-xs" for="dataset-upload">Upload Dataset</Label>
+								<FileInput id="dataset-upload" class="w-32" bind:files={datasetUploadFiles} />
+							</div>
+						</Dialog.Description>
+					</Dialog.Header>
+				</Dialog.Content>
+			</Dialog.Root>
 		</div>
+		<div class="flex flex-col gap-2"></div>
 		<div class="flex-1"></div>
 		<div class="flex flex-col gap-2">
 			<Label class="flex gap-2 text-xs">Hardware</Label>
 			<Tooltip.Root>
-				<Tooltip.Trigger class="flex h-9 items-center space-x-2">
-					<Label for="hardware-backend">CPU</Label>
-					<Switch id="hardware-backend" bind:checked={useGPU} />
-					<Label for="hardware-backend">GPU</Label>
+				<Tooltip.Trigger asChild>
+					<div class="flex h-9 flex-row flex-nowrap items-center space-x-2">
+						<Label for="hardware-backend">CPU</Label>
+						<Switch id="hardware-backend" bind:checked={useGPU} />
+						<Label for="hardware-backend">GPU</Label>
+					</div>
 				</Tooltip.Trigger>
 				<Tooltip.Content class="max-w-52">
 					GPU is recommended for large models but slower for small models.

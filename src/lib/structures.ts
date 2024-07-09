@@ -84,12 +84,13 @@ export const loadUploadedCsv = async (csvFile: Blob | MediaSource, labels: strin
 
 	// Prepare the Dataset for training.
 	const flattenedDataset = csvDataset
+		//@ts-expect-error
 		.map(({ xs, ys }) => {
 			// Convert xs(features) and ys(labels) from object form (keyed by
 			// column name) to array form.
 			return { xs: Object.values(xs), ys: Object.values(ys) };
 		})
-		.batch(32);
+		.batch(64);
 
 	const it = await flattenedDataset.iterator();
 	const xs = [];
