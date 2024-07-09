@@ -200,89 +200,93 @@
 	<title>NeuralLab</title>
 	<meta name="description" content="Design and visualize neural networks in your browser." />
 </svelte:head>
+<div class="container col-span-9 flex h-full h-full max-w-screen-2xl flex-row gap-4 py-4">
+	<div class="grid h-full grid-flow-col gap-20 border-r bg-background w-96"></div>
+	<div class="container flex h-full max-w-screen-2xl flex-col gap-4 py-4">
+		<div class="flex flex-row flex-wrap items-end gap-4">
+			<div class="flex flex-col gap-2">
+				<Label class="flex gap-2 text-xs">
+					<Activity class="h-4 w-4"></Activity>
+					Activation Function
+				</Label>
+				<Select.Root bind:selected={selectedActivation}>
+					<Select.Trigger class="w-[180px]">
+						<Select.Value></Select.Value>
+					</Select.Trigger>
+					<Select.Content>
+						<Select.Item value="relu">ReLU</Select.Item>
+						<Select.Item value="sigmoid">Sigmoid</Select.Item>
+					</Select.Content>
+				</Select.Root>
+			</div>
+			<div class="flex flex-col gap-2">
+				<Label class="flex gap-2 text-xs">
+					<RefreshCw class="h-4 w-4"></RefreshCw>
+					Epochs
+				</Label>
+				<Input type="number" bind:value={epochs} placeholder="1000" min={1} class="w-24" />
+			</div>
+			<div class="flex flex-col gap-2">
+				<Label class="flex gap-2 text-xs">Input</Label>
+				<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
+			</div>
+			<div class="flex flex-col gap-2">
+				<Label class="flex gap-2 text-xs">Predicted value</Label>
+				<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
+			</div>
+			<div class="flex-1"></div>
+			<div class="flex flex-col gap-2">
+				<Label class="flex gap-2 text-xs">Hardware</Label>
+				<Tooltip.Root>
+					<Tooltip.Trigger class="flex h-9 items-center space-x-2">
+						<Label for="hardware-backend">CPU</Label>
+						<Switch id="hardware-backend" bind:checked={useGPU} />
+						<Label for="hardware-backend">GPU</Label>
+					</Tooltip.Trigger>
+					<Tooltip.Content class="max-w-52">
+						GPU is recommended for large models but slower for small models.
+					</Tooltip.Content>
+				</Tooltip.Root>
+			</div>
 
-<div class="container flex h-full max-w-screen-2xl flex-col gap-4 py-4">
-	<div class="flex flex-row flex-wrap items-end gap-4">
-		<div class="flex flex-col gap-2">
-			<Label class="flex gap-2 text-xs">
-				<Activity class="h-4 w-4"></Activity>
-				Activation Function
-			</Label>
-			<Select.Root bind:selected={selectedActivation}>
-				<Select.Trigger class="w-[180px]">
-					<Select.Value></Select.Value>
-				</Select.Trigger>
-				<Select.Content>
-					<Select.Item value="relu">ReLU</Select.Item>
-					<Select.Item value="sigmoid">Sigmoid</Select.Item>
-				</Select.Content>
-			</Select.Root>
-		</div>
-		<div class="flex flex-col gap-2">
-			<Label class="flex gap-2 text-xs">
-				<RefreshCw class="h-4 w-4"></RefreshCw>
-				Epochs
-			</Label>
-			<Input type="number" bind:value={epochs} placeholder="1000" min={1} class="w-24" />
-		</div>
-		<div class="flex flex-col gap-2">
-			<Label class="flex gap-2 text-xs">Input</Label>
-			<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
-		</div>
-		<div class="flex flex-col gap-2">
-			<Label class="flex gap-2 text-xs">Predicted value</Label>
-			<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
-		</div>
-		<div class="flex-1"></div>
-		<div class="flex flex-col gap-2">
-			<Label class="flex gap-2 text-xs">Hardware</Label>
-			<Tooltip.Root>
-				<Tooltip.Trigger class="flex h-9 items-center space-x-2">
-					<Label for="hardware-backend">CPU</Label>
-					<Switch id="hardware-backend" bind:checked={useGPU} />
-					<Label for="hardware-backend">GPU</Label>
-				</Tooltip.Trigger>
-				<Tooltip.Content class="max-w-52">
-					GPU is recommended for large models but slower for small models.
-				</Tooltip.Content>
-			</Tooltip.Root>
-		</div>
-
-		<div class="flex flex-col gap-2">
-			<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
-			<Button on:click={trainModel}>
-				<Brain class="mr-2 h-4 w-4"></Brain>
-				Train
-			</Button>
-		</div>
-	</div>
-
-	<div class="flex h-full flex-col items-center justify-center gap-6 rounded-lg border p-6 text-sm">
-		<div class="flex flex-row items-center">
-			<Button variant="ghost" size="icon" class="h-8 w-8" on:click={addLayer}>
-				<Plus class="h-4 w-4"></Plus>
-			</Button>
-			<Button variant="ghost" size="icon" class="h-8 w-8" on:click={removeLayer}>
-				<Minus class="h-4 w-4"></Minus>
-			</Button>
-			<span class="ml-2 leading-none text-muted-foreground">{$model.layers.length} Layers</span>
+			<div class="flex flex-col gap-2">
+				<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
+				<Button on:click={trainModel}>
+					<Brain class="mr-2 h-4 w-4"></Brain>
+					Train
+				</Button>
+			</div>
 		</div>
 
-		<div class="flex flex-grow flex-row items-start">
-			{#each $model.layers as layer, i (i)}
-				<svelte:component
-					this={layerComponents[layer.type]}
-					{layer}
-					index={i}
-					tfLayer={tfModel.layers[i]}
-				></svelte:component>
-				{#if i < $model.layers.length - 1}
-					{@const leftLayerHeights = getNodeYPositions(layer)}
-					{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
-					{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
-					<ConnectionsVis {leftLayerHeights} {rightLayerHeights} {canvasWidth} {weights} />
-				{/if}
-			{/each}
+		<div
+			class="flex h-full flex-col items-center justify-center gap-6 rounded-lg border p-6 text-sm"
+		>
+			<div class="flex flex-row items-center">
+				<Button variant="ghost" size="icon" class="h-8 w-8" on:click={addLayer}>
+					<Plus class="h-4 w-4"></Plus>
+				</Button>
+				<Button variant="ghost" size="icon" class="h-8 w-8" on:click={removeLayer}>
+					<Minus class="h-4 w-4"></Minus>
+				</Button>
+				<span class="ml-2 leading-none text-muted-foreground">{$model.layers.length} Layers</span>
+			</div>
+
+			<div class="flex flex-grow flex-row items-start">
+				{#each $model.layers as layer, i (i)}
+					<svelte:component
+						this={layerComponents[layer.type]}
+						{layer}
+						index={i}
+						tfLayer={tfModel.layers[i]}
+					></svelte:component>
+					{#if i < $model.layers.length - 1}
+						{@const leftLayerHeights = getNodeYPositions(layer)}
+						{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
+						{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
+						<ConnectionsVis {leftLayerHeights} {rightLayerHeights} {canvasWidth} {weights} />
+					{/if}
+				{/each}
+			</div>
 		</div>
 	</div>
 </div>
