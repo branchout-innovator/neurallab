@@ -3,6 +3,7 @@
 	import Label from '$lib/components/ui/label/label.svelte';
 	import {
 		createTFModel,
+		loadUploadedCsv,
 		type ActivationIdentifier,
 		type DenseLayer,
 		type Layer,
@@ -25,6 +26,7 @@
 	import { Switch } from '$lib/components/ui/switch/index.js';
 	import { browser } from '$app/environment';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+	import FileInput from '$lib/components/ui/file-input/file-input.svelte';
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
@@ -193,7 +195,13 @@
 		if (browser) tf.setBackend(useGPU ? 'webgl' : 'cpu');
 	}
 
-	// to draw weight connections: https://github.com/tensorflow/playground/blob/02469bd3751764b20486015d4202b792af5362a6/src/playground.ts#L538
+	let datasetUploadFiles: FileList;
+
+	$: {
+		if (datasetUploadFiles) {
+			loadUploadedCsv(datasetUploadFiles[0], ['Squared Value']);
+		}
+	}
 </script>
 
 <svelte:head>
@@ -202,6 +210,7 @@
 </svelte:head>
 
 <div class="container flex h-full max-w-screen-2xl flex-col gap-4 py-4">
+	<!-- Controls (header) -->
 	<div class="flex flex-row flex-wrap items-end gap-4">
 		<div class="flex flex-col gap-2">
 			<Label class="flex gap-2 text-xs">
@@ -230,8 +239,12 @@
 			<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
 		</div>
 		<div class="flex flex-col gap-2">
-			<Label class="flex gap-2 text-xs">Predicted value</Label>
+			<Label class="flex gap-2 text-xs">Predicted Value</Label>
 			<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
+		</div>
+		<div class="flex flex-col gap-2">
+			<Label class="flex gap-2 text-xs" for="dataset-upload">Upload Dataset</Label>
+			<FileInput id="dataset-upload" class="w-32" bind:files={datasetUploadFiles} />
 		</div>
 		<div class="flex-1"></div>
 		<div class="flex flex-col gap-2">
