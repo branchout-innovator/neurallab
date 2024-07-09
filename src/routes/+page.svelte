@@ -91,7 +91,7 @@
 		// So with the small models in the Tensorflow playground its actually faster to use CPU
 		// await tf.setBackend('webgl');
 		console.log(tf.getBackend());
-		function generateData(numPoints: number, range: { max: number; min: number }) {
+		async function generateData(numPoints: number, range: { max: number; min: number }) {
 			const xs = [];
 			const ys = [];
 			for (let i = 0; i < numPoints; i++) {
@@ -111,12 +111,19 @@
 			// const normalizedXs = xTensor.sub(xMin).div(xMax.sub(xMin));
 			// const normalizedYs = yTensor.sub(yMin).div(yMax.sub(yMin));
 
-			return { xs: xTensor, ys: yTensor };
+			return { xs: await xTensor.array(), ys: await yTensor.array() };
+		}
+
+		async function generateDataset(): Promise<tf.data.Dataset<tf.TensorContainer>> {
+			const { xs, ys } = await generateData(1000, { min: -10, max: 10 });
+			const xDataset = tf.data.array(xs);
+			const yDataset = tf.data.array(ys);
+			const xyDataset = tf.data.zip({ xs: xDataset, ys: yDataset }).batch(32).shuffle(4);
+			return xyDataset;
 		}
 
 		// Generate some synthetic data for training.
-		const data = generateData(1000, { min: -10, max: 10 });
-		const { xs, ys } = data;
+		const data = csvDataset || (await generateDataset());
 
 		toast.loading(`Training for ${epochs} epochs...`);
 
@@ -124,7 +131,7 @@
 		currentEpoch = 0;
 
 		try {
-			await tfModel.fit(xs, ys, {
+			await tfModel.fitDataset(data, {
 				epochs: Number(epochs),
 				callbacks: {
 					onEpochEnd(epoch, logs) {
@@ -197,9 +204,13 @@
 
 	let datasetUploadFiles: FileList;
 
+	let csvDataset: tf.data.Dataset<tf.TensorContainer>;
+
 	$: {
 		if (datasetUploadFiles) {
-			loadUploadedCsv(datasetUploadFiles[0], ['Squared Value']);
+			(async () => {
+				csvDataset = await loadUploadedCsv(datasetUploadFiles[0], ['Squared Value']);
+			})();
 		}
 	}
 </script>

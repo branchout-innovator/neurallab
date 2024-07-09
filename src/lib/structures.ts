@@ -83,12 +83,13 @@ export const loadUploadedCsv = async (csvFile: Blob | MediaSource, labels: strin
 	const numOfFeatures = (await csvDataset.columnNames()).length - 1;
 
 	// Prepare the Dataset for training.
-	const flattenedDataset = csvDataset.map(({ xs, ys }) => {
-		// Convert xs(features) and ys(labels) from object form (keyed by
-		// column name) to array form.
-		return { xs: Object.values(xs), ys: Object.values(ys) };
-	});
-	//.batch(10);
+	const flattenedDataset = csvDataset
+		.map(({ xs, ys }) => {
+			// Convert xs(features) and ys(labels) from object form (keyed by
+			// column name) to array form.
+			return { xs: Object.values(xs), ys: Object.values(ys) };
+		})
+		.batch(32);
 
 	const it = await flattenedDataset.iterator();
 	const xs = [];
@@ -106,4 +107,6 @@ export const loadUploadedCsv = async (csvFile: Blob | MediaSource, labels: strin
 
 	console.log(featuresTensor.shape);
 	console.log(labelsTensor.shape);
+
+	return flattenedDataset;
 };
