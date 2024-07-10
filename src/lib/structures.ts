@@ -67,24 +67,23 @@ export const createTFModel = (model: SequentialModel): tf.Sequential => {
 	return tfModel;
 };
 
-export const loadUploadedCsv = async (csvFile: Blob | MediaSource, labels: string[]) => {
-	const url = URL.createObjectURL(csvFile);
-	const columnConfigs: {
+export const loadUploadedCsv = async (
+	csvFile: Blob | MediaSource,
+	columnConfigs: {
 		[key: string]: tf.data.ColumnConfig;
-	} = {};
-	for (const label of labels) {
-		columnConfigs[label] = { isLabel: true };
 	}
+) => {
+	const url = URL.createObjectURL(csvFile);
 
 	const csvDataset = tf.data.csv(url, {
 		columnConfigs
 	});
 
-	const numOfFeatures = (await csvDataset.columnNames()).length - 1;
+	// const numOfFeatures = (await csvDataset.columnNames()).length - 1;
 
 	// Prepare the Dataset for training.
 	const flattenedDataset = csvDataset
-		//@ts-expect-error
+		// @ts-expect-error unclear type for map
 		.map(({ xs, ys }) => {
 			// Convert xs(features) and ys(labels) from object form (keyed by
 			// column name) to array form.

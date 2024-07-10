@@ -18,7 +18,7 @@
 	import Brain from 'lucide-svelte/icons/brain';
 	import Activity from 'lucide-svelte/icons/activity';
 	import RefreshCw from 'lucide-svelte/icons/refresh-cw';
-	import { writable } from 'svelte/store';
+	import { writable, type Writable } from 'svelte/store';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { toast } from 'svelte-sonner';
 	import ConnectionsVis from '$lib/ui/connections-vis.svelte';
@@ -30,6 +30,9 @@
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as Resizable from "$lib/components/ui/resizable";
+	import * as d3 from 'd3';
+	import * as Table from '$lib/components/ui/table';
+	import * as RadioGroup from '$lib/components/ui/radio-group';
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
@@ -209,14 +212,40 @@
 
 	let dataset: tf.data.Dataset<tf.TensorContainer>;
 
+	let csvColumnConfigs: Writable<{
+		[key: string]: { isLabel: 'true' | 'false' };
+	}> = writable({});
+
 	$: {
 		(async () => {
-			if (datasetUploadFiles) {
-				dataset = await loadUploadedCsv(datasetUploadFiles[0], ['Squared Value']);
+			if (datasetUploadFiles && datasetUploadFiles.length > 0) {
+				const { columns } = d3.csvParse(await datasetUploadFiles[0].text());
+				$csvColumnConfigs = {};
+				for (const column of columns) {
+					$csvColumnConfigs[column] = {
+						isLabel: 'false'
+					};
+				}
 			} else {
 				dataset = await generateDataset();
 			}
 		})();
+	}
+
+	$: {
+		(async (csvColumnConfigs: { [key: string]: { isLabel: 'true' | 'false' } }) => {
+			if (!datasetUploadFiles || !datasetUploadFiles.length) return;
+			const config: {
+				[key: string]: tf.data.ColumnConfig;
+			} = {};
+			let hasLabel = false;
+			for (const column in csvColumnConfigs) {
+				const isLabel = csvColumnConfigs[column].isLabel === 'true';
+				config[column] = { isLabel };
+				if (isLabel) hasLabel = true;
+			}
+			if (hasLabel) dataset = await loadUploadedCsv(datasetUploadFiles[0], config);
+		})($csvColumnConfigs);
 	}
 </script>
 
@@ -276,12 +305,41 @@
 					<Dialog.Content>
 						<Dialog.Header>
 							<Dialog.Title>Upload CSV Dataset</Dialog.Title>
-							<Dialog.Description class="flex flex-col gap-1">
+							<Dialog.Description class="flex flex-col gap-2">
 								<p>Upload a dataset from a .csv file.</p>
 								<div class="flex flex-col">
-									<Label class="flex gap-2 text-xs" for="dataset-upload">Upload Dataset</Label>
 									<FileInput id="dataset-upload" class="w-32" bind:files={datasetUploadFiles} />
 								</div>
+								{#if Object.entries($csvColumnConfigs).length > 0}
+									<Table.Root>
+										<Table.Header>
+											<Table.Row>
+												<Table.Head class="flex-grow">Column Name</Table.Head>
+											</Table.Row>
+										</Table.Header>
+										{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
+											<Table.Row>
+												<Table.Cell class="font-medium">{column}</Table.Cell>
+												<RadioGroup.Root bind:value={$csvColumnConfigs[column].isLabel} asChild>
+													<Table.Cell>
+														<div class="flex items-center space-x-2">
+															<RadioGroup.Item value="false" id={`feature-${column}`}
+															></RadioGroup.Item>
+															<Label for={`feature-${column}`}>Input</Label>
+														</div>
+													</Table.Cell>
+													<Table.Cell>
+														<div class="flex items-center space-x-2">
+															<RadioGroup.Item value="true" id={`label-${column}`}
+															></RadioGroup.Item>
+															<Label for={`label-${column}`}>Output</Label>
+														</div>
+													</Table.Cell>
+												</RadioGroup.Root>
+											</Table.Row>
+										{/each}
+									</Table.Root>
+								{/if}
 							</Dialog.Description>
 						</Dialog.Header>
 					</Dialog.Content>
@@ -303,6 +361,13 @@
 						GPU is recommended for large models but slower for small models.
 					</Tooltip.Content>
 				</Tooltip.Root>
+			</div>
+			<div class="flex flex-col gap-2">
+				<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
+				<Button on:click={trainModel}>
+					<Brain class="mr-2 h-4 w-4"></Brain>
+					Train
+				</Button>
 			</div>
 		</div>
 		<div
