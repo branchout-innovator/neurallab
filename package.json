@@ -47,6 +47,7 @@
 		"bits-ui": "^0.21.12",
 		"clsx": "^2.1.1",
 		"mode-watcher": "^0.3.1",
+		"paneforge": "^0.0.5",
 		"svelte-radix": "^1.1.0",
 		"svelte-sonner": "^0.3.24",
 		"tailwind-merge": "^2.3.0",
