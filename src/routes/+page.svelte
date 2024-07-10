@@ -223,9 +223,11 @@
 	<title>NeuralLab</title>
 	<meta name="description" content="Design and visualize neural networks in your browser." />
 </svelte:head>
-<div class="container col-span-9 flex h-full h-full max-w-screen-2xl flex-row gap-4 py-4">
-	<div class="grid h-full grid-flow-col gap-20 border-r bg-background w-96"></div>
-	<div class="container flex h-full max-w-screen-2xl flex-col gap-4 py-4">
+<div class="container flex h-full h-full max-w-screen-2xl flex-row gap-4">
+	<div class="flex h-full w-80 border-r bg-background"></div>
+
+	<div class="flex h-full max-w-screen-2xl flex-grow flex-col gap-4 py-4">
+		<!-- Controls (header) -->
 		<div class="flex flex-row flex-wrap items-end gap-4">
 			<div class="flex flex-col gap-2">
 				<Label class="flex gap-2 text-xs">
@@ -254,105 +256,47 @@
 				<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
 			</div>
 			<div class="flex flex-col gap-2">
-				<Label class="flex gap-2 text-xs">Predicted value</Label>
+				<Label class="flex gap-2 text-xs">Predicted Value</Label>
 				<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
 			</div>
+			<div class="flex flex-col gap-2">
+				<div></div>
+				<Dialog.Root>
+					<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
+						>Upload Dataset</Dialog.Trigger
+					>
+					<Dialog.Content>
+						<Dialog.Header>
+							<Dialog.Title>Upload CSV Dataset</Dialog.Title>
+							<Dialog.Description class="flex flex-col gap-1">
+								<p>Upload a dataset from a .csv file.</p>
+								<div class="flex flex-col">
+									<Label class="flex gap-2 text-xs" for="dataset-upload">Upload Dataset</Label>
+									<FileInput id="dataset-upload" class="w-32" bind:files={datasetUploadFiles} />
+								</div>
+							</Dialog.Description>
+						</Dialog.Header>
+					</Dialog.Content>
+				</Dialog.Root>
+			</div>
+			<div class="flex flex-col gap-2"></div>
 			<div class="flex-1"></div>
 			<div class="flex flex-col gap-2">
 				<Label class="flex gap-2 text-xs">Hardware</Label>
 				<Tooltip.Root>
-					<Tooltip.Trigger class="flex h-9 items-center space-x-2">
-						<Label for="hardware-backend">CPU</Label>
-						<Switch id="hardware-backend" bind:checked={useGPU} />
-						<Label for="hardware-backend">GPU</Label>
+					<Tooltip.Trigger asChild>
+						<div class="flex h-9 flex-row flex-nowrap items-center space-x-2">
+							<Label for="hardware-backend">CPU</Label>
+							<Switch id="hardware-backend" bind:checked={useGPU} />
+							<Label for="hardware-backend">GPU</Label>
+						</div>
 					</Tooltip.Trigger>
 					<Tooltip.Content class="max-w-52">
 						GPU is recommended for large models but slower for small models.
 					</Tooltip.Content>
 				</Tooltip.Root>
 			</div>
-
-<<<<<<< HEAD
-			<div class="flex flex-col gap-2">
-				<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
-				<Button on:click={trainModel}>
-					<Brain class="mr-2 h-4 w-4"></Brain>
-					Train
-				</Button>
-			</div>
-=======
-<div class="container flex h-full max-w-screen-2xl flex-col gap-4 py-4">
-	<!-- Controls (header) -->
-	<div class="flex flex-row flex-wrap items-end gap-4">
-		<div class="flex flex-col gap-2">
-			<Label class="flex gap-2 text-xs">
-				<Activity class="h-4 w-4"></Activity>
-				Activation Function
-			</Label>
-			<Select.Root bind:selected={selectedActivation}>
-				<Select.Trigger class="w-[180px]">
-					<Select.Value></Select.Value>
-				</Select.Trigger>
-				<Select.Content>
-					<Select.Item value="relu">ReLU</Select.Item>
-					<Select.Item value="sigmoid">Sigmoid</Select.Item>
-				</Select.Content>
-			</Select.Root>
 		</div>
-		<div class="flex flex-col gap-2">
-			<Label class="flex gap-2 text-xs">
-				<RefreshCw class="h-4 w-4"></RefreshCw>
-				Epochs
-			</Label>
-			<Input type="number" bind:value={epochs} placeholder="1000" min={1} class="w-24" />
-		</div>
-		<div class="flex flex-col gap-2">
-			<Label class="flex gap-2 text-xs">Input</Label>
-			<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
-		</div>
-		<div class="flex flex-col gap-2">
-			<Label class="flex gap-2 text-xs">Predicted Value</Label>
-			<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
-		</div>
-		<div class="flex flex-col gap-2">
-			<div></div>
-			<Dialog.Root>
-				<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
-					>Upload Dataset</Dialog.Trigger
-				>
-				<Dialog.Content>
-					<Dialog.Header>
-						<Dialog.Title>Upload CSV Dataset</Dialog.Title>
-						<Dialog.Description class="flex flex-col gap-1">
-							<p>Upload a dataset from a .csv file.</p>
-							<div class="flex flex-col">
-								<Label class="flex gap-2 text-xs" for="dataset-upload">Upload Dataset</Label>
-								<FileInput id="dataset-upload" class="w-32" bind:files={datasetUploadFiles} />
-							</div>
-						</Dialog.Description>
-					</Dialog.Header>
-				</Dialog.Content>
-			</Dialog.Root>
-		</div>
-		<div class="flex flex-col gap-2"></div>
-		<div class="flex-1"></div>
-		<div class="flex flex-col gap-2">
-			<Label class="flex gap-2 text-xs">Hardware</Label>
-			<Tooltip.Root>
-				<Tooltip.Trigger asChild>
-					<div class="flex h-9 flex-row flex-nowrap items-center space-x-2">
-						<Label for="hardware-backend">CPU</Label>
-						<Switch id="hardware-backend" bind:checked={useGPU} />
-						<Label for="hardware-backend">GPU</Label>
-					</div>
-				</Tooltip.Trigger>
-				<Tooltip.Content class="max-w-52">
-					GPU is recommended for large models but slower for small models.
-				</Tooltip.Content>
-			</Tooltip.Root>
->>>>>>> 31a04ab50c4b627178622f7d9a3bb22b3edef306
-		</div>
-
 		<div
 			class="flex h-full flex-col items-center justify-center gap-6 rounded-lg border p-6 text-sm"
 		>
