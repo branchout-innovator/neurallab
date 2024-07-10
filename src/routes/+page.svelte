@@ -29,6 +29,7 @@
 	import FileInput from '$lib/components/ui/file-input/file-input.svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { buttonVariants } from '$lib/components/ui/button';
+	import * as Resizable from "$lib/components/ui/resizable";
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
@@ -223,10 +224,17 @@
 	<title>NeuralLab</title>
 	<meta name="description" content="Design and visualize neural networks in your browser." />
 </svelte:head>
-<div class="container flex h-full h-full max-w-full flex-row gap-4">
-	<div class="flex h-full min-w-80 max-w-80 border-r bg-background"></div>
-
-	<div class="flex h-full max-w-screen-2xl flex-grow flex-col gap-4 py-4 overflow-x-hidden">
+<!--<div class="container flex h-full max-w-full flex-row gap-4">-->
+<Resizable.PaneGroup
+	direction="horizontal"
+	class="container flex h-full max-w-full flex-row gap-4"
+  	>
+	<Resizable.Pane defaultSize={25}>
+	<div class="flex h-full bg-background"></div>
+	</Resizable.Pane>
+	<Resizable.Handle withHandle />
+	<Resizable.Pane defaultSize={75}>
+	<div class="flex h-full max-w-full flex-grow flex-col gap-4 py-4 overflow-x-hidden">
 		<!-- Controls (header) -->
 		<div class="flex flex-row flex-wrap items-end gap-4">
 			<div class="flex flex-col gap-2">
@@ -328,4 +336,6 @@
 			</div>
 		</div>
 	</div>
-</div>
+</Resizable.Pane>
+<!--</div>-->
+</Resizable.PaneGroup>
