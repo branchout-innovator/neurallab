@@ -66,3 +66,48 @@ export const createTFModel = (model: SequentialModel): tf.Sequential => {
 
 	return tfModel;
 };
+
+export const loadUploadedCsv = async (csvFile: Blob | MediaSource, labels: string[]) => {
+	const url = URL.createObjectURL(csvFile);
+	const columnConfigs: {
+		[key: string]: tf.data.ColumnConfig;
+	} = {};
+	for (const label of labels) {
+		columnConfigs[label] = { isLabel: true };
+	}
+
+	const csvDataset = tf.data.csv(url, {
+		columnConfigs
+	});
+
+	const numOfFeatures = (await csvDataset.columnNames()).length - 1;
+
+	// Prepare the Dataset for training.
+	const flattenedDataset = csvDataset
+		//@ts-expect-error
+		.map(({ xs, ys }) => {
+			// Convert xs(features) and ys(labels) from object form (keyed by
+			// column name) to array form.
+			return { xs: Object.values(xs), ys: Object.values(ys) };
+		})
+		.batch(64);
+
+	const it = await flattenedDataset.iterator();
+	const xs = [];
+	const ys = [];
+	// read only the data for the first 5 rows
+	// all the data need not to be read once
+	// since it will consume a lot of memory
+	for (let i = 0; i < 5; i++) {
+		const e = await it.next();
+		xs.push(e.value.xs);
+		ys.push(e.value.ys);
+	}
+	const featuresTensor = tf.tensor(xs);
+	const labelsTensor = tf.tensor(ys);
+
+	console.log(featuresTensor.shape);
+	console.log(labelsTensor.shape);
+
+	return flattenedDataset;
+};
