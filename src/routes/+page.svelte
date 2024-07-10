@@ -231,20 +231,21 @@
 		})();
 	}
 
+	let hasLabel = false;
+
 	$: {
-		(async (csvColumnConfigs: { [key: string]: { isLabel: 'true' | 'false' } }) => {
-			if (!datasetUploadFiles || !datasetUploadFiles.length) return;
+		if (datasetUploadFiles && datasetUploadFiles.length) {
 			const config: {
 				[key: string]: tf.data.ColumnConfig;
 			} = {};
-			let hasLabel = false;
-			for (const column in csvColumnConfigs) {
-				const isLabel = csvColumnConfigs[column].isLabel === 'true';
+			hasLabel = false;
+			for (const column in $csvColumnConfigs) {
+				const isLabel = $csvColumnConfigs[column].isLabel === 'true';
 				config[column] = { isLabel };
 				if (isLabel) hasLabel = true;
 			}
-			if (hasLabel) dataset = await loadUploadedCsv(datasetUploadFiles[0], config);
-		})($csvColumnConfigs);
+			if (hasLabel) loadUploadedCsv(datasetUploadFiles[0], config).then((d) => (dataset = d));
+		}
 	}
 </script>
 
@@ -255,7 +256,7 @@
 <div class="container flex h-full h-full max-w-full flex-row gap-4">
 	<div class="flex h-full min-w-80 max-w-80 border-r bg-background"></div>
 
-	<div class="flex h-full max-w-screen-2xl flex-grow flex-col gap-4 py-4 overflow-x-hidden">
+	<div class="flex h-full max-w-screen-2xl flex-grow flex-col gap-4 overflow-x-hidden py-4">
 		<!-- Controls (header) -->
 		<div class="flex flex-row flex-wrap items-end gap-4">
 			<div class="flex flex-col gap-2">
@@ -331,6 +332,11 @@
 											</Table.Row>
 										{/each}
 									</Table.Root>
+									{#if !hasLabel}
+										<p class="font-medium text-foreground">
+											Choose at least one column to use as output.
+										</p>
+									{/if}
 								{/if}
 							</Dialog.Description>
 						</Dialog.Header>
@@ -362,10 +368,8 @@
 				</Button>
 			</div>
 		</div>
-		<div
-			class="flex h-full w-full flex-col gap-6 rounded-lg border p-6 text-sm overflow-x-scroll"
-		>
-			<div class="flex flex-row items-center mr-auto ml-auto">
+		<div class="flex h-full w-full flex-col gap-6 overflow-x-scroll rounded-lg border p-6 text-sm">
+			<div class="ml-auto mr-auto flex flex-row items-center">
 				<Button variant="ghost" size="icon" class="h-8 w-8" on:click={addLayer}>
 					<Plus class="h-4 w-4"></Plus>
 				</Button>
@@ -375,7 +379,7 @@
 				<span class="ml-2 leading-none text-muted-foreground">{$model.layers.length} Layers</span>
 			</div>
 
-			<div class="flex flex-grow flex-row items-start mr-auto ml-auto">
+			<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
 				{#each $model.layers as layer, i (i)}
 					<svelte:component
 						this={layerComponents[layer.type]}
