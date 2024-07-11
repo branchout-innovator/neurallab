@@ -4,6 +4,7 @@
 	import {
 		createTFModel,
 		loadUploadedCsv,
+		type SampledOutputs,
 		updateSampledOutputs,
 		type ActivationIdentifier,
 		type DenseLayer,
@@ -141,11 +142,10 @@
 			await tfModel.fitDataset(data, {
 				epochs: Number(epochs),
 				callbacks: {
-					onEpochEnd(epoch, logs) {
+					async onEpochEnd(epoch, logs) {
 						currentEpoch = epoch + 1;
-						sampledOutputs = updateSampledOutputs(tfModel, 10, [-10, 10]);
-
 						if (currentEpoch % 5 === 0) tfModel = tfModel;
+						$sampledOutputs = await updateSampledOutputs(tfModel, 10, [-10, 10]);
 					}
 				}
 			});
@@ -188,7 +188,7 @@
 
 	let tfModel: tf.Sequential;
 
-	const updateTFModel = (model: SequentialModel) => {
+	const updateTFModel = async (model: SequentialModel) => {
 		if (!tfModel) {
 			tfModel = createTFModel(model);
 		} else {
@@ -196,7 +196,7 @@
 			const newModel = createTFModel(model);
 			tfModel = newModel;
 		}
-		if (browser) sampledOutputs = updateSampledOutputs(tfModel, 10, [-10, 10]);
+		if (browser) $sampledOutputs = await updateSampledOutputs(tfModel, 10, [-10, 10]);
 	};
 
 	$: {
@@ -254,7 +254,8 @@
 		}
 	}
 
-	let sampledOutputs = {};
+	let sampledOutputs = writable<SampledOutputs>({});
+	setContext('sampledOutputs', sampledOutputs);
 </script>
 
 <svelte:head>

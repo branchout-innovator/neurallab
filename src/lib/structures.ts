@@ -172,6 +172,7 @@ export const loadUploadedCsv = async (
 // Claude's response
 
 export interface SampledOutputs {
+	/** Key: layer.name in Tensorflow layers */
 	[key: string]: number[][][];
 }
 
