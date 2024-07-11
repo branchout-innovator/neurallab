@@ -4,6 +4,7 @@
 	import {
 		createTFModel,
 		loadUploadedCsv,
+		updateSampledOutputs,
 		type ActivationIdentifier,
 		type DenseLayer,
 		type Layer,
@@ -46,7 +47,7 @@
 			{
 				type: 'dense',
 				units: 10,
-				inputShape: [1]
+				inputShape: [2]
 			} as DenseLayer,
 			{
 				type: 'dense',
@@ -142,6 +143,8 @@
 				callbacks: {
 					onEpochEnd(epoch, logs) {
 						currentEpoch = epoch + 1;
+						sampledOutputs = updateSampledOutputs(tfModel, 10, [-10, 10]);
+
 						if (currentEpoch % 5 === 0) tfModel = tfModel;
 					}
 				}
@@ -193,13 +196,15 @@
 			const newModel = createTFModel(model);
 			tfModel = newModel;
 		}
+		if (browser) sampledOutputs = updateSampledOutputs(tfModel, 10, [-10, 10]);
 	};
 
 	$: {
 		updateTFModel($model);
 	}
 
-	$: predictedVal = tfModel?.predict(tf.tensor2d([Number(testPred)], [1, 1]));
+	// $: predictedVal = tfModel?.predict(tf.tensor2d([Number(testPred)], [1, 1]));
+	$: predictedVal = 0;
 
 	let testPred = 2;
 
@@ -248,6 +253,8 @@
 			if (hasLabel) loadUploadedCsv(datasetUploadFiles[0], config).then((d) => (dataset = d));
 		}
 	}
+
+	let sampledOutputs = {};
 </script>
 
 <svelte:head>
