@@ -259,10 +259,21 @@
 	class="container flex h-full max-w-full flex-row gap-4"
   	>
 	<Resizable.Pane defaultSize={25}>
-	<div class="flex h-full bg-background"></div>
+		<div class="flex h-full bg-background overflow-y-auto">
+			<div class = "p-4">
+				<p class = "text-xl font-semibold text-center underline">Side Bar</p>
+				<span class = "inline-block h-4 w-4"></span>
+				<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vitae nulla elit. Phasellus luctus hendrerit dui, vel fermentum neque tempor sed. Sed efficitur urna eget sapien laoreet, sit amet tincidunt lorem consectetur. Vivamus sit amet semper augue, nec facilisis justo. Cras malesuada malesuada purus, sit amet tempor neque bibendum vel. Etiam laoreet, sem vel commodo fermentum, leo metus varius dui, sed sodales justo libero et ante. Nunc vestibulum justo eu nisi lobortis varius. Proin ut purus id quam fermentum dignissim nec ac ipsum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Pellentesque efficitur risus in dui venenatis, quis tincidunt ligula blandit. Proin at feugiat lectus. Integer commodo sollicitudin bibendum. Quisque laoreet vestibulum quam, eu molestie ipsum egestas quis. Etiam rutrum at ex id viverra. Vestibulum ultrices, quam in dignissim laoreet, elit ipsum tempus nulla, a faucibus lacus ipsum eget tortor.
+					</p>
+					<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vitae nulla elit. Phasellus luctus hendrerit dui, vel fermentum neque tempor sed. Sed efficitur urna eget sapien laoreet, sit amet tincidunt lorem consectetur. Vivamus sit amet semper augue, nec facilisis justo. Cras malesuada malesuada purus, sit amet tempor neque bibendum vel. Etiam laoreet, sem vel commodo fermentum, leo metus varius dui, sed sodales justo libero et ante. Nunc vestibulum justo eu nisi lobortis varius. Proin ut purus id quam fermentum dignissim nec ac ipsum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Pellentesque efficitur risus in dui venenatis, quis tincidunt ligula blandit. Proin at feugiat lectus. Integer commodo sollicitudin bibendum. Quisque laoreet vestibulum quam, eu molestie ipsum egestas quis. Etiam rutrum at ex id viverra. Vestibulum ultrices, quam in dignissim laoreet, elit ipsum tempus nulla, a faucibus lacus ipsum eget tortor.
+					</p>
+					<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vitae nulla elit. Phasellus luctus hendrerit dui, vel fermentum neque tempor sed. Sed efficitur urna eget sapien laoreet, sit amet tincidunt lorem consectetur. Vivamus sit amet semper augue, nec facilisis justo. Cras malesuada malesuada purus, sit amet tempor neque bibendum vel. Etiam laoreet, sem vel commodo fermentum, leo metus varius dui, sed sodales justo libero et ante. Nunc vestibulum justo eu nisi lobortis varius. Proin ut purus id quam fermentum dignissim nec ac ipsum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Pellentesque efficitur risus in dui venenatis, quis tincidunt ligula blandit. Proin at feugiat lectus. Integer commodo sollicitudin bibendum. Quisque laoreet vestibulum quam, eu molestie ipsum egestas quis. Etiam rutrum at ex id viverra. Vestibulum ultrices, quam in dignissim laoreet, elit ipsum tempus nulla, a faucibus lacus ipsum eget tortor.
+					</p>
+			</div>
+		</div>
 	</Resizable.Pane>
 	<Resizable.Handle withHandle />
-	<Resizable.Pane defaultSize={75}>
+	<Resizable.Pane defaultSize={75} class = "min-w-3/4">
 	<div class="flex h-full max-w-full flex-grow flex-col gap-4 py-4 overflow-x-hidden">
 		<!-- Controls (header) -->
 		<div class="flex flex-row flex-wrap items-end gap-4">
