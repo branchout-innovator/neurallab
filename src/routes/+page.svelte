@@ -33,6 +33,7 @@
 	import * as d3 from 'd3';
 	import * as Table from '$lib/components/ui/table';
 	import * as RadioGroup from '$lib/components/ui/radio-group';
+	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
@@ -247,6 +248,23 @@
 			if (hasLabel) dataset = await loadUploadedCsv(datasetUploadFiles[0], config);
 		})($csvColumnConfigs);
 	}
+
+	function pageLeft() {
+		changePage(-1);
+	}
+	function pageRight() {
+		changePage(1);
+	}
+	let articletitle = ["sdjfnd", "sjokccjdj", "skgkoifjnm", "mkdjvijdmcvjijfmkijnjrjdnigjnskdnj fhdjsnd"];
+	let pagetext = ["asbfhsbd", "sjhcbfujesndnjdjs", "ijgnfjvnfdnkm", "kbjfncmfcjfdncjfndcvfdmckvnjfdmkvjnfkmxv fdmmc"];
+	function changePage(d: number) {
+		let pageNum = Number(position);
+		if ((pageNum != 0 || d != -1)&&(pageNum!=pagetext.length-1 || d != 1)) {
+			pageNum += d;
+		}
+		position = String(pageNum);
+	}
+	let position = "0";
 </script>
 
 <svelte:head>
@@ -259,16 +277,33 @@
 	class="container flex h-full max-w-full flex-row gap-4"
   	>
 	<Resizable.Pane defaultSize={25}>
-		<div class="flex h-full bg-background overflow-y-auto">
-			<div class = "p-4">
-				<p class = "text-xl font-semibold text-center underline">Side Bar</p>
-				<span class = "inline-block h-4 w-4"></span>
-				<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vitae nulla elit. Phasellus luctus hendrerit dui, vel fermentum neque tempor sed. Sed efficitur urna eget sapien laoreet, sit amet tincidunt lorem consectetur. Vivamus sit amet semper augue, nec facilisis justo. Cras malesuada malesuada purus, sit amet tempor neque bibendum vel. Etiam laoreet, sem vel commodo fermentum, leo metus varius dui, sed sodales justo libero et ante. Nunc vestibulum justo eu nisi lobortis varius. Proin ut purus id quam fermentum dignissim nec ac ipsum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Pellentesque efficitur risus in dui venenatis, quis tincidunt ligula blandit. Proin at feugiat lectus. Integer commodo sollicitudin bibendum. Quisque laoreet vestibulum quam, eu molestie ipsum egestas quis. Etiam rutrum at ex id viverra. Vestibulum ultrices, quam in dignissim laoreet, elit ipsum tempus nulla, a faucibus lacus ipsum eget tortor.
-					</p>
-					<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vitae nulla elit. Phasellus luctus hendrerit dui, vel fermentum neque tempor sed. Sed efficitur urna eget sapien laoreet, sit amet tincidunt lorem consectetur. Vivamus sit amet semper augue, nec facilisis justo. Cras malesuada malesuada purus, sit amet tempor neque bibendum vel. Etiam laoreet, sem vel commodo fermentum, leo metus varius dui, sed sodales justo libero et ante. Nunc vestibulum justo eu nisi lobortis varius. Proin ut purus id quam fermentum dignissim nec ac ipsum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Pellentesque efficitur risus in dui venenatis, quis tincidunt ligula blandit. Proin at feugiat lectus. Integer commodo sollicitudin bibendum. Quisque laoreet vestibulum quam, eu molestie ipsum egestas quis. Etiam rutrum at ex id viverra. Vestibulum ultrices, quam in dignissim laoreet, elit ipsum tempus nulla, a faucibus lacus ipsum eget tortor.
-					</p>
-					<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vitae nulla elit. Phasellus luctus hendrerit dui, vel fermentum neque tempor sed. Sed efficitur urna eget sapien laoreet, sit amet tincidunt lorem consectetur. Vivamus sit amet semper augue, nec facilisis justo. Cras malesuada malesuada purus, sit amet tempor neque bibendum vel. Etiam laoreet, sem vel commodo fermentum, leo metus varius dui, sed sodales justo libero et ante. Nunc vestibulum justo eu nisi lobortis varius. Proin ut purus id quam fermentum dignissim nec ac ipsum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Pellentesque efficitur risus in dui venenatis, quis tincidunt ligula blandit. Proin at feugiat lectus. Integer commodo sollicitudin bibendum. Quisque laoreet vestibulum quam, eu molestie ipsum egestas quis. Etiam rutrum at ex id viverra. Vestibulum ultrices, quam in dignissim laoreet, elit ipsum tempus nulla, a faucibus lacus ipsum eget tortor.
-					</p>
+		<div class="container flex h-full w-full flex-col px-0 overflow-y-hidden py-4">
+			<div class="container flex-row flex w-full h-1/8 items-end">
+				<div class="flex h-full w-1/3"><Button variant="outline" class="ml-auto" size="icon" on:click={pageLeft}>&lt;</Button></div>
+				<div class="w-1/3">
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger asChild let:builder>
+							<Button variant="outline" class="h-full w-full" builders={[builder]}>Pages</Button>
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content>
+							<DropdownMenu.Label>Page Select</DropdownMenu.Label>
+							<DropdownMenu.Separator />
+							<DropdownMenu.RadioGroup bind:value={position}>
+								{#each articletitle as title, i}
+									<DropdownMenu.RadioItem value={String(i)}>{title}</DropdownMenu.RadioItem>
+								{/each}
+							</DropdownMenu.RadioGroup>			  
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
+				</div>
+				<div class="flex w-1/3 h-full"><Button variant="outline" class="mr-auto" size="icon" on:click={pageRight}>&gt;</Button></div>
+			</div>
+			<div class="flex w-full overflow-y-auto">
+				<div class = "p-4 w-full">
+					<h2 class = "scroll-m-20 border-b pb-2 text-2xl font-semibold tracking-tight transition-colors first:mt-0 text-center">{articletitle[Number(position)]}</h2>
+					<span class = "inline-block h-4 w-4"></span>
+					<p>{pagetext[Number(position)]}</p>
+				</div>
 			</div>
 		</div>
 	</Resizable.Pane>
