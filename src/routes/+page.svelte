@@ -4,6 +4,8 @@
 	import {
 		createTFModel,
 		loadUploadedCsv,
+		type SampledOutputs,
+		updateSampledOutputs,
 		type ActivationIdentifier,
 		type DenseLayer,
 		type Layer,
@@ -29,7 +31,7 @@
 	import FileInput from '$lib/components/ui/file-input/file-input.svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { buttonVariants } from '$lib/components/ui/button';
-	import * as Resizable from "$lib/components/ui/resizable";
+	import * as Resizable from '$lib/components/ui/resizable';
 	import * as d3 from 'd3';
 	import * as Table from '$lib/components/ui/table';
 	import * as RadioGroup from '$lib/components/ui/radio-group';
@@ -47,7 +49,7 @@
 			{
 				type: 'dense',
 				units: 10,
-				inputShape: [1]
+				inputShape: [2]
 			} as DenseLayer,
 			{
 				type: 'dense',
@@ -141,9 +143,10 @@
 			await tfModel.fitDataset(data, {
 				epochs: Number(epochs),
 				callbacks: {
-					onEpochEnd(epoch, logs) {
+					async onEpochEnd(epoch, logs) {
 						currentEpoch = epoch + 1;
 						if (currentEpoch % 5 === 0) tfModel = tfModel;
+						$sampledOutputs = await updateSampledOutputs(tfModel, 10, [-10, 10]);
 					}
 				}
 			});
@@ -186,7 +189,7 @@
 
 	let tfModel: tf.Sequential;
 
-	const updateTFModel = (model: SequentialModel) => {
+	const updateTFModel = async (model: SequentialModel) => {
 		if (!tfModel) {
 			tfModel = createTFModel(model);
 		} else {
@@ -194,13 +197,15 @@
 			const newModel = createTFModel(model);
 			tfModel = newModel;
 		}
+		if (browser) $sampledOutputs = await updateSampledOutputs(tfModel, 10, [-10, 10]);
 	};
 
 	$: {
 		updateTFModel($model);
 	}
 
-	$: predictedVal = tfModel?.predict(tf.tensor2d([Number(testPred)], [1, 1]));
+	// $: predictedVal = tfModel?.predict(tf.tensor2d([Number(testPred)], [1, 1]));
+	$: predictedVal = 0;
 
 	let testPred = 2;
 
@@ -233,20 +238,21 @@
 		})();
 	}
 
+	let hasLabel = false;
+
 	$: {
-		(async (csvColumnConfigs: { [key: string]: { isLabel: 'true' | 'false' } }) => {
-			if (!datasetUploadFiles || !datasetUploadFiles.length) return;
+		if (datasetUploadFiles && datasetUploadFiles.length) {
 			const config: {
 				[key: string]: tf.data.ColumnConfig;
 			} = {};
-			let hasLabel = false;
-			for (const column in csvColumnConfigs) {
-				const isLabel = csvColumnConfigs[column].isLabel === 'true';
+			hasLabel = false;
+			for (const column in $csvColumnConfigs) {
+				const isLabel = $csvColumnConfigs[column].isLabel === 'true';
 				config[column] = { isLabel };
 				if (isLabel) hasLabel = true;
 			}
-			if (hasLabel) dataset = await loadUploadedCsv(datasetUploadFiles[0], config);
-		})($csvColumnConfigs);
+			if (hasLabel) loadUploadedCsv(datasetUploadFiles[0], config).then((d) => (dataset = d));
+		}
 	}
 
 	function pageLeft() {
@@ -265,6 +271,8 @@
 		position = String(pageNum);
 	}
 	let position = "0";
+	let sampledOutputs = writable<SampledOutputs>({});
+	setContext('sampledOutputs', sampledOutputs);
 </script>
 
 <svelte:head>
@@ -272,10 +280,7 @@
 	<meta name="description" content="Design and visualize neural networks in your browser." />
 </svelte:head>
 <!--<div class="container flex h-full max-w-full flex-row gap-4">-->
-<Resizable.PaneGroup
-	direction="horizontal"
-	class="container flex h-full max-w-full flex-row gap-4"
-  	>
+<Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row gap-4">
 	<Resizable.Pane defaultSize={25}>
 		<div class="container flex h-full w-full flex-col px-0 overflow-y-hidden py-4">
 			<div class="container flex-row flex w-full h-1/8 items-end">
@@ -427,26 +432,153 @@
 					<Minus class="h-4 w-4"></Minus>
 				</Button>
 				<span class="ml-2 leading-none text-muted-foreground">{$model.layers.length} Layers</span>
+		<div class="flex h-full bg-background"></div>
+	</Resizable.Pane>
+	<Resizable.Handle withHandle />
+	<Resizable.Pane defaultSize={75}>
+		<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
+			<!-- Controls (header) -->
+			<div class="flex flex-row flex-wrap items-end gap-4">
+				<div class="flex flex-col gap-2">
+					<Label class="flex gap-2 text-xs">
+						<Activity class="h-4 w-4"></Activity>
+						Activation Function
+					</Label>
+					<Select.Root bind:selected={selectedActivation}>
+						<Select.Trigger class="w-[180px]">
+							<Select.Value></Select.Value>
+						</Select.Trigger>
+						<Select.Content>
+							<Select.Item value="relu">ReLU</Select.Item>
+							<Select.Item value="sigmoid">Sigmoid</Select.Item>
+						</Select.Content>
+					</Select.Root>
+				</div>
+				<div class="flex flex-col gap-2">
+					<Label class="flex gap-2 text-xs">
+						<RefreshCw class="h-4 w-4"></RefreshCw>
+						Epochs
+					</Label>
+					<Input type="number" bind:value={epochs} placeholder="1000" min={1} class="w-24" />
+				</div>
+				<div class="flex flex-col gap-2">
+					<Label class="flex gap-2 text-xs">Input</Label>
+					<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
+				</div>
+				<div class="flex flex-col gap-2">
+					<Label class="flex gap-2 text-xs">Predicted Value</Label>
+					<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
+				</div>
+				<div class="flex flex-col gap-2">
+					<div></div>
+					<Dialog.Root>
+						<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
+							>Upload Dataset</Dialog.Trigger
+						>
+						<Dialog.Content>
+							<Dialog.Header>
+								<Dialog.Title>Upload CSV Dataset</Dialog.Title>
+								<Dialog.Description class="flex flex-col gap-2">
+									<p>Upload a dataset from a .csv file.</p>
+									<div class="flex flex-col">
+										<FileInput id="dataset-upload" class="w-32" bind:files={datasetUploadFiles} />
+									</div>
+									{#if Object.entries($csvColumnConfigs).length > 0}
+										<Table.Root>
+											<Table.Header>
+												<Table.Row>
+													<Table.Head class="flex-grow">Column Name</Table.Head>
+												</Table.Row>
+											</Table.Header>
+											{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
+												<Table.Row>
+													<Table.Cell class="font-medium">{column}</Table.Cell>
+													<RadioGroup.Root bind:value={$csvColumnConfigs[column].isLabel} asChild>
+														<Table.Cell>
+															<div class="flex items-center space-x-2">
+																<RadioGroup.Item value="false" id={`feature-${column}`}
+																></RadioGroup.Item>
+																<Label for={`feature-${column}`}>Input</Label>
+															</div>
+														</Table.Cell>
+														<Table.Cell>
+															<div class="flex items-center space-x-2">
+																<RadioGroup.Item value="true" id={`label-${column}`}
+																></RadioGroup.Item>
+																<Label for={`label-${column}`}>Output</Label>
+															</div>
+														</Table.Cell>
+													</RadioGroup.Root>
+												</Table.Row>
+											{/each}
+										</Table.Root>
+										{#if !hasLabel}
+											<p class="font-medium text-foreground">
+												Choose at least one column to use as output.
+											</p>
+										{/if}
+									{/if}
+								</Dialog.Description>
+							</Dialog.Header>
+						</Dialog.Content>
+					</Dialog.Root>
+				</div>
+				<div class="flex flex-col gap-2"></div>
+				<div class="flex-1"></div>
+				<div class="flex flex-col gap-2">
+					<Label class="flex gap-2 text-xs">Hardware</Label>
+					<Tooltip.Root>
+						<Tooltip.Trigger asChild>
+							<div class="flex h-9 flex-row flex-nowrap items-center space-x-2">
+								<Label for="hardware-backend">CPU</Label>
+								<Switch id="hardware-backend" bind:checked={useGPU} />
+								<Label for="hardware-backend">GPU</Label>
+							</div>
+						</Tooltip.Trigger>
+						<Tooltip.Content class="max-w-52">
+							GPU is recommended for large models but slower for small models.
+						</Tooltip.Content>
+					</Tooltip.Root>
+				</div>
+				<div class="flex flex-col gap-2">
+					<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
+					<Button on:click={trainModel}>
+						<Brain class="mr-2 h-4 w-4"></Brain>
+						Train
+					</Button>
+				</div>
 			</div>
+			<div
+				class="flex h-full w-full flex-col gap-6 overflow-x-scroll rounded-lg border p-6 text-sm"
+			>
+				<div class="ml-auto mr-auto flex flex-row items-center">
+					<Button variant="ghost" size="icon" class="h-8 w-8" on:click={addLayer}>
+						<Plus class="h-4 w-4"></Plus>
+					</Button>
+					<Button variant="ghost" size="icon" class="h-8 w-8" on:click={removeLayer}>
+						<Minus class="h-4 w-4"></Minus>
+					</Button>
+					<span class="ml-2 leading-none text-muted-foreground">{$model.layers.length} Layers</span>
+				</div>
 
-			<div class="flex flex-grow flex-row items-start mr-auto ml-auto">
-				{#each $model.layers as layer, i (i)}
-					<svelte:component
-						this={layerComponents[layer.type]}
-						{layer}
-						index={i}
-						tfLayer={tfModel.layers[i]}
-					></svelte:component>
-					{#if i < $model.layers.length - 1}
-						{@const leftLayerHeights = getNodeYPositions(layer)}
-						{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
-						{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
-						<ConnectionsVis {leftLayerHeights} {rightLayerHeights} {canvasWidth} {weights} />
-					{/if}
-				{/each}
+				<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
+					{#each $model.layers as layer, i (i)}
+						<svelte:component
+							this={layerComponents[layer.type]}
+							{layer}
+							index={i}
+							tfLayer={tfModel.layers[i]}
+						></svelte:component>
+						{#if i < $model.layers.length - 1}
+							{@const leftLayerHeights = getNodeYPositions(layer)}
+							{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
+							{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
+							<ConnectionsVis {leftLayerHeights} {rightLayerHeights} {canvasWidth} {weights} />
+						{/if}
+					{/each}
+				</div>
 			</div>
 		</div>
-	</div>
-</Resizable.Pane>
-<!--</div>-->
+	</Resizable.Pane>
+	<!--</div>-->
 </Resizable.PaneGroup>
