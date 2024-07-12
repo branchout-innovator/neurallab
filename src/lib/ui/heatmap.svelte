@@ -1,4 +1,4 @@
-<script lang="ts">
+<!--<script lang="ts">
     import type { SampledOutputs } from '$lib/structures';
     import { getContext, onMount } from 'svelte';
     import type { Writable } from 'svelte/store';
@@ -102,4 +102,4 @@
     .heatmap-container {
         display: inline-block;
     }
-</style>
+</style>-->
