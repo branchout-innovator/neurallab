@@ -6,8 +6,8 @@
 
     export let nodeIndex: number;
     export let layerName: string;
-    export let width = 400;
-    export let height = 400;
+    export let width = 700;
+    export let height = 700;
     export let xDomain: [number, number] = [-6, 6];
     export let yDomain: [number, number] = [-6, 6];
 
@@ -17,7 +17,7 @@
     let svg: SVGSVGElement;
     let ctx: CanvasRenderingContext2D;
 
-    const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+    const margin = { top: 40, right: 40, bottom: 60, left: 80 };
     const chartWidth = width - margin.left - margin.right;
     const chartHeight = height - margin.top - margin.bottom;
 
