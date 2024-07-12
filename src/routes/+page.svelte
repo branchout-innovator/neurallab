@@ -35,6 +35,7 @@
 	import * as d3 from 'd3';
 	import * as Table from '$lib/components/ui/table';
 	import * as RadioGroup from '$lib/components/ui/radio-group';
+	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
@@ -254,6 +255,22 @@
 		}
 	}
 
+	function pageLeft() {
+		changePage(-1);
+	}
+	function pageRight() {
+		changePage(1);
+	}
+	let articletitle = ["sdjfnd", "sjokccjdj", "skgkoifjnm", "mkdjvijdmcvjijfmkijnjrjdnigjnskdnj fhdjsnd"];
+	let pagetext = ["asbfhsbd", "sjhcbfujesndnjdjs", "ijgnfjvnfdnkm", "kbjfncmfcjfdncjfndcvfdmckvnjfdmkvjnfkmxv fdmmc"];
+	function changePage(d: number) {
+		let pageNum = Number(position);
+		if ((pageNum != 0 || d != -1)&&(pageNum!=pagetext.length-1 || d != 1)) {
+			pageNum += d;
+		}
+		position = String(pageNum);
+	}
+	let position = "0";
 	let sampledOutputs = writable<SampledOutputs>({});
 	setContext('sampledOutputs', sampledOutputs);
 </script>
@@ -265,6 +282,156 @@
 <!--<div class="container flex h-full max-w-full flex-row gap-4">-->
 <Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row gap-4">
 	<Resizable.Pane defaultSize={25}>
+		<div class="container flex h-full w-full flex-col px-0 overflow-y-hidden py-4">
+			<div class="container flex-row flex w-full h-1/8 items-end">
+				<div class="flex h-full w-1/3"><Button variant="outline" class="ml-auto" size="icon" on:click={pageLeft}>&lt;</Button></div>
+				<div class="w-1/3">
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger asChild let:builder>
+							<Button variant="outline" class="h-full w-full" builders={[builder]}>Pages</Button>
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content>
+							<DropdownMenu.Label>Page Select</DropdownMenu.Label>
+							<DropdownMenu.Separator />
+							<DropdownMenu.RadioGroup bind:value={position}>
+								{#each articletitle as title, i}
+									<DropdownMenu.RadioItem value={String(i)}>{title}</DropdownMenu.RadioItem>
+								{/each}
+							</DropdownMenu.RadioGroup>			  
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
+				</div>
+				<div class="flex w-1/3 h-full"><Button variant="outline" class="mr-auto" size="icon" on:click={pageRight}>&gt;</Button></div>
+			</div>
+			<div class="flex w-full overflow-y-auto">
+				<div class = "p-4 w-full">
+					<h2 class = "scroll-m-20 border-b pb-2 text-2xl font-semibold tracking-tight transition-colors first:mt-0 text-center">{articletitle[Number(position)]}</h2>
+					<span class = "inline-block h-4 w-4"></span>
+					<p>{pagetext[Number(position)]}</p>
+				</div>
+			</div>
+		</div>
+	</Resizable.Pane>
+	<Resizable.Handle withHandle />
+	<Resizable.Pane defaultSize={75} class = "min-w-3/4">
+	<div class="flex h-full max-w-full flex-grow flex-col gap-4 py-4 overflow-x-hidden">
+		<!-- Controls (header) -->
+		<div class="flex flex-row flex-wrap items-end gap-4">
+			<div class="flex flex-col gap-2">
+				<Label class="flex gap-2 text-xs">
+					<Activity class="h-4 w-4"></Activity>
+					Activation Function
+				</Label>
+				<Select.Root bind:selected={selectedActivation}>
+					<Select.Trigger class="w-[180px]">
+						<Select.Value></Select.Value>
+					</Select.Trigger>
+					<Select.Content>
+						<Select.Item value="relu">ReLU</Select.Item>
+						<Select.Item value="sigmoid">Sigmoid</Select.Item>
+					</Select.Content>
+				</Select.Root>
+			</div>
+			<div class="flex flex-col gap-2">
+				<Label class="flex gap-2 text-xs">
+					<RefreshCw class="h-4 w-4"></RefreshCw>
+					Epochs
+				</Label>
+				<Input type="number" bind:value={epochs} placeholder="1000" min={1} class="w-24" />
+			</div>
+			<div class="flex flex-col gap-2">
+				<Label class="flex gap-2 text-xs">Input</Label>
+				<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
+			</div>
+			<div class="flex flex-col gap-2">
+				<Label class="flex gap-2 text-xs">Predicted Value</Label>
+				<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
+			</div>
+			<div class="flex flex-col gap-2">
+				<div></div>
+				<Dialog.Root>
+					<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
+						>Upload Dataset</Dialog.Trigger
+					>
+					<Dialog.Content>
+						<Dialog.Header>
+							<Dialog.Title>Upload CSV Dataset</Dialog.Title>
+							<Dialog.Description class="flex flex-col gap-2">
+								<p>Upload a dataset from a .csv file.</p>
+								<div class="flex flex-col">
+									<FileInput id="dataset-upload" class="w-32" bind:files={datasetUploadFiles} />
+								</div>
+								{#if Object.entries($csvColumnConfigs).length > 0}
+									<Table.Root>
+										<Table.Header>
+											<Table.Row>
+												<Table.Head class="flex-grow">Column Name</Table.Head>
+											</Table.Row>
+										</Table.Header>
+										{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
+											<Table.Row>
+												<Table.Cell class="font-medium">{column}</Table.Cell>
+												<RadioGroup.Root bind:value={$csvColumnConfigs[column].isLabel} asChild>
+													<Table.Cell>
+														<div class="flex items-center space-x-2">
+															<RadioGroup.Item value="false" id={`feature-${column}`}
+															></RadioGroup.Item>
+															<Label for={`feature-${column}`}>Input</Label>
+														</div>
+													</Table.Cell>
+													<Table.Cell>
+														<div class="flex items-center space-x-2">
+															<RadioGroup.Item value="true" id={`label-${column}`}
+															></RadioGroup.Item>
+															<Label for={`label-${column}`}>Output</Label>
+														</div>
+													</Table.Cell>
+												</RadioGroup.Root>
+											</Table.Row>
+										{/each}
+									</Table.Root>
+								{/if}
+							</Dialog.Description>
+						</Dialog.Header>
+					</Dialog.Content>
+				</Dialog.Root>
+			</div>
+			<div class="flex flex-col gap-2"></div>
+			<div class="flex-1"></div>
+			<div class="flex flex-col gap-2">
+				<Label class="flex gap-2 text-xs">Hardware</Label>
+				<Tooltip.Root>
+					<Tooltip.Trigger asChild>
+						<div class="flex h-9 flex-row flex-nowrap items-center space-x-2">
+							<Label for="hardware-backend">CPU</Label>
+							<Switch id="hardware-backend" bind:checked={useGPU} />
+							<Label for="hardware-backend">GPU</Label>
+						</div>
+					</Tooltip.Trigger>
+					<Tooltip.Content class="max-w-52">
+						GPU is recommended for large models but slower for small models.
+					</Tooltip.Content>
+				</Tooltip.Root>
+			</div>
+			<div class="flex flex-col gap-2">
+				<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
+				<Button on:click={trainModel}>
+					<Brain class="mr-2 h-4 w-4"></Brain>
+					Train
+				</Button>
+			</div>
+		</div>
+		<div
+			class="flex h-full w-full flex-col gap-6 rounded-lg border p-6 text-sm overflow-x-scroll"
+		>
+			<div class="flex flex-row items-center mr-auto ml-auto">
+				<Button variant="ghost" size="icon" class="h-8 w-8" on:click={addLayer}>
+					<Plus class="h-4 w-4"></Plus>
+				</Button>
+				<Button variant="ghost" size="icon" class="h-8 w-8" on:click={removeLayer}>
+					<Minus class="h-4 w-4"></Minus>
+				</Button>
+				<span class="ml-2 leading-none text-muted-foreground">{$model.layers.length} Layers</span>
 		<div class="flex h-full bg-background"></div>
 	</Resizable.Pane>
 	<Resizable.Handle withHandle />
