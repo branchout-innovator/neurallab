@@ -197,7 +197,11 @@
 			const newModel = createTFModel(model);
 			tfModel = newModel;
 		}
-		if (browser) $sampledOutputs = await updateSampledOutputs(tfModel, 10, [-10, 10]);
+		if (browser) {
+			console.log
+			$sampledOutputs = await updateSampledOutputs(tfModel, 10, [-10, 10]);
+		}
+
 	};
 
 	$: {

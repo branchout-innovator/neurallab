@@ -81,7 +81,7 @@
     }
 
     function setupAxes() {
-        // ... (setupAxes function remains the same) ...
+       
     }
 </script>
 
