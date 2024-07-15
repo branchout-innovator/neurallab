@@ -82,7 +82,6 @@
 	</Button>
 	{#each { length: layer.units } as _, nodeIndex (nodeIndex)}
 		<div class="relative flex h-6 w-6 items-center justify-center">
-			<div class="h-5 w-5 rounded-full bg-muted"></div>
 			<Heatmap {nodeIndex} layerName={tfLayer.name} />
 
 			<Tooltip.Root>

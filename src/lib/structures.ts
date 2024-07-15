@@ -184,17 +184,8 @@ export async function updateSampledOutputs(
 	model: tf.LayersModel,
 	DENSITY: number,
 	xDomain: [number, number]
-	// INPUTS: Inputs
 ): Promise<SampledOutputs> {
 	const outputs: SampledOutputs = {};
-
-	model.layers.forEach((layer) => {
-		outputs[layer.name] = Array(DENSITY).fill(Array(DENSITY).fill(0));
-	});
-	// // Go through all predefined inputs.
-	// for (let inputName in INPUTS) {
-	// 	outputs[inputName] = Array(DENSITY).fill(Array(DENSITY).fill(0));
-	// }
 
 	const xScale = tf.linspace(xDomain[0], xDomain[1], DENSITY);
 	const yScale = tf.linspace(xDomain[1], xDomain[0], DENSITY);
@@ -205,17 +196,15 @@ export async function updateSampledOutputs(
 	// Forward pass through each layer, storing intermediate outputs
 	for (const layer of model.layers) {
 		currentInput = layer.apply(currentInput) as tf.Tensor;
-		const reshapedOutput = currentInput.reshape([DENSITY, DENSITY, -1]);
-		// list of nodes that each have two dimensional outputs (from the grid of inputs)
+
+		// Reshape the output to [numNodes, DENSITY, DENSITY]
+		const reshapedOutput = currentInput
+			.reshape([DENSITY * DENSITY, -1])
+			.transpose()
+			.reshape([-1, DENSITY, DENSITY]);
+
 		outputs[layer.name] = reshapedOutput.arraySync() as number[][][];
 	}
-
-	// // Go through all predefined inputs.
-	// for (let inputName in INPUTS) {
-	// 	const inputTensor = tf.tensor(INPUTS[inputName]);
-	// 	const repeatedInput = inputTensor.broadcastTo([DENSITY * DENSITY, inputTensor.shape[0]]);
-	// 	outputs[inputName] = repeatedInput.reshape([DENSITY, DENSITY, -1]).arraySync() as number[][][];
-	// }
 
 	return outputs;
 }

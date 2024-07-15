@@ -35,7 +35,7 @@
 	import * as d3 from 'd3';
 	import * as Table from '$lib/components/ui/table';
 	import * as RadioGroup from '$lib/components/ui/radio-group';
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import SvelteMarkdown from 'svelte-markdown';
 	import ResizableHandle from '$lib/components/ui/resizable/resizable-handle.svelte';
 
@@ -148,7 +148,7 @@
 					async onEpochEnd(epoch, logs) {
 						currentEpoch = epoch + 1;
 						if (currentEpoch % 5 === 0) tfModel = tfModel;
-						$sampledOutputs = await updateSampledOutputs(tfModel, 10, [-10, 10]);
+						$sampledOutputs = await updateSampledOutputs(tfModel, 15, [-10, 10]);
 					}
 				}
 			});
@@ -200,10 +200,9 @@
 			tfModel = newModel;
 		}
 		if (browser) {
-			console.log
-			$sampledOutputs = await updateSampledOutputs(tfModel, 10, [-10, 10]);
+			console.log;
+			$sampledOutputs = await updateSampledOutputs(tfModel, 15, [-10, 10]);
 		}
-
 	};
 
 	$: {
@@ -267,16 +266,26 @@
 	function pageRight() {
 		changePage(1);
 	}
-	let articletitle = ["sdjfnd", "sjokccjdj", "skgkoifjnm", "mkdjvijdmcvjijfmkijnjrjdnigjnskdnj fhdjsnd"];
-	let pagetext = ["asbfhsbd", "sjhcbfujesndnjdjs", "ijgnfjvnfdnkm", "kbjfncmfcjfdncjfndcvfdmckvnjfdmkvjnfkmxv fdmmc"];
+	let articletitle = [
+		'sdjfnd',
+		'sjokccjdj',
+		'skgkoifjnm',
+		'mkdjvijdmcvjijfmkijnjrjdnigjnskdnj fhdjsnd'
+	];
+	let pagetext = [
+		'asbfhsbd',
+		'sjhcbfujesndnjdjs',
+		'ijgnfjvnfdnkm',
+		'kbjfncmfcjfdncjfndcvfdmckvnjfdmkvjnfkmxv fdmmc'
+	];
 	function changePage(d: number) {
 		let pageNum = Number(position);
-		if ((pageNum != 0 || d != -1)&&(pageNum!=pagetext.length-1 || d != 1)) {
+		if ((pageNum != 0 || d != -1) && (pageNum != pagetext.length - 1 || d != 1)) {
 			pageNum += d;
 		}
 		position = String(pageNum);
 	}
-	let position = "0";
+	let position = '0';
 	let sampledOutputs = writable<SampledOutputs>({});
 	setContext('sampledOutputs', sampledOutputs);
 	const source = `
@@ -285,7 +294,7 @@
 
 Activation functions are mathematical functions applied to the output of a neuron (like a filter). They introduce non-linearity (where input changes are not proportional to output changes) to the model, which allows it to learn and predict patterns more accurately. 
 <br>
-![image0](/path/image0.png)
+![image0](/picture0.png)
 <br>
 ## When to use Different Activation Functions:
 #### **Output Layers:**
@@ -327,7 +336,7 @@ In a computer's brain (like in robots or apps that learn), there are also tiny s
 - Imagine a balance scale: it can tip to one side for good things and to the other for bad things, showing how strong each is.
 Why Are They Important?
 Activation functions help the computer's brain understand and decide things better by handling information in smart ways. Just like how you use different switches or decisions based on what you're doing, computers use these activation functions to learn and make choices more accurately.
-`
+`;
 </script>
 
 <svelte:head>
@@ -337,9 +346,11 @@ Activation functions help the computer's brain understand and decide things bett
 <!--<div class="container flex h-full max-w-full flex-row gap-4">-->
 <Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row gap-4">
 	<Resizable.Pane defaultSize={25}>
-		<div class="container flex h-full w-full flex-col px-0 overflow-y-hidden py-4">
-			<div class="container flex-row flex w-full h-1/8 items-end">
-				<div class="flex h-full w-1/3"><Button variant="outline" class="ml-auto" size="icon" on:click={pageLeft}>&lt;</Button></div>
+		<div class="container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
+			<div class="h-1/8 container flex w-full flex-row items-end">
+				<div class="flex h-full w-1/3">
+					<Button variant="outline" class="ml-auto" size="icon" on:click={pageLeft}>&lt;</Button>
+				</div>
 				<div class="w-1/3">
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger asChild let:builder>
@@ -352,16 +363,22 @@ Activation functions help the computer's brain understand and decide things bett
 								{#each articletitle as title, i}
 									<DropdownMenu.RadioItem value={String(i)}>{title}</DropdownMenu.RadioItem>
 								{/each}
-							</DropdownMenu.RadioGroup>			  
+							</DropdownMenu.RadioGroup>
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
 				</div>
-				<div class="flex w-1/3 h-full"><Button variant="outline" class="mr-auto" size="icon" on:click={pageRight}>&gt;</Button></div>
+				<div class="flex h-full w-1/3">
+					<Button variant="outline" class="mr-auto" size="icon" on:click={pageRight}>&gt;</Button>
+				</div>
 			</div>
 			<div class="flex w-full overflow-y-auto">
-				<div class = "p-4 w-full">
-					<h2 class = "scroll-m-20 border-b pb-2 text-2xl font-semibold tracking-tight transition-colors first:mt-0 text-center">{articletitle[Number(position)]}</h2>
-					<span class = "inline-block h-4 w-4"></span>
+				<div class="w-full p-4">
+					<h2
+						class="scroll-m-20 border-b pb-2 text-center text-2xl font-semibold tracking-tight transition-colors first:mt-0"
+					>
+						{articletitle[Number(position)]}
+					</h2>
+					<span class="inline-block h-4 w-4"></span>
 					<p>{pagetext[Number(position)]}</p>
 					<SvelteMarkdown {source} />
 				</div>
