@@ -3,13 +3,11 @@
 	import { getContext, onMount } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import * as d3 from 'd3';
+	import type { HTMLAttributes } from 'svelte/elements';
+	type $$Props = HTMLAttributes<HTMLCanvasElement> & { nodeIndex: number; layerName: string };
 
 	export let nodeIndex: number;
 	export let layerName: string;
-	export let width = 700;
-	export let height = 700;
-	export let xDomain: [number, number] = [-6, 6];
-	export let yDomain: [number, number] = [-6, 6];
 
 	const sampledOutputs: Writable<SampledOutputs> = getContext('sampledOutputs');
 
@@ -127,10 +125,9 @@
 	}
 </script>
 
-<div>
-	<canvas bind:this={canvas}></canvas>
-	<!-- <svg bind:this={svg} class="pointer-events-none"></svg> -->
-</div>
+<canvas bind:this={canvas} {...$$restProps}></canvas>
+
+<!-- <svg bind:this={svg} class="pointer-events-none"></svg> -->
 
 <style>
 	.heatmap-container {

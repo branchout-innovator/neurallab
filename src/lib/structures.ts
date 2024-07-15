@@ -183,12 +183,13 @@ interface Inputs {
 export async function updateSampledOutputs(
 	model: tf.LayersModel,
 	DENSITY: number,
-	xDomain: [number, number]
+	xDomain: [number, number],
+	yDomain: [number, number]
 ): Promise<SampledOutputs> {
 	const outputs: SampledOutputs = {};
 
 	const xScale = tf.linspace(xDomain[0], xDomain[1], DENSITY);
-	const yScale = tf.linspace(xDomain[1], xDomain[0], DENSITY);
+	const yScale = tf.linspace(yDomain[1], yDomain[0], DENSITY);
 
 	const [xx, yy] = tf.meshgrid(xScale, yScale);
 	let currentInput: tf.Tensor = tf.stack([xx.flatten(), yy.flatten()], 1);

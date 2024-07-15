@@ -39,6 +39,10 @@
 	import SvelteMarkdown from 'svelte-markdown';
 	import ResizableHandle from '$lib/components/ui/resizable/resizable-handle.svelte';
 
+	const SAMPLE_DENSITY = 20;
+	let sample_x_domain: [number, number] = [-3, 3];
+	let sample_y_domain: [number, number] = [-3, 3];
+
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
 	};
@@ -149,7 +153,12 @@
 						currentEpoch = epoch + 1;
 						if (currentEpoch % 5 === 0) tfModel = tfModel;
 						try {
-							$sampledOutputs = await updateSampledOutputs(tfModel, 15, [-10, 10]);
+							$sampledOutputs = await updateSampledOutputs(
+								tfModel,
+								SAMPLE_DENSITY,
+								sample_x_domain,
+								sample_y_domain
+							);
 						} catch (e) {
 							console.error('Error while sampling outputs: ', e);
 						}
@@ -206,7 +215,12 @@
 		if (browser) {
 			console.log;
 			try {
-				$sampledOutputs = await updateSampledOutputs(tfModel, 15, [-10, 10]);
+				$sampledOutputs = await updateSampledOutputs(
+					tfModel,
+					SAMPLE_DENSITY,
+					sample_x_domain,
+					sample_y_domain
+				);
 			} catch (e) {
 				console.error('Error when sampling outputs: ', e);
 			}

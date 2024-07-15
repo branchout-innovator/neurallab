@@ -4,6 +4,7 @@
 	import { browser } from '$app/environment';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+	import { remToPx } from '$lib/utils';
 
 	export let leftLayerHeights: number[];
 	export let rightLayerHeights: number[];
@@ -40,6 +41,7 @@
 		const weightsArray = (await weights.array()) as number[][];
 		if (typeof weightsArray === 'number') return;
 		const maxWeight = getMaxAbsWeight(weightsArray);
+		const endHeight = remToPx(1.1);
 
 		paths = [];
 		// if (leftLayerHeights.length * rightLayerHeights.length > 500) return;
@@ -49,10 +51,12 @@
 				const weight = weightsArray[i][j];
 				const normalizedWeight = weight / maxWeight;
 
+				const rightConnectionSpacing = endHeight / leftLayerHeights.length;
 				const startX = 0;
 				const startY = leftLayerHeights[i];
 				const endX = canvasWidth;
-				const endY = rightLayerHeights[j];
+				const endY =
+					rightLayerHeights[j] + (i - (leftLayerHeights.length - 1) / 2) * rightConnectionSpacing;
 
 				const controlPoint1X = startX + canvasWidth / 3;
 				const controlPoint1Y = startY;
