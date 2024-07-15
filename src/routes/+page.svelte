@@ -354,7 +354,6 @@ ReLU(x) = max(0,x)
 Similar to sigmoid but with a range of [-1, 1]. Can be more effective at training the network because of a larger gradient: 
 tanh(x) = e<sup>x</sup>-e<sup>-x<sup>/e<sup>x</sup>+e<sup>-x</sup>
 <br>
-![image1](/path/image1.png)
 <br>
 # Chatgpt response: 
 Imagine your brain as a big, super-smart machine with lots of tiny switches inside. These switches help you decide what to do based on the information you get, like deciding whether to jump when you see a puddle or to say "hello" when you see a friend.
