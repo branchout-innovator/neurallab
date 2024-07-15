@@ -31,7 +31,6 @@
 			console.error('Canvas unsupported by browser');
 			throw new Error('Canvas unsupported by browser');
 		}
-		console.log('Canvas context:', ctx);
 
 		setupAxes();
 		if (nodeOutputs) {
@@ -51,7 +50,6 @@
 		}
 		canvas.width = chartWidth;
 		canvas.height = chartHeight;
-		console.log('drawing heatmap');
 
 		const numSamples = nodeOutputs.length;
 
@@ -77,7 +75,6 @@
 			}
 		}
 		ctx.putImageData(imageData, 0, 0);
-		console.log(`put image data with dimensions ${numSamples}x${numSamples}`);
 	}
 
 	function setupAxes() {

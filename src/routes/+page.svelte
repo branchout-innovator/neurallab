@@ -148,7 +148,11 @@
 					async onEpochEnd(epoch, logs) {
 						currentEpoch = epoch + 1;
 						if (currentEpoch % 5 === 0) tfModel = tfModel;
-						$sampledOutputs = await updateSampledOutputs(tfModel, 15, [-10, 10]);
+						try {
+							$sampledOutputs = await updateSampledOutputs(tfModel, 15, [-10, 10]);
+						} catch (e) {
+							console.error('Error while sampling outputs: ', e);
+						}
 					}
 				}
 			});
@@ -201,8 +205,13 @@
 		}
 		if (browser) {
 			console.log;
-			$sampledOutputs = await updateSampledOutputs(tfModel, 15, [-10, 10]);
+			try {
+				$sampledOutputs = await updateSampledOutputs(tfModel, 15, [-10, 10]);
+			} catch (e) {
+				console.error('Error when sampling outputs: ', e);
+			}
 		}
+		console.log(tfModel);
 	};
 
 	$: {
@@ -251,12 +260,24 @@
 				[key: string]: tf.data.ColumnConfig;
 			} = {};
 			hasLabel = false;
+			let featureCount = 0;
 			for (const column in $csvColumnConfigs) {
 				const isLabel = $csvColumnConfigs[column].isLabel === 'true';
 				config[column] = { isLabel };
-				if (isLabel) hasLabel = true;
+				if (isLabel) {
+					hasLabel = true;
+				} else {
+					featureCount++;
+				}
 			}
-			if (hasLabel) loadUploadedCsv(datasetUploadFiles[0], config).then((d) => (dataset = d));
+			if (hasLabel) {
+				loadUploadedCsv(datasetUploadFiles[0], config).then((d) => (dataset = d));
+			}
+			if ($model.layers[0]) {
+				$model.layers[0].inputShape = [featureCount];
+				console.log('features: ', featureCount);
+				updateTFModel($model);
+			}
 		}
 	}
 

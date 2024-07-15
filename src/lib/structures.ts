@@ -20,13 +20,13 @@ export type ActivationIdentifier =
 
 export interface Layer {
 	type: string;
+	inputShape?: number[];
 }
 
 export type DenseLayer = Layer & {
 	type: 'dense';
 	/** How many neurons there will be in this layer */
 	units: number;
-	inputShape?: number[];
 	activation?: ActivationIdentifier;
 };
 
