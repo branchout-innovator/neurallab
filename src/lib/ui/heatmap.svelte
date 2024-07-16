@@ -15,7 +15,7 @@
 	export let layerName: string;
 	export let customDensity: $$Props['customDensity'] = undefined;
 
-	const sampledOutputs: Writable<SampledOutputs> = getContext('sampledOutputs');
+	const sampledOutputs: Writable<SampledOutputs<number[][]>> = getContext('sampledOutputs');
 	const getTfModel = getContext('getTfModel') as () => tf.Sequential;
 	let tfModel = getTfModel();
 
@@ -145,11 +145,3 @@
 </script>
 
 <canvas bind:this={canvas} {...$$restProps}></canvas>
-
-<!-- <svg bind:this={svg} class="pointer-events-none"></svg> -->
-
-<style>
-	.heatmap-container {
-		display: inline-block;
-	}
-</style>
