@@ -9,6 +9,9 @@
 	import * as tf from '@tensorflow/tfjs';
 	import { browser } from '$app/environment';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+	import Heatmap from './heatmap.svelte';
+	import * as HoverCard from '$lib/components/ui/hover-card';
+	import EnlargedHeatmap from './EnlargedHeatmap.svelte';
 
 	export let layer: DenseLayer;
 	export let index: number;
@@ -81,7 +84,14 @@
 	</Button>
 	{#each { length: layer.units } as _, nodeIndex (nodeIndex)}
 		<div class="relative flex h-6 w-6 items-center justify-center">
-			<div class="h-5 w-5 rounded-full bg-muted"></div>
+			<HoverCard.Root>
+				<HoverCard.Trigger>
+					<Heatmap {nodeIndex} layerName={tfLayer.name} class="rounded-[0.15rem]" />
+				</HoverCard.Trigger>
+				<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
+					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} />
+				</HoverCard.Content>
+			</HoverCard.Root>
 
 			<Tooltip.Root>
 				<Tooltip.Trigger
