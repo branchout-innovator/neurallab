@@ -88,7 +88,7 @@
 				<HoverCard.Trigger>
 					<Heatmap {nodeIndex} layerName={tfLayer.name} class="rounded-[0.15rem]" />
 				</HoverCard.Trigger>
-				<HoverCard.Content>
+				<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
 					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} />
 				</HoverCard.Content>
 			</HoverCard.Root>

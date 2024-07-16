@@ -8,12 +8,12 @@
 	type $$Props = HTMLAttributes<HTMLCanvasElement> & {
 		nodeIndex: number;
 		layerName: string;
-		customDensity: number | undefined;
+		customDensity?: number;
 	};
 
 	export let nodeIndex: number;
 	export let layerName: string;
-	export let customDensity: number | undefined;
+	export let customDensity: $$Props['customDensity'] = undefined;
 
 	const sampledOutputs: Writable<SampledOutputs> = getContext('sampledOutputs');
 	const getTfModel = getContext('getTfModel') as () => tf.Sequential;
@@ -72,7 +72,6 @@
 
 		const numSamples = customDensity || nodeOutputs.length;
 
-		// Create color scale
 		const colorScale = d3
 			.scaleSequential(d3.interpolateRdBu)
 			.domain([
@@ -80,7 +79,6 @@
 				d3.max(nodeOutputs, (row) => d3.max(row)) || 1
 			]);
 
-		// Draw heatmap on canvas
 		const imageData = ctx.createImageData(numSamples, numSamples);
 		for (let y = 0; y < numSamples; y++) {
 			for (let x = 0; x < numSamples; x++) {
