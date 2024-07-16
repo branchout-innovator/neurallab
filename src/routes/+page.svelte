@@ -229,14 +229,12 @@
 			tfModel = newModel;
 		}
 		if (browser) {
-			console.log;
 			try {
 				await sampleOutputs();
 			} catch (e) {
 				console.error('Error when sampling outputs: ', e);
 			}
 		}
-		console.log(tfModel);
 	};
 
 	$: {
