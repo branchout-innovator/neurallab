@@ -1,15 +1,23 @@
 <script lang="ts">
-	import type { SampledOutputs } from '$lib/structures';
+	import { getSampledOutputForNode, type SampledOutputs } from '$lib/structures';
 	import { getContext, onMount } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import * as d3 from 'd3';
 	import type { HTMLAttributes } from 'svelte/elements';
-	type $$Props = HTMLAttributes<HTMLCanvasElement> & { nodeIndex: number; layerName: string };
+	import * as tf from '@tensorflow/tfjs';
+	type $$Props = HTMLAttributes<HTMLCanvasElement> & {
+		nodeIndex: number;
+		layerName: string;
+		customDensity: number | undefined;
+	};
 
 	export let nodeIndex: number;
 	export let layerName: string;
+	export let customDensity: number | undefined;
 
 	const sampledOutputs: Writable<SampledOutputs> = getContext('sampledOutputs');
+	const getTfModel = getContext('getTfModel') as () => tf.Sequential;
+	let tfModel = getTfModel();
 
 	let canvas: HTMLCanvasElement;
 	let svg: SVGSVGElement;
@@ -17,11 +25,24 @@
 
 	const margin = { top: 40, right: 40, bottom: 60, left: 80 };
 
-	$: nodeOutputs =
-		$sampledOutputs && $sampledOutputs[layerName] && $sampledOutputs[layerName][nodeIndex];
+	let nodeOutputs: number[][] | undefined;
+	$: {
+		(async () => {
+			nodeOutputs = customDensity
+				? await getSampledOutputForNode(
+						tfModel,
+						layerName,
+						nodeIndex,
+						customDensity,
+						[-3, 3],
+						[-3, 3]
+					)
+				: $sampledOutputs && $sampledOutputs[layerName] && $sampledOutputs[layerName][nodeIndex];
+		})();
+	}
 
-	$: chartWidth = nodeOutputs?.length;
-	$: chartHeight = nodeOutputs?.length;
+	$: chartWidth = customDensity || nodeOutputs?.length;
+	$: chartHeight = customDensity || nodeOutputs?.length;
 
 	onMount(() => {
 		if (ctx == null) ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
@@ -43,13 +64,13 @@
 	}
 
 	function updateHeatmap() {
-		if (!ctx || !nodeOutputs) {
+		if (!ctx || !nodeOutputs || !chartWidth || !chartHeight) {
 			return;
 		}
 		canvas.width = chartWidth;
 		canvas.height = chartHeight;
 
-		const numSamples = nodeOutputs.length;
+		const numSamples = customDensity || nodeOutputs.length;
 
 		// Create color scale
 		const colorScale = d3

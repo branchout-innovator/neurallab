@@ -133,6 +133,7 @@
 	let currentEpoch = 0;
 
 	const trainModel = async () => {
+		if (!tfModel) return;
 		// The model needs to be "big enough" to benefit from GPU acceleration
 		// So with the small models in the Tensorflow playground its actually faster to use CPU
 		// await tf.setBackend('webgl');
@@ -150,6 +151,7 @@
 				epochs: Number(epochs),
 				callbacks: {
 					async onEpochEnd(epoch, logs) {
+						if (!tfModel) return;
 						currentEpoch = epoch + 1;
 						if (currentEpoch % 5 === 0) tfModel = tfModel;
 						try {
@@ -202,7 +204,10 @@
 	}
 	let canvasWidth = 150;
 
-	let tfModel: tf.Sequential;
+	let tfModel: tf.Sequential | undefined = undefined;
+	setContext('getTfModel', () => {
+		return tfModel;
+	});
 
 	const updateTFModel = async (model: SequentialModel) => {
 		if (!tfModel) {
@@ -547,20 +552,22 @@ Activation functions help the computer's brain understand and decide things bett
 				</div>
 
 				<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
-					{#each $model.layers as layer, i (i)}
-						<svelte:component
-							this={layerComponents[layer.type]}
-							{layer}
-							index={i}
-							tfLayer={tfModel.layers[i]}
-						></svelte:component>
-						{#if i < $model.layers.length - 1}
-							{@const leftLayerHeights = getNodeYPositions(layer)}
-							{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
-							{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
-							<ConnectionsVis {leftLayerHeights} {rightLayerHeights} {canvasWidth} {weights} />
-						{/if}
-					{/each}
+					{#if tfModel}
+						{#each $model.layers as layer, i (i)}
+							<svelte:component
+								this={layerComponents[layer.type]}
+								{layer}
+								index={i}
+								tfLayer={tfModel.layers[i]}
+							></svelte:component>
+							{#if i < $model.layers.length - 1}
+								{@const leftLayerHeights = getNodeYPositions(layer)}
+								{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
+								{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
+								<ConnectionsVis {leftLayerHeights} {rightLayerHeights} {canvasWidth} {weights} />
+							{/if}
+						{/each}
+					{/if}
 				</div>
 			</div>
 		</div>

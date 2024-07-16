@@ -11,7 +11,7 @@
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import Heatmap from './heatmap.svelte';
 	import * as HoverCard from '$lib/components/ui/hover-card';
-	import EnlargedHeatmap from './EnlargedHeatmap.svelte'
+	import EnlargedHeatmap from './EnlargedHeatmap.svelte';
 
 	export let layer: DenseLayer;
 	export let index: number;
@@ -86,7 +86,7 @@
 		<div class="relative flex h-6 w-6 items-center justify-center">
 			<HoverCard.Root>
 				<HoverCard.Trigger>
-					<Heatmap {nodeIndex} layerName={tfLayer.name} />
+					<Heatmap {nodeIndex} layerName={tfLayer.name} class="rounded-[0.15rem]" />
 				</HoverCard.Trigger>
 				<HoverCard.Content>
 					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} />
