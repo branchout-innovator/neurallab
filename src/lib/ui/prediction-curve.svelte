@@ -15,28 +15,35 @@
 		nodeIndex: number;
 		layerName: string;
 		customDensity?: number;
+		size?: number;
+		strokeWidth?: number;
+		xDomain?: [number, number];
+		yDomain?: [number, number];
 	};
 
 	export let nodeIndex: number;
 	export let layerName: string;
 	export let customDensity: $$Props['customDensity'] = undefined;
+	export let xDomain: [number, number] = [-3, 3];
+	export let yDomain: [number, number] = [-3, 3];
 
 	const sampledOutputs: Writable<SampledOutputs<number[]>> = getContext('sampledOutputs');
 	const getTfModel = getContext('getTfModel') as () => tf.Sequential;
 	let tfModel = getTfModel();
 
 	let svg: SVGSVGElement;
-	let gx: SVGGElement;
-	let gy: SVGGElement;
 	let path: SVGPathElement;
 
-	const size = 64;
+	export let size = 1.5;
+	$: pxSize = remToPx(size);
+
+	export let strokeWidth = 1;
 
 	let nodeOutputs: number[] | undefined;
 	$: {
 		(async () => {
 			nodeOutputs = customDensity
-				? await getSampledOutputForNode1D(tfModel, layerName, nodeIndex, customDensity, [-3, 3])
+				? await getSampledOutputForNode1D(tfModel, layerName, nodeIndex, customDensity, xDomain)
 				: $sampledOutputs && $sampledOutputs[layerName] && $sampledOutputs[layerName][nodeIndex];
 		})();
 	}
@@ -47,14 +54,17 @@
 
 	function updateChart() {
 		if (!nodeOutputs) return;
-		const chartWidth = size;
-		const chartHeight = size;
+		const chartWidth = pxSize;
+		const chartHeight = pxSize;
 
 		const numSamples = nodeOutputs.length;
-		const xScale = d3.scaleLinear().domain([-3, 3]).range([0, chartWidth]);
+		const xScale = d3.scaleLinear().domain(xDomain).range([0, chartWidth]);
 		const yScale = d3
 			.scaleLinear()
-			.domain([d3.min(nodeOutputs) || 0, d3.max(nodeOutputs) || 1])
+			.domain([
+				Math.min(yDomain[0], d3.min(nodeOutputs) || 0),
+				Math.max(yDomain[1], d3.max(nodeOutputs) || 1)
+			])
 			.range([chartHeight, 0]);
 
 		const line = d3
@@ -64,7 +74,7 @@
 					d3
 						.scaleLinear()
 						.domain([0, numSamples - 1])
-						.range([-3, 3])(i)
+						.range(xDomain)(i)
 				)
 			)
 			.y((d) => yScale(d));
@@ -75,13 +85,13 @@
 
 <svg
 	bind:this={svg}
-	viewBox={`0 0 ${size} ${size}`}
+	viewBox={`0 0 ${pxSize} ${pxSize}`}
 	class="pointer-events-none"
 	overflow="visible"
 	{...$$restProps}
 >
 	<g>
-		<path bind:this={path} fill="none" stroke="#737373" stroke-width="2" />
+		<path bind:this={path} fill="none" stroke="#737373" stroke-width={strokeWidth} />
 	</g>
 </svg>
 

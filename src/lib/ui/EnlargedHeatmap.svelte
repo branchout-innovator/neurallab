@@ -12,12 +12,11 @@
 
 	export let nodeIndex: number;
 	export let layerName: string;
-	// export let dataset: tf.data.Dataset<tf.TensorContainer>;
+	//export let dataset: tf.data.Dataset<tf.TensorContainer>;
 
 	const model: Writable<SequentialModel> = getContext('model');
 
 	let svg: SVGSVGElement;
-	const size = 284.2;
 
 	let testPoints: { x: number; y: number; label: number }[] = [];
 
@@ -28,33 +27,38 @@
 		.clamp(true);
 
 	onMount(async () => {
-		// await loadTestPoints();
+		await loadTestPoints();
 		setupAxes();
-		// drawTestPoints();
+		drawTestPoints();
 	});
 
 	async function loadTestPoints() {
-		
 		// Load tf dataset here
 		const dataset = tf.data.array([
 			{ xs: [1, 2], ys: 1 },
 			{ xs: [-1, -2], ys: -1 },
 			{ xs: [-1.1, -2.1], ys: 1 }
 		]);
-		// await dataset.forEachAsync((element) => {
-		// 	const x = element.xs[0];
-		// 	const y = element.xs[1];
-		// 	const label = element.ys;
-		// 	testPoints.push({ x, y, label });
-		// });
-		// testPoints = testPoints;
+		await dataset.forEachAsync((element) => {
+			const x = element.xs[0];
+			const y = element.xs[1];
+			const label = element.ys;
+			testPoints.push({ x, y, label });
+		});
+		testPoints = testPoints;
 	}
+
+	$: is1D = isEqual($model.layers[0].inputShape, [1]);
+	$: is2D = isEqual($model.layers[0].inputShape, [2]);
+
+	$: xDomain = (is1D ? [-11, 11] : [-3, 3]) as [number, number];
+	$: yDomain = (is1D ? [-10, 120] : [-3, 3]) as [number, number];
 
 	function setupAxes() {
 		const heatmapSize = remToPx(14);
 
-		const xScale = d3.scaleLinear().domain([-3, 3]).range([0, heatmapSize]);
-		const yScale = d3.scaleLinear().domain([3, -3]).range([0, heatmapSize]);
+		const xScale = d3.scaleLinear().domain(xDomain).range([0, heatmapSize]);
+		const yScale = d3.scaleLinear().domain(yDomain.slice().reverse()).range([0, heatmapSize]);
 
 		d3.select(gx)
 			.call(d3.axisBottom(xScale).ticks(5).tickSize(5))
@@ -99,18 +103,16 @@
 				{nodeIndex}
 				{layerName}
 				class="h-56 w-56 rounded-[0.15rem]"
-				customDensity={20}
+				customDensity={60}
+				size={14}
+				strokeWidth={2}
+				{xDomain}
+				{yDomain}
 			/>
 		{:else if isEqual($model.layers[0].inputShape, [2])}
 			<Heatmap {nodeIndex} {layerName} class="h-56 w-56 rounded-[0.15rem]" customDensity={60} />
 		{/if}
-		<svg
-			bind:this={svg}
-			width={size}
-			height={size}
-			class="pointer-events-none absolute left-0 top-0"
-			overflow="visible"
-		>
+		<svg bind:this={svg} class="pointer-events-none absolute left-0 top-0" overflow="visible">
 			<g bind:this={gx} class="translate-y-56"></g>
 			<g bind:this={gy}></g>
 		</svg>

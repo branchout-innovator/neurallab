@@ -243,8 +243,8 @@
 		updateTFModel($model);
 	}
 
-	// $: predictedVal = tfModel?.predict(tf.tensor2d([Number(testPred)], [1, 1]));
-	$: predictedVal = 0;
+	$: predictedVal = tfModel?.predict(tf.tensor2d([Number(testPred)], [1, 1]));
+	// $: predictedVal = 0;
 
 	let testPred = 2;
 
