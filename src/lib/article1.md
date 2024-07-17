@@ -1,8 +1,8 @@
 ## What are Activation Functions? (Neural Nets)
 
-Activation functions are mathematical functions applied to the output of a neuron (like a filter). They introduce non-linearity (where input changes are not proportional to output changes) to the model, which allows it to learn and predict patterns more accurately. 
+Activation functions are mathematical functions applied to the output of a neuron (like a filter). They introduce non-linearity (where input changes are not proportional to output changes) to the model, which allows it to learn and predict patterns more accurately.
 <br>
-![Image0](/static/image0)
+![Image0](/static/articleimages/image0)
 <br>
 ## When to use Different Activation Functions:
 #### **Output Layers:**
