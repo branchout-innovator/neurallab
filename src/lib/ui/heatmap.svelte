@@ -23,8 +23,8 @@
 	let svg: SVGSVGElement;
 	let ctx: CanvasRenderingContext2D;
 
-	const margin = { top: 40, right: 40, bottom: 60, left: 80 };
-
+	let chartWidth: number | undefined;
+	let chartHeight: number | undefined;
 	let nodeOutputs: number[][] | undefined;
 	$: {
 		(async () => {
@@ -41,8 +41,11 @@
 		})();
 	}
 
-	$: chartWidth = customDensity || nodeOutputs?.length;
-	$: chartHeight = customDensity || nodeOutputs?.length;
+	$: if (nodeOutputs) {
+		chartWidth = customDensity || nodeOutputs.length;
+		chartHeight = customDensity || nodeOutputs.length;
+		updateHeatmap();
+	}
 
 	onMount(() => {
 		if (ctx == null) ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
@@ -57,14 +60,9 @@
 		}
 	});
 
-	$: {
-		if (nodeOutputs) {
-			updateHeatmap();
-		}
-	}
-
 	function updateHeatmap() {
 		if (!ctx || !nodeOutputs || !chartWidth || !chartHeight) {
+			console.log(ctx, nodeOutputs, chartWidth, chartHeight);
 			return;
 		}
 		canvas.width = chartWidth;

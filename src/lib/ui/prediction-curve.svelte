@@ -81,7 +81,7 @@
 	{...$$restProps}
 >
 	<g>
-		<path bind:this={path} fill="none" stroke="steelblue" stroke-width="2" />
+		<path bind:this={path} fill="none" stroke="#737373" stroke-width="2" />
 	</g>
 </svg>
 

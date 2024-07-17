@@ -1,14 +1,20 @@
 <script lang="ts">
 	import Heatmap from './heatmap.svelte';
-	import { onMount } from 'svelte';
+	import { getContext, onMount } from 'svelte';
 	import * as d3 from 'd3';
 	import { remToPx } from '$lib/utils';
 	import * as tf from '@tensorflow/tfjs';
+	import PredictionCurve from './prediction-curve.svelte';
+	import isEqual from 'lodash.isequal';
+	import type { SequentialModel } from '$lib/structures';
+	import type { Writable } from 'svelte/store';
 	//import type { Dataset } from '@tensorflow/tfjs';
 
 	export let nodeIndex: number;
 	export let layerName: string;
-	export let dataset: tf.data.Dataset<tf.TensorContainer>;
+	// export let dataset: tf.data.Dataset<tf.TensorContainer>;
+
+	const model: Writable<SequentialModel> = getContext('model');
 
 	let svg: SVGSVGElement;
 	const size = 284.2;
@@ -22,28 +28,26 @@
 		.clamp(true);
 
 	onMount(async () => {
-		await loadTestPoints();
+		// await loadTestPoints();
 		setupAxes();
-		drawTestPoints();
+		// drawTestPoints();
 	});
 
 	async function loadTestPoints() {
-		/*
+		
 		// Load tf dataset here
 		const dataset = tf.data.array([
 			{ xs: [1, 2], ys: 1 },
 			{ xs: [-1, -2], ys: -1 },
 			{ xs: [-1.1, -2.1], ys: 1 }
-		]);*/
-
-		await dataset.forEachAsync((element) => {
-			const x = element.xs[0];
-			const y = element.xs[1];
-			const label = element.ys;
-			testPoints.push({ x, y, label });
-		});
-
-		testPoints = testPoints;
+		]);
+		// await dataset.forEachAsync((element) => {
+		// 	const x = element.xs[0];
+		// 	const y = element.xs[1];
+		// 	const label = element.ys;
+		// 	testPoints.push({ x, y, label });
+		// });
+		// testPoints = testPoints;
 	}
 
 	function setupAxes() {
@@ -90,7 +94,16 @@
 
 <div>
 	<div class="relative mb-4 ml-4">
-		<Heatmap {nodeIndex} {layerName} customDensity={60} class="h-56 w-56 rounded" />
+		{#if isEqual($model.layers[0].inputShape, [1])}
+			<PredictionCurve
+				{nodeIndex}
+				{layerName}
+				class="h-56 w-56 rounded-[0.15rem]"
+				customDensity={20}
+			/>
+		{:else if isEqual($model.layers[0].inputShape, [2])}
+			<Heatmap {nodeIndex} {layerName} class="h-56 w-56 rounded-[0.15rem]" customDensity={60} />
+		{/if}
 		<svg
 			bind:this={svg}
 			width={size}

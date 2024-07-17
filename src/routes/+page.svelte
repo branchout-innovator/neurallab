@@ -139,7 +139,7 @@
 		if (!tfModel) return;
 		if (isEqual($model.layers[0].inputShape, [1]))
 			$sampledOutputs = await updateSampledOutputs1D(tfModel, SAMPLE_DENSITY_1D, sample_x_domain);
-		else if (isEqual($model.layers[0].inputShape, [1]))
+		else if (isEqual($model.layers[0].inputShape, [2]))
 			$sampledOutputs = await updateSampledOutputs(
 				tfModel,
 				SAMPLE_DENSITY_2D,
