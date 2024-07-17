@@ -75,7 +75,7 @@
 		const numSamples = customDensity || nodeOutputs.length;
 
 		const colorScale = d3
-			.scaleSequential(d3.interpolateRdBu)
+			.scaleSequential(d3.interpolateRgb('#3B82F6', '#EF4444'))
 			.domain([
 				d3.min(nodeOutputs, (row) => d3.min(row)) || -1,
 				d3.max(nodeOutputs, (row) => d3.max(row)) || 1
