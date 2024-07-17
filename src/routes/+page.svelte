@@ -9,7 +9,8 @@
 		type ActivationIdentifier,
 		type DenseLayer,
 		type Layer,
-		type SequentialModel
+		type SequentialModel,
+		updateSampledOutputs1D
 	} from '$lib/structures';
 	import * as tf from '@tensorflow/tfjs';
 	import { onMount, setContext, SvelteComponent } from 'svelte';
@@ -38,10 +39,12 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import SvelteMarkdown from 'svelte-markdown';
 	import ResizableHandle from '$lib/components/ui/resizable/resizable-handle.svelte';
+	import isEqual from 'lodash.isequal';
+	import ImageComponent from './ImageComponent.svelte';
 	import mark from '$lib/article1.md?raw';
-	import ImageComponent from "./ImageComponent.svelte";
 
-	const SAMPLE_DENSITY = 20;
+	const SAMPLE_DENSITY_2D = 20;
+	const SAMPLE_DENSITY_1D = 10;
 	let sample_x_domain: [number, number] = [-3, 3];
 	let sample_y_domain: [number, number] = [-3, 3];
 
@@ -57,7 +60,7 @@
 			{
 				type: 'dense',
 				units: 10,
-				inputShape: [2]
+				inputShape: [1]
 			} as DenseLayer,
 			{
 				type: 'dense',
@@ -134,6 +137,19 @@
 
 	let currentEpoch = 0;
 
+	const sampleOutputs = async () => {
+		if (!tfModel) return;
+		if (isEqual($model.layers[0].inputShape, [1]))
+			$sampledOutputs = await updateSampledOutputs1D(tfModel, SAMPLE_DENSITY_1D, sample_x_domain);
+		else if (isEqual($model.layers[0].inputShape, [1]))
+			$sampledOutputs = await updateSampledOutputs(
+				tfModel,
+				SAMPLE_DENSITY_2D,
+				sample_x_domain,
+				sample_y_domain
+			);
+	};
+
 	const trainModel = async () => {
 		if (!tfModel) return;
 		// The model needs to be "big enough" to benefit from GPU acceleration
@@ -157,12 +173,7 @@
 						currentEpoch = epoch + 1;
 						if (currentEpoch % 5 === 0) tfModel = tfModel;
 						try {
-							$sampledOutputs = await updateSampledOutputs(
-								tfModel,
-								SAMPLE_DENSITY,
-								sample_x_domain,
-								sample_y_domain
-							);
+							await sampleOutputs();
 						} catch (e) {
 							console.error('Error while sampling outputs: ', e);
 						}
@@ -220,19 +231,12 @@
 			tfModel = newModel;
 		}
 		if (browser) {
-			console.log;
 			try {
-				$sampledOutputs = await updateSampledOutputs(
-					tfModel,
-					SAMPLE_DENSITY,
-					sample_x_domain,
-					sample_y_domain
-				);
+				await sampleOutputs();
 			} catch (e) {
 				console.error('Error when sampling outputs: ', e);
 			}
 		}
-		console.log(tfModel);
 	};
 
 	$: {
@@ -328,11 +332,10 @@
 		position = String(pageNum);
 	}
 	let position = '0';
-	let sampledOutputs = writable<SampledOutputs>({});
+	let sampledOutputs = writable<SampledOutputs<number[] | number[][]>>({});
 	setContext('sampledOutputs', sampledOutputs);
 	const source = mark;
 </script>
-
 
 <svelte:head>
 	<title>NeuralLab</title>

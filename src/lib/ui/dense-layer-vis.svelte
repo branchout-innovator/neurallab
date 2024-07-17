@@ -12,6 +12,8 @@
 	import Heatmap from './heatmap.svelte';
 	import * as HoverCard from '$lib/components/ui/hover-card';
 	import EnlargedHeatmap from './EnlargedHeatmap.svelte';
+	import PredictionCurve from './prediction-curve.svelte';
+	import isEqual from 'lodash.isequal';
 
 	export let layer: DenseLayer;
 	export let index: number;
@@ -86,7 +88,15 @@
 		<div class="relative flex h-6 w-6 items-center justify-center">
 			<HoverCard.Root>
 				<HoverCard.Trigger>
-					<Heatmap {nodeIndex} layerName={tfLayer.name} class="rounded-[0.15rem]" />
+					{#if isEqual($model.layers[0].inputShape, [1])}
+						<PredictionCurve
+							{nodeIndex}
+							layerName={tfLayer.name}
+							class="h-5 w-5 rounded-[0.15rem]"
+						/>
+					{:else if isEqual($model.layers[0].inputShape, [2])}
+						<Heatmap {nodeIndex} layerName={tfLayer.name} class="rounded-[0.15rem]" />
+					{/if}
 				</HoverCard.Trigger>
 				<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
 					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} />
