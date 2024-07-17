@@ -183,15 +183,15 @@
 			console.log(tfModel);
 			console.log($model);
 
-			// Make predictions and denormalize
-			const input = tf.tensor2d([Number(testPred)], [1, 1]);
-			// const normalizedInput = input.sub(data.xMin).div(data.xMax.sub(data.xMin));
-			const prediction = tfModel.predict(input) as tf.Tensor; // Assert that this is a single tensor
-			// const denormalizedPrediction = prediction.mul(data.yMax.sub(data.yMin)).add(data.yMin);
-			prediction.print(); // Should print a value close to 4 (2^2)
+			// // Make predictions and denormalize
+			// const input = tf.tensor2d([Number(testPred)], [1, 1]);
+			// // const normalizedInput = input.sub(data.xMin).div(data.xMax.sub(data.xMin));
+			// const prediction = tfModel.predict(input) as tf.Tensor; // Assert that this is a single tensor
+			// // const denormalizedPrediction = prediction.mul(data.yMax.sub(data.yMin)).add(data.yMin);
+			// prediction.print(); // Should print a value close to 4 (2^2)
 
 			// Open the browser devtools to see the output
-			toast.success(`Training complete! Try changing the input value and see the prediction.`);
+			toast.success(`Training complete!`);
 			tfModel = tfModel;
 		} catch (e) {
 			console.error(e);

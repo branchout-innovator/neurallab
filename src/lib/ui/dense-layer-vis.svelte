@@ -70,6 +70,12 @@
 	function getColor(normalizedWeight: number): string {
 		return normalizedWeight > 0 ? '#EF4444' : '#3B82F6';
 	}
+
+	$: is1D = isEqual($model.layers[0].inputShape, [1]);
+	$: is2D = isEqual($model.layers[0].inputShape, [2]);
+
+	$: xDomain = (is1D ? [-11, 11] : [-3, 3]) as [number, number];
+	$: yDomain = (is1D ? [-10, 120] : [-3, 3]) as [number, number];
 </script>
 
 <div class="flex flex-col items-center gap-2 rounded-lg border bg-card p-2 text-card-foreground">
@@ -93,13 +99,21 @@
 							{nodeIndex}
 							layerName={tfLayer.name}
 							class="h-5 w-5 rounded-[0.15rem]"
+							{xDomain}
+							{yDomain}
 						/>
 					{:else if isEqual($model.layers[0].inputShape, [2])}
-						<Heatmap {nodeIndex} layerName={tfLayer.name} class="rounded-[0.15rem]" />
+						<Heatmap
+							{nodeIndex}
+							layerName={tfLayer.name}
+							class="rounded-[0.15rem]"
+							{xDomain}
+							{yDomain}
+						/>
 					{/if}
 				</HoverCard.Trigger>
 				<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
-					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} />
+					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} {xDomain} {yDomain} />
 				</HoverCard.Content>
 			</HoverCard.Root>
 

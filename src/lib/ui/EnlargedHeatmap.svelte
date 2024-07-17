@@ -12,6 +12,8 @@
 
 	export let nodeIndex: number;
 	export let layerName: string;
+	export let xDomain: [number, number] = [-3, 3];
+	export let yDomain: [number, number] = [-3, 3];
 	//export let dataset: tf.data.Dataset<tf.TensorContainer>;
 
 	const model: Writable<SequentialModel> = getContext('model');
@@ -47,12 +49,6 @@
 		});
 		testPoints = testPoints;
 	}
-
-	$: is1D = isEqual($model.layers[0].inputShape, [1]);
-	$: is2D = isEqual($model.layers[0].inputShape, [2]);
-
-	$: xDomain = (is1D ? [-11, 11] : [-3, 3]) as [number, number];
-	$: yDomain = (is1D ? [-10, 120] : [-3, 3]) as [number, number];
 
 	function setupAxes() {
 		const heatmapSize = remToPx(14);
