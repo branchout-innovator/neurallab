@@ -243,8 +243,8 @@
 		updateTFModel($model);
 	}
 
-	$: predictedVal = tfModel?.predict(tf.tensor2d([Number(testPred)], [1, 1]));
-	// $: predictedVal = 0;
+	// $: predictedVal = tfModel?.predict(tf.tensor2d([Number(testPred)], [1, 1]));
+	$: predictedVal = 0;
 
 	let testPred = 2;
 
@@ -410,14 +410,14 @@
 					</Label>
 					<Input type="number" bind:value={epochs} placeholder="1000" min={1} class="w-24" />
 				</div>
-				<div class="flex flex-col gap-2">
+				<!-- <div class="flex flex-col gap-2">
 					<Label class="flex gap-2 text-xs">Input</Label>
 					<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
 				</div>
 				<div class="flex flex-col gap-2">
 					<Label class="flex gap-2 text-xs">Predicted Value</Label>
 					<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
-				</div>
+				</div> -->
 				<div class="flex flex-col gap-2">
 					<div></div>
 					<Dialog.Root>
