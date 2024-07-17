@@ -11,7 +11,7 @@
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import Heatmap from './heatmap.svelte';
 	import * as HoverCard from '$lib/components/ui/hover-card';
-	import EnlargedHeatmap from './EnlargedHeatmap.svelte';
+	import EnlargedHeatmap from './detailed-vis.svelte';
 	import PredictionCurve from './prediction-curve.svelte';
 	import isEqual from 'lodash.isequal';
 
@@ -71,11 +71,10 @@
 		return normalizedWeight > 0 ? '#EF4444' : '#3B82F6';
 	}
 
-	$: is1D = isEqual($model.layers[0].inputShape, [1]);
-	$: is2D = isEqual($model.layers[0].inputShape, [2]);
-
-	$: xDomain = (is1D ? [-11, 11] : [-3, 3]) as [number, number];
-	$: yDomain = (is1D ? [-10, 120] : [-3, 3]) as [number, number];
+	const sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> =
+		getContext('sampleDomain');
+	$: xDomain = $sampleDomain.x;
+	$: yDomain = $sampleDomain.y;
 </script>
 
 <div class="flex flex-col items-center gap-2 rounded-lg border bg-card p-2 text-card-foreground">

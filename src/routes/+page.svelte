@@ -43,11 +43,6 @@
 	import ImageComponent from './ImageComponent.svelte';
 	import mark from '$lib/article1.md?raw';
 
-	const SAMPLE_DENSITY_2D = 20;
-	const SAMPLE_DENSITY_1D = 10;
-	let sample_x_domain: [number, number] = [-3, 3];
-	let sample_y_domain: [number, number] = [-3, 3];
-
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
 	};
@@ -140,13 +135,13 @@
 	const sampleOutputs = async () => {
 		if (!tfModel) return;
 		if (isEqual($model.layers[0].inputShape, [1]))
-			$sampledOutputs = await updateSampledOutputs1D(tfModel, SAMPLE_DENSITY_1D, sample_x_domain);
+			$sampledOutputs = await updateSampledOutputs1D(tfModel, SAMPLE_DENSITY_1D, $sampleDomain.x);
 		else if (isEqual($model.layers[0].inputShape, [2]))
 			$sampledOutputs = await updateSampledOutputs(
 				tfModel,
 				SAMPLE_DENSITY_2D,
-				sample_x_domain,
-				sample_y_domain
+				$sampleDomain.x,
+				$sampleDomain.y
 			);
 	};
 
@@ -335,6 +330,22 @@
 	let sampledOutputs = writable<SampledOutputs<number[] | number[][]>>({});
 	setContext('sampledOutputs', sampledOutputs);
 	const source = mark;
+
+	const SAMPLE_DENSITY_2D = 20;
+	const SAMPLE_DENSITY_1D = 10;
+	let sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> = writable({
+		x: [-3, 3],
+		y: [-3, 3]
+	});
+	setContext('sampleDomain', sampleDomain);
+
+	$: is1D = isEqual($model.layers[0].inputShape, [1]);
+	$: is2D = isEqual($model.layers[0].inputShape, [2]);
+
+	$: {
+		$sampleDomain.x = (is1D ? [-11, 11] : [-3, 3]) as [number, number];
+		$sampleDomain.y = (is1D ? [-10, 120] : [-3, 3]) as [number, number];
+	}
 </script>
 
 <svelte:head>

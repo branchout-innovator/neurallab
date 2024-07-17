@@ -17,15 +17,15 @@
 		customDensity?: number;
 		size?: number;
 		strokeWidth?: number;
-		xDomain?: [number, number];
-		yDomain?: [number, number];
+		xDomain: [number, number];
+		yDomain: [number, number];
 	};
 
 	export let nodeIndex: number;
 	export let layerName: string;
 	export let customDensity: $$Props['customDensity'] = undefined;
-	export let xDomain: [number, number] = [-3, 3];
-	export let yDomain: [number, number] = [-3, 3];
+	export let xDomain: [number, number];
+	export let yDomain: [number, number];
 
 	const sampledOutputs: Writable<SampledOutputs<number[]>> = getContext('sampledOutputs');
 	const getTfModel = getContext('getTfModel') as () => tf.Sequential;
@@ -59,13 +59,7 @@
 
 		const numSamples = nodeOutputs.length;
 		const xScale = d3.scaleLinear().domain(xDomain).range([0, chartWidth]);
-		const yScale = d3
-			.scaleLinear()
-			.domain([
-				Math.min(yDomain[0], d3.min(nodeOutputs) || 0),
-				Math.max(yDomain[1], d3.max(nodeOutputs) || 1)
-			])
-			.range([chartHeight, 0]);
+		const yScale = d3.scaleLinear().domain(yDomain).range([chartHeight, 0]);
 
 		const line = d3
 			.line<number>()
@@ -91,7 +85,7 @@
 	{...$$restProps}
 >
 	<g>
-		<path bind:this={path} fill="none" stroke="#737373" stroke-width={strokeWidth} />
+		<path bind:this={path} fill="none" stroke-width={strokeWidth} class="stroke-green-500" />
 	</g>
 </svg>
 

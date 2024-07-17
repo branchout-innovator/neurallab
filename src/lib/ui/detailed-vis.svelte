@@ -54,7 +54,7 @@
 		const heatmapSize = remToPx(14);
 
 		const xScale = d3.scaleLinear().domain(xDomain).range([0, heatmapSize]);
-		const yScale = d3.scaleLinear().domain(yDomain.slice().reverse()).range([0, heatmapSize]);
+		const yScale = d3.scaleLinear().domain(yDomain).range([heatmapSize, 0]);
 
 		d3.select(gx)
 			.call(d3.axisBottom(xScale).ticks(5).tickSize(5))
@@ -106,7 +106,14 @@
 				{yDomain}
 			/>
 		{:else if isEqual($model.layers[0].inputShape, [2])}
-			<Heatmap {nodeIndex} {layerName} class="h-56 w-56 rounded-[0.15rem]" customDensity={60} />
+			<Heatmap
+				{nodeIndex}
+				{layerName}
+				class="h-56 w-56 rounded-[0.15rem]"
+				customDensity={60}
+				{xDomain}
+				{yDomain}
+			/>
 		{/if}
 		<svg bind:this={svg} class="pointer-events-none absolute left-0 top-0" overflow="visible">
 			<g bind:this={gx} class="translate-y-56"></g>
