@@ -354,12 +354,12 @@
 	<meta name="description" content="Design and visualize neural networks in your browser." />
 </svelte:head>
 <!--<div class="container flex h-full max-w-full flex-row gap-4">-->
-<Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row gap-4">
-	<Resizable.Pane defaultSize={25}>
+<Resizable.PaneGroup direction="horizontal" class="flex h-full max-w-full flex-row">
+	<Resizable.Pane defaultSize={40}>
 		<div class="container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
 			<div class="h-1/8 container flex w-full flex-row items-end">
 				<div class="flex h-full w-1/3">
-					<Button variant="outline" class="ml-auto" size="icon" on:click={pageLeft}>&lt;</Button>
+					<Button variant="outline" class="ml-auto h-full" size="icon" on:click={pageLeft}>&lt;</Button>
 				</div>
 				<div class="w-1/3">
 					<DropdownMenu.Root>
@@ -378,25 +378,24 @@
 					</DropdownMenu.Root>
 				</div>
 				<div class="flex h-full w-1/3">
-					<Button variant="outline" class="mr-auto" size="icon" on:click={pageRight}>&gt;</Button>
+					<Button variant="outline" class="mr-auto h-full" size="icon" on:click={pageRight}>&gt;</Button>
 				</div>
 			</div>
 			<div class="flex w-full overflow-y-auto">
-				<div class="w-full p-4">
+				<div class="w-full px-8 py-4">
 					<h2
 						class="scroll-m-20 border-b pb-2 text-center text-2xl font-semibold tracking-tight transition-colors first:mt-0"
 					>
 						{articletitle[Number(position)]}
 					</h2>
 					<span class="inline-block h-4 w-4"></span>
-					<p>{pagetext[Number(position)]}</p>
 					<SvelteMarkdown {source} renderers={{ image: ImageComponent }} />
 				</div>
 			</div>
 		</div>
 	</Resizable.Pane>
 	<Resizable.Handle withHandle />
-	<Resizable.Pane defaultSize={75}>
+	<Resizable.Pane defaultSize={60} class = "p-4">
 		<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
 			<!-- Controls (header) -->
 			<div class="flex flex-row flex-wrap items-end gap-4">
