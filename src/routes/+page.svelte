@@ -9,7 +9,8 @@
 		type ActivationIdentifier,
 		type DenseLayer,
 		type Layer,
-		type SequentialModel
+		type SequentialModel,
+		updateSampledOutputs1D
 	} from '$lib/structures';
 	import * as tf from '@tensorflow/tfjs';
 	import { onMount, setContext, SvelteComponent } from 'svelte';
@@ -38,10 +39,9 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import SvelteMarkdown from 'svelte-markdown';
 	import ResizableHandle from '$lib/components/ui/resizable/resizable-handle.svelte';
+	import isEqual from 'lodash.isequal';
 	import ImageComponent from './ImageComponent.svelte';
-	const SAMPLE_DENSITY = 20;
-	let sample_x_domain: [number, number] = [-3, 3];
-	let sample_y_domain: [number, number] = [-3, 3];
+	import mark from '$lib/article1.md?raw';
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
@@ -55,7 +55,7 @@
 			{
 				type: 'dense',
 				units: 10,
-				inputShape: [2]
+				inputShape: [1]
 			} as DenseLayer,
 			{
 				type: 'dense',
@@ -132,7 +132,21 @@
 
 	let currentEpoch = 0;
 
+	const sampleOutputs = async () => {
+		if (!tfModel) return;
+		if (isEqual($model.layers[0].inputShape, [1]))
+			$sampledOutputs = await updateSampledOutputs1D(tfModel, SAMPLE_DENSITY_1D, $sampleDomain.x);
+		else if (isEqual($model.layers[0].inputShape, [2]))
+			$sampledOutputs = await updateSampledOutputs(
+				tfModel,
+				SAMPLE_DENSITY_2D,
+				$sampleDomain.x,
+				$sampleDomain.y
+			);
+	};
+
 	const trainModel = async () => {
+		if (!tfModel) return;
 		// The model needs to be "big enough" to benefit from GPU acceleration
 		// So with the small models in the Tensorflow playground its actually faster to use CPU
 		// await tf.setBackend('webgl');
@@ -146,37 +160,34 @@
 		currentEpoch = 0;
 
 		try {
-			await tfModel.fitDataset(data, {
+			const history = await tfModel.fitDataset(data, {
 				epochs: Number(epochs),
 				callbacks: {
 					async onEpochEnd(epoch, logs) {
+						if (!tfModel) return;
 						currentEpoch = epoch + 1;
 						if (currentEpoch % 5 === 0) tfModel = tfModel;
 						try {
-							$sampledOutputs = await updateSampledOutputs(
-								tfModel,
-								SAMPLE_DENSITY,
-								sample_x_domain,
-								sample_y_domain
-							);
+							await sampleOutputs();
 						} catch (e) {
 							console.error('Error while sampling outputs: ', e);
 						}
+						// set tfModel.stopTraining = true to stop training
 					}
 				}
 			});
 			console.log(tfModel);
 			console.log($model);
 
-			// Make predictions and denormalize
-			const input = tf.tensor2d([Number(testPred)], [1, 1]);
-			// const normalizedInput = input.sub(data.xMin).div(data.xMax.sub(data.xMin));
-			const prediction = tfModel.predict(input) as tf.Tensor; // Assert that this is a single tensor
-			// const denormalizedPrediction = prediction.mul(data.yMax.sub(data.yMin)).add(data.yMin);
-			prediction.print(); // Should print a value close to 4 (2^2)
+			// // Make predictions and denormalize
+			// const input = tf.tensor2d([Number(testPred)], [1, 1]);
+			// // const normalizedInput = input.sub(data.xMin).div(data.xMax.sub(data.xMin));
+			// const prediction = tfModel.predict(input) as tf.Tensor; // Assert that this is a single tensor
+			// // const denormalizedPrediction = prediction.mul(data.yMax.sub(data.yMin)).add(data.yMin);
+			// prediction.print(); // Should print a value close to 4 (2^2)
 
 			// Open the browser devtools to see the output
-			toast.success(`Training complete! Try changing the input value and see the prediction.`);
+			toast.success(`Training complete!`);
 			tfModel = tfModel;
 		} catch (e) {
 			console.error(e);
@@ -202,7 +213,10 @@
 	}	
 	let canvasWidth = 150;
 
-	let tfModel: tf.Sequential;
+	let tfModel: tf.Sequential | undefined = undefined;
+	setContext('getTfModel', () => {
+		return tfModel;
+	});
 
 	const updateTFModel = async (model: SequentialModel) => {
 		if (!tfModel) {
@@ -213,19 +227,12 @@
 			tfModel = newModel;
 		}
 		if (browser) {
-			console.log;
 			try {
-				$sampledOutputs = await updateSampledOutputs(
-					tfModel,
-					SAMPLE_DENSITY,
-					sample_x_domain,
-					sample_y_domain
-				);
+				await sampleOutputs();
 			} catch (e) {
 				console.error('Error when sampling outputs: ', e);
 			}
 		}
-		console.log(tfModel);
 	};
 
 	$: {
@@ -321,57 +328,25 @@
 		position = String(pageNum);
 	}
 	let position = '0';
-	let sampledOutputs = writable<SampledOutputs>({});
+	let sampledOutputs = writable<SampledOutputs<number[] | number[][]>>({});
 	setContext('sampledOutputs', sampledOutputs);
-	const source = `
+	const source = mark;
 
-## What are Activation Functions? (Neural Nets)
+	const SAMPLE_DENSITY_2D = 10;
+	const SAMPLE_DENSITY_1D = 10;
+	let sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> = writable({
+		x: [-3, 3],
+		y: [-3, 3]
+	});
+	setContext('sampleDomain', sampleDomain);
 
-Activation functions are mathematical functions applied to the output of a neuron (like a filter). They introduce non-linearity (where input changes are not proportional to output changes) to the model, which allows it to learn and predict patterns more accurately. 
-<br>
-![picture0](/static/picture0)
-<br>
-## When to use Different Activation Functions:
-#### **Output Layers:**
+	$: is1D = isEqual($model.layers[0].inputShape, [1]);
+	$: is2D = isEqual($model.layers[0].inputShape, [2]);
 
-### Binary Classification: 
-The Sigmoid function is used for the output layer because it outputs a value from 0 to 1: 
-σ(x) = 1/(1 + e<sup>-x</sup>)
-
-### Multi-class Classification: 
-The Softmax function is used because it converts the outputs to probabilities that sum to 100%: 
-softmax(x<sub>i</sub>) = e<sup>x<sub>i</sub></sup>/∑<sub>j</sub>e<sup>x<sub>j</sub></sup>
-
-### Regression: 
-Either linear activation functions or no activation function is used. 
-#### **Hidden Layers:**
-
-### ReLU:
-Simple and effective activation function that helps to alleviate the vanishing gradient problem (derivatives of positive inputs are 1): 
-ReLU(x) = max(0,x)
-
-### Tanh: 
-Similar to sigmoid but with a range of [-1, 1]. Can be more effective at training the network because of a larger gradient: 
-tanh(x) = e<sup>x</sup>-e<sup>-x<sup>/e<sup>x</sup>+e<sup>-x</sup>
-<br>
-![image1](/path/image1.png)
-<br>
-# Chatgpt response: 
-Imagine your brain as a big, super-smart machine with lots of tiny switches inside. These switches help you decide what to do based on the information you get, like deciding whether to jump when you see a puddle or to say "hello" when you see a friend.
-## Activation Functions
-In a computer's brain (like in robots or apps that learn), there are also tiny switches called activation functions. These switches help the computer make decisions by turning "on" or "off" based on the information it receives. Here are some examples of how these activation functions work:
-- ReLU (Rectified Linear Unit):
-- Imagine a switch that stays off (at 0) if it gets a negative signal, but turns on (to the same value as the signal) when it gets a positive signal.
-- It's like if you decided only to do something if it was fun (positive), and  you'd do exactly how much fun it seemed.
-- Sigmoid:
-- This switch smoothly turns on more and more as the signal gets bigger, but it never fully reaches 1, and never fully turns off to 0.
-- Think of it like a dimmer switch for a light; as you turn it, the light gets brighter slowly, but it never gets completely dark or super bright.
-- Tanh (Hyperbolic Tangent):
-- This one is like the sigmoid but a bit different: it can handle both positive and negative signals, turning on for positive ones and turning off for negative ones, and it does it more smoothly.
-- Imagine a balance scale: it can tip to one side for good things and to the other for bad things, showing how strong each is.
-Why Are They Important?
-Activation functions help the computer's brain understand and decide things better by handling information in smart ways. Just like how you use different switches or decisions based on what you're doing, computers use these activation functions to learn and make choices more accurately.
-`;
+	$: {
+		$sampleDomain.x = (is1D ? [-11, 11] : [-3, 3]) as [number, number];
+		$sampleDomain.y = (is1D ? [-10, 120] : [-3, 3]) as [number, number];
+	}
 </script>
 
 <svelte:head>
@@ -447,14 +422,14 @@ Activation functions help the computer's brain understand and decide things bett
 					</Label>
 					<Input type="number" bind:value={epochs} placeholder="1000" min={1} class="w-24" />
 				</div>
-				<div class="flex flex-col gap-2">
+				<!-- <div class="flex flex-col gap-2">
 					<Label class="flex gap-2 text-xs">Input</Label>
 					<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
 				</div>
 				<div class="flex flex-col gap-2">
 					<Label class="flex gap-2 text-xs">Predicted Value</Label>
 					<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
-				</div>
+				</div> -->
 				<div class="flex flex-col gap-2">
 					<div></div>
 					<Dialog.Root>
@@ -548,20 +523,23 @@ Activation functions help the computer's brain understand and decide things bett
 				</div>
 
 				<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
-					{#each $model.layers as layer, i (i)}
-						<svelte:component
-							this={layerComponents[layer.type]}
-							{layer}
-							index={i}
-							tfLayer={tfModel.layers[i]}
-						></svelte:component>
-						{#if i < $model.layers.length - 1}
-							{@const leftLayerHeights = getNodeYPositions(layer)}
-							{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
-							{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
-							<ConnectionsVis {leftLayerHeights} {rightLayerHeights} {canvasWidth} {weights} />
-						{/if}
-					{/each}
+					{#if tfModel}
+						{#each $model.layers as layer, i (i)}
+							<svelte:component
+								this={layerComponents[layer.type]}
+								{layer}
+								index={i}
+								tfLayer={tfModel.layers[i]}
+								{dataset}
+							></svelte:component>
+							{#if i < $model.layers.length - 1}
+								{@const leftLayerHeights = getNodeYPositions(layer)}
+								{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
+								{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
+								<ConnectionsVis {leftLayerHeights} {rightLayerHeights} {canvasWidth} {weights} />
+							{/if}
+						{/each}
+					{/if}
 				</div>
 			</div>
 		</div>

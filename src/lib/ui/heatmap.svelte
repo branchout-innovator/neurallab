@@ -1,27 +1,55 @@
 <script lang="ts">
-	import type { SampledOutputs } from '$lib/structures';
+	import { getSampledOutputForNode, type SampledOutputs } from '$lib/structures';
 	import { getContext, onMount } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import * as d3 from 'd3';
 	import type { HTMLAttributes } from 'svelte/elements';
-	type $$Props = HTMLAttributes<HTMLCanvasElement> & { nodeIndex: number; layerName: string };
+	import * as tf from '@tensorflow/tfjs';
+	type $$Props = HTMLAttributes<HTMLCanvasElement> & {
+		nodeIndex: number;
+		layerName: string;
+		customDensity?: number;
+		xDomain?: [number, number];
+		yDomain?: [number, number];
+	};
 
 	export let nodeIndex: number;
 	export let layerName: string;
+	export let customDensity: $$Props['customDensity'] = undefined;
+	export let xDomain: [number, number] = [-3, 3];
+	export let yDomain: [number, number] = [-3, 3];
 
-	const sampledOutputs: Writable<SampledOutputs> = getContext('sampledOutputs');
+	const sampledOutputs: Writable<SampledOutputs<number[][]>> = getContext('sampledOutputs');
+	const getTfModel = getContext('getTfModel') as () => tf.Sequential;
+	let tfModel = getTfModel();
 
 	let canvas: HTMLCanvasElement;
 	let svg: SVGSVGElement;
 	let ctx: CanvasRenderingContext2D;
 
-	const margin = { top: 40, right: 40, bottom: 60, left: 80 };
+	let chartWidth: number | undefined;
+	let chartHeight: number | undefined;
+	let nodeOutputs: number[][] | undefined;
+	$: {
+		(async () => {
+			nodeOutputs = customDensity
+				? await getSampledOutputForNode(
+						tfModel,
+						layerName,
+						nodeIndex,
+						customDensity,
+						xDomain,
+						yDomain
+					)
+				: $sampledOutputs && $sampledOutputs[layerName] && $sampledOutputs[layerName][nodeIndex];
+		})();
+	}
 
-	$: nodeOutputs =
-		$sampledOutputs && $sampledOutputs[layerName] && $sampledOutputs[layerName][nodeIndex];
-
-	$: chartWidth = nodeOutputs?.length;
-	$: chartHeight = nodeOutputs?.length;
+	$: if (nodeOutputs) {
+		chartWidth = customDensity || nodeOutputs.length;
+		chartHeight = customDensity || nodeOutputs.length;
+		updateHeatmap();
+	}
 
 	onMount(() => {
 		if (ctx == null) ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
@@ -36,30 +64,23 @@
 		}
 	});
 
-	$: {
-		if (nodeOutputs) {
-			updateHeatmap();
-		}
-	}
-
 	function updateHeatmap() {
-		if (!ctx || !nodeOutputs) {
+		if (!ctx || !nodeOutputs || !chartWidth || !chartHeight) {
+			console.log(ctx, nodeOutputs, chartWidth, chartHeight);
 			return;
 		}
 		canvas.width = chartWidth;
 		canvas.height = chartHeight;
 
-		const numSamples = nodeOutputs.length;
+		const numSamples = customDensity || nodeOutputs.length;
 
-		// Create color scale
 		const colorScale = d3
 			.scaleSequential(d3.interpolateRdBu)
 			.domain([
-				d3.min(nodeOutputs, (row) => d3.min(row)) || -1,
-				d3.max(nodeOutputs, (row) => d3.max(row)) || 1
+				d3.max(nodeOutputs, (row) => d3.max(row)) || 1,
+				d3.min(nodeOutputs, (row) => d3.min(row)) || -1
 			]);
 
-		// Draw heatmap on canvas
 		const imageData = ctx.createImageData(numSamples, numSamples);
 		for (let y = 0; y < numSamples; y++) {
 			for (let x = 0; x < numSamples; x++) {
@@ -126,11 +147,3 @@
 </script>
 
 <canvas bind:this={canvas} {...$$restProps}></canvas>
-
-<!-- <svg bind:this={svg} class="pointer-events-none"></svg> -->
-
-<style>
-	.heatmap-container {
-		display: inline-block;
-	}
-</style>

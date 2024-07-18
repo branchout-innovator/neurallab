@@ -1,6 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import {searchForWorkspaceRoot} from 'vite';
+import {searchForWorkspaceRoot } from 'vite'
 
 export default defineConfig({
 	plugins: [
@@ -11,7 +11,7 @@ export default defineConfig({
 		// 			dest: 'static'
 		// 		}
 		// 	]
-		// }),
+		// })
 		sveltekit()
 	],
 	server: {

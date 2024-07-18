@@ -11,11 +11,14 @@
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import Heatmap from './heatmap.svelte';
 	import * as HoverCard from '$lib/components/ui/hover-card';
-	import EnlargedHeatmap from './EnlargedHeatmap.svelte'
+	import EnlargedHeatmap from './detailed-vis.svelte';
+	import PredictionCurve from './prediction-curve.svelte';
+	import isEqual from 'lodash.isequal';
 
 	export let layer: DenseLayer;
 	export let index: number;
 	export let tfLayer: tf.layers.Layer;
+	export let dataset: tf.data.Dataset<tf.TensorContainer>;
 
 	const model: Writable<SequentialModel> = getContext('model');
 
@@ -68,6 +71,11 @@
 	function getColor(normalizedWeight: number): string {
 		return normalizedWeight > 0 ? '#EF4444' : '#3B82F6';
 	}
+
+	const sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> =
+		getContext('sampleDomain');
+	$: xDomain = $sampleDomain.x;
+	$: yDomain = $sampleDomain.y;
 </script>
 
 <div class="flex flex-col items-center gap-2 rounded-lg border bg-card p-2 text-card-foreground">
@@ -86,10 +94,26 @@
 		<div class="relative flex h-6 w-6 items-center justify-center">
 			<HoverCard.Root>
 				<HoverCard.Trigger>
-					<Heatmap {nodeIndex} layerName={tfLayer.name} />
+					{#if isEqual($model.layers[0].inputShape, [1])}
+						<PredictionCurve
+							{nodeIndex}
+							layerName={tfLayer.name}
+							class="h-5 w-5 rounded-[0.15rem]"
+							{xDomain}
+							{yDomain}
+						/>
+					{:else if isEqual($model.layers[0].inputShape, [2])}
+						<Heatmap
+							{nodeIndex}
+							layerName={tfLayer.name}
+							class="h-5 w-5 rounded-[0.15rem]"
+							{xDomain}
+							{yDomain}
+						/>
+					{/if}
 				</HoverCard.Trigger>
-				<HoverCard.Content>
-					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} />
+				<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
+					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} {xDomain} {yDomain} {dataset}/>
 				</HoverCard.Content>
 			</HoverCard.Root>
 

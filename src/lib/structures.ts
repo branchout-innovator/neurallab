@@ -112,72 +112,9 @@ export const loadUploadedCsv = async (
 	return flattenedDataset;
 };
 
-/**
- * Given a neural network, it asks the network for the output (prediction)
- * of every node in the network using inputs sampled on a square grid.
- * It returns a map where each key is the node ID and the value is a square
- * matrix of the outputs of the network for each input in the grid respectively.
- */
-// function updateDecisionBoundary(network: nn.Node[][], firstTime: boolean) {
-// 	const boundary = {};
-// 	if (firstTime) {
-// 		nn.forEachNode(network, true, (node) => {
-// 			boundary[node.id] = new Array(DENSITY);
-// 		});
-// 		// Go through all predefined inputs.
-// 		for (let nodeId in INPUTS) {
-// 			boundary[nodeId] = new Array(DENSITY);
-// 		}
-// 	}
-// 	let xScale = d3
-// 		.scaleLinear()
-// 		.domain([0, DENSITY - 1])
-// 		.range(xDomain);
-// 	let yScale = d3
-// 		.scaleLinear()
-// 		.domain([DENSITY - 1, 0])
-// 		.range(xDomain);
-
-// 	let i = 0,
-// 		j = 0;
-// 	for (i = 0; i < DENSITY; i++) {
-// 		if (firstTime) {
-// 			nn.forEachNode(network, true, (node) => {
-// 				boundary[node.id][i] = new Array(DENSITY);
-// 			});
-// 			// Go through all predefined inputs.
-// 			for (let nodeId in INPUTS) {
-// 				boundary[nodeId][i] = new Array(DENSITY);
-// 			}
-// 		}
-// 		for (j = 0; j < DENSITY; j++) {
-// 			// 1 for points inside the circle, and 0 for points outside the circle.
-// 			let x = xScale(i);
-// 			let y = yScale(j);
-// 			let input = constructInput(x, y);
-// 			nn.forwardProp(network, input);
-// 			nn.forEachNode(network, true, (node) => {
-// 				boundary[node.id][i][j] = node.output;
-// 			});
-// 			if (firstTime) {
-// 				// Go through all predefined inputs.
-// 				for (let nodeId in INPUTS) {
-// 					boundary[nodeId][i][j] = INPUTS[nodeId].f(x, y);
-// 				}
-// 			}
-// 		}
-// 	}
-// }
-
-// Claude's response
-
-export interface SampledOutputs {
+export interface SampledOutputs<Sample> {
 	/** Key: layer.name in Tensorflow layers */
-	[key: string]: number[][][];
-}
-
-interface Inputs {
-	[key: string]: number[];
+	[key: string]: Sample[];
 }
 
 export async function updateSampledOutputs(
@@ -185,8 +122,8 @@ export async function updateSampledOutputs(
 	DENSITY: number,
 	xDomain: [number, number],
 	yDomain: [number, number]
-): Promise<SampledOutputs> {
-	const outputs: SampledOutputs = {};
+): Promise<SampledOutputs<number[][]>> {
+	const outputs: SampledOutputs<number[][]> = {};
 
 	const xScale = tf.linspace(xDomain[0], xDomain[1], DENSITY);
 	const yScale = tf.linspace(yDomain[1], yDomain[0], DENSITY);
@@ -208,6 +145,112 @@ export async function updateSampledOutputs(
 	}
 
 	return outputs;
+}
+
+export async function getSampledOutputForNode(
+	model: tf.LayersModel,
+	layerName: string,
+	nodeIndex: number,
+	DENSITY: number,
+	xDomain: [number, number],
+	yDomain: [number, number]
+): Promise<number[][]> {
+	const xScale = tf.linspace(xDomain[0], xDomain[1], DENSITY);
+	const yScale = tf.linspace(yDomain[1], yDomain[0], DENSITY);
+
+	const [xx, yy] = tf.meshgrid(xScale, yScale);
+	let currentInput: tf.Tensor = tf.stack([xx.flatten(), yy.flatten()], 1);
+
+	let targetLayer: tf.layers.Layer | undefined;
+	let targetLayerIndex: number = -1;
+
+	// Find the target layer
+	for (let i = 0; i < model.layers.length; i++) {
+		if (model.layers[i].name === layerName) {
+			targetLayer = model.layers[i];
+			targetLayerIndex = i;
+			break;
+		}
+	}
+
+	if (!targetLayer) {
+		throw new Error(`Layer "${layerName}" not found in the model.`);
+	}
+
+	// Forward pass up to the target layer
+	for (let i = 0; i <= targetLayerIndex; i++) {
+		currentInput = model.layers[i].apply(currentInput) as tf.Tensor;
+	}
+
+	// Reshape the output to [DENSITY * DENSITY, numNodes]
+	const reshapedOutput = currentInput.reshape([DENSITY * DENSITY, -1]);
+
+	// Select the specific node's output and reshape to [DENSITY, DENSITY]
+	const nodeOutput = reshapedOutput.slice([0, nodeIndex], [-1, 1]).reshape([DENSITY, DENSITY]);
+
+	return nodeOutput.arraySync() as number[][];
+}
+
+export async function updateSampledOutputs1D(
+	model: tf.LayersModel,
+	DENSITY: number,
+	xDomain: [number, number]
+): Promise<SampledOutputs<number[]>> {
+	const outputs: SampledOutputs<number[]> = {};
+
+	const xScale = tf.linspace(xDomain[0], xDomain[1], DENSITY);
+
+	let currentInput: tf.Tensor = xScale.reshape([-1, 1]);
+
+	// Forward pass through each layer, storing intermediate outputs
+	for (const layer of model.layers) {
+		currentInput = layer.apply(currentInput) as tf.Tensor;
+
+		// Reshape the output to [numNodes, DENSITY]
+		const reshapedOutput = currentInput.transpose();
+
+		outputs[layer.name] = reshapedOutput.arraySync() as number[][];
+	}
+
+	return outputs;
+}
+
+export async function getSampledOutputForNode1D(
+	model: tf.LayersModel,
+	layerName: string,
+	nodeIndex: number,
+	DENSITY: number,
+	xDomain: [number, number]
+): Promise<number[]> {
+	const xScale = tf.linspace(xDomain[0], xDomain[1], DENSITY);
+
+	let currentInput: tf.Tensor = xScale.reshape([-1, 1]);
+
+	let targetLayer: tf.layers.Layer | undefined;
+	let targetLayerIndex: number = -1;
+
+	// Find the target layer
+	for (let i = 0; i < model.layers.length; i++) {
+		if (model.layers[i].name === layerName) {
+			targetLayer = model.layers[i];
+			targetLayerIndex = i;
+			break;
+		}
+	}
+
+	if (!targetLayer) {
+		throw new Error(`Layer "${layerName}" not found in the model.`);
+	}
+
+	// Forward pass up to the target layer
+	for (let i = 0; i <= targetLayerIndex; i++) {
+		currentInput = model.layers[i].apply(currentInput) as tf.Tensor;
+	}
+
+	// Select the specific node's output
+	const nodeOutput = currentInput.slice([0, nodeIndex], [-1, 1]);
+
+	return nodeOutput.squeeze().arraySync() as number[];
 }
 
 // Helper function to construct input (if needed)
