@@ -332,7 +332,7 @@
 	setContext('sampledOutputs', sampledOutputs);
 	const source = mark;
 
-	const SAMPLE_DENSITY_2D = 20;
+	const SAMPLE_DENSITY_2D = 10;
 	const SAMPLE_DENSITY_1D = 10;
 	let sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> = writable({
 		x: [-3, 3],

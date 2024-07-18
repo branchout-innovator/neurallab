@@ -2,29 +2,37 @@
 
 Activation functions are mathematical functions applied to the output of a neuron (like a filter). They introduce non-linearity (where input changes are not proportional to output changes) to the model, which allows it to learn and predict patterns more accurately.
 <br>
-![Image0](/static/articleimages/image0)
+![Image0](/articleimages/image0)
 <br>
+
 ## When to use Different Activation Functions:
+
 #### **Output Layers:**
 
-### Binary Classification: 
-The Sigmoid function is used for the output layer because it outputs a value from 0 to 1: 
+### Binary Classification:
+
+The Sigmoid function is used for the output layer because it outputs a value from 0 to 1:
 σ(x) = 1/(1 + e<sup>-x</sup>)
 
-### Multi-class Classification: 
-The Softmax function is used because it converts the outputs to probabilities that sum to 100%: 
+### Multi-class Classification:
+
+The Softmax function is used because it converts the outputs to probabilities that sum to 100%:
 softmax(x<sub>i</sub>) = e<sup>x<sub>i</sub></sup>/∑<sub>j</sub>e<sup>x<sub>j</sub></sup>
 
-### Regression: 
-Either linear activation functions or no activation function is used. 
+### Regression:
+
+Either linear activation functions or no activation function is used.
+
 #### **Hidden Layers:**
 
-### ReLU: 
-Simple and effective activation function that helps to alleviate the vanishing gradient problem (derivatives of positive inputs are 1): 
+### ReLU:
+
+Simple and effective activation function that helps to alleviate the vanishing gradient problem (derivatives of positive inputs are 1):
 ReLU(x) = max(0,x)
 
-### Tanh: 
-Similar to sigmoid but with a range of [-1, 1]. Can be more effective at training the network because of a larger gradient: 
+### Tanh:
+
+Similar to sigmoid but with a range of [-1, 1]. Can be more effective at training the network because of a larger gradient:
 tanh(x) = e<sup>x</sup>-e<sup>-x<sup>/e<sup>x</sup>+e<sup>-x</sup>
 <br>
 

@@ -106,7 +106,7 @@
 						<Heatmap
 							{nodeIndex}
 							layerName={tfLayer.name}
-							class="rounded-[0.15rem]"
+							class="h-5 w-5 rounded-[0.15rem]"
 							{xDomain}
 							{yDomain}
 						/>
