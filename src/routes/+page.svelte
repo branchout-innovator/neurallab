@@ -160,7 +160,7 @@
 		currentEpoch = 0;
 
 		try {
-			await tfModel.fitDataset(data, {
+			const history = await tfModel.fitDataset(data, {
 				epochs: Number(epochs),
 				callbacks: {
 					async onEpochEnd(epoch, logs) {
@@ -172,6 +172,7 @@
 						} catch (e) {
 							console.error('Error while sampling outputs: ', e);
 						}
+						// set tfModel.stopTraining = true to stop training
 					}
 				}
 			});
@@ -529,6 +530,7 @@
 								{layer}
 								index={i}
 								tfLayer={tfModel.layers[i]}
+								{dataset}
 							></svelte:component>
 							{#if i < $model.layers.length - 1}
 								{@const leftLayerHeights = getNodeYPositions(layer)}

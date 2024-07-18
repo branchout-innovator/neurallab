@@ -14,7 +14,7 @@
 	export let layerName: string;
 	export let xDomain: [number, number] = [-3, 3];
 	export let yDomain: [number, number] = [-3, 3];
-	//export let dataset: tf.data.Dataset<tf.TensorContainer>;
+	export let dataset: tf.data.Dataset<tf.TensorContainer>;
 
 	const model: Writable<SequentialModel> = getContext('model');
 
@@ -36,15 +36,19 @@
 
 	async function loadTestPoints() {
 		// Load tf dataset here
+		/*
 		const dataset = tf.data.array([
 			{ xs: [1, 2], ys: 1 },
 			{ xs: [-1, -2], ys: -1 },
 			{ xs: [-1.1, -2.1], ys: 1 }
-		]);
+		]);*/
+		//if (!dataset) return;
+		console.log(dataset);
 		await dataset.forEachAsync((element) => {
-			const x = element.xs[0];
-			const y = element.xs[1];
-			const label = element.ys;
+			const data = element as { xs: number[], ys: number }
+			const x = data.xs[0];
+			const y = data.xs[1];
+			const label = data.ys;
 			testPoints.push({ x, y, label });
 		});
 		testPoints = testPoints;
