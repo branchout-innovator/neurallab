@@ -10,7 +10,8 @@
 		type DenseLayer,
 		type Layer,
 		type SequentialModel,
-		updateSampledOutputs1D
+		updateSampledOutputs1D,
+		loadCsvDataset
 	} from '$lib/structures';
 	import * as tf from '@tensorflow/tfjs';
 	import { onMount, setContext, SvelteComponent } from 'svelte';
@@ -152,7 +153,8 @@
 		// await tf.setBackend('webgl');
 		console.log(tf.getBackend());
 
-		const data = dataset;
+		const data = $dataset;
+		if (!data) return;
 
 		toast.loading(`Training for ${epochs} epochs...`);
 
@@ -251,11 +253,43 @@
 
 	let datasetUploadFiles: FileList;
 
-	let dataset: tf.data.Dataset<tf.TensorContainer>;
+	let dataset: Writable<tf.data.Dataset<tf.TensorContainer> | undefined> = writable(undefined);
+	setContext('dataset', dataset);
 
 	let csvColumnConfigs: Writable<{
 		[key: string]: { isLabel: 'true' | 'false' };
 	}> = writable({});
+
+	async function getNSamplesFromDataset(
+		dataset: tf.data.Dataset<tf.TensorContainer>,
+		n: number
+	): Promise<tf.TensorContainer[]> {
+		const samples: tf.TensorContainer[] = [];
+
+		// Shuffle the dataset to get random samples
+		const shuffledDataset = dataset.shuffle(1000);
+
+		// Take n samples
+		const samplesDataset = shuffledDataset.take(n);
+
+		// Collect the samples
+		await samplesDataset.batch(n).forEachAsync((sample) => {
+			samples.push(sample);
+		});
+
+		return samples;
+	}
+
+	async function logDataset(dataset: tf.data.Dataset<tf.TensorContainer>) {
+		await dataset.forEachAsync((element) => {
+			console.log(element);
+			// const data = element as { xs: tf.Tensor; ys: tf.Tensor };
+			// const x = data.xs.dataSync()[0];
+			// const y = data.xs.dataSync()[1];
+			// const label = data.ys.dataSync()[0];
+			// console.log({ x, y, label });
+		});
+	}
 
 	$: {
 		(async () => {
@@ -267,8 +301,6 @@
 						isLabel: 'false'
 					};
 				}
-			} else {
-				dataset = await generateDataset();
 			}
 		})();
 	}
@@ -292,7 +324,7 @@
 				}
 			}
 			if (hasLabel) {
-				loadUploadedCsv(datasetUploadFiles[0], config).then((d) => (dataset = d));
+				loadUploadedCsv(datasetUploadFiles[0], config).then((d) => ($dataset = d));
 			}
 			if ($model.layers[0]) {
 				$model.layers[0].inputShape = [featureCount];
@@ -347,6 +379,25 @@
 		$sampleDomain.x = (is1D ? [-11, 11] : [-3, 3]) as [number, number];
 		$sampleDomain.y = (is1D ? [-10, 120] : [-3, 3]) as [number, number];
 	}
+
+	const loadSampleDataset = async (url: string, numFeatures: number) => {
+		let blob = await fetch(url).then((r) => r.blob());
+		loadUploadedCsv(blob, {
+			inside_circle: { isLabel: true }
+		}).then((d) => {
+			$dataset = d;
+			getNSamplesFromDataset(d, 100).then((a) => console.log('moug ', a));
+		});
+		if ($model.layers[0]) {
+			$model.layers[0].inputShape = [numFeatures];
+			console.log('features: ', numFeatures);
+			updateTFModel($model);
+		}
+	};
+
+	onMount(async () => {
+		loadSampleDataset('/circle_dataset.csv', 2);
+	});
 </script>
 
 <svelte:head>
