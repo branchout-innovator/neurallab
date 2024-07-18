@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Heatmap from './heatmap.svelte';
-	import { getContext, onMount } from 'svelte';
+	import { getContext, onDestroy, onMount } from 'svelte';
 	import * as d3 from 'd3';
 	import { remToPx } from '$lib/utils';
 	import * as tf from '@tensorflow/tfjs';
@@ -8,19 +8,24 @@
 	import isEqual from 'lodash.isequal';
 	import type { SequentialModel } from '$lib/structures';
 	import type { Writable } from 'svelte/store';
+	import { zoom } from 'd3';
+	import { Button } from '$lib/components/ui/button';
 	//import type { Dataset } from '@tensorflow/tfjs';
 
 	export let nodeIndex: number;
 	export let layerName: string;
-	export let xDomain: [number, number] = [-3, 3];
-	export let yDomain: [number, number] = [-3, 3];
-	export let dataset: tf.data.Dataset<tf.TensorContainer>;
+	const dataset: Writable<tf.data.Dataset<tf.TensorContainer>> = getContext('dataset');
 
 	const model: Writable<SequentialModel> = getContext('model');
 
 	let svg: SVGSVGElement;
 
 	let testPoints: { x: number; y: number; label: number }[] = [];
+
+	const sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> =
+		getContext('sampleDomain');
+
+	let zoomBehavior: d3.ZoomBehavior<SVGSVGElement, unknown>;
 
 	const pointColorScale = d3
 		.scaleLinear<string>()
@@ -32,6 +37,7 @@
 		await loadTestPoints();
 		setupAxes();
 		drawTestPoints();
+		setupZoom();
 	});
 
 	async function loadTestPoints() {
@@ -42,23 +48,28 @@
 			{ xs: [-1, -2], ys: -1 },
 			{ xs: [-1.1, -2.1], ys: 1 }
 		]);*/
-		//if (!dataset) return;
-		console.log(dataset);
-		await dataset.forEachAsync((element) => {
-			const data = element as { xs: number[], ys: number }
-			const x = data.xs[0];
-			const y = data.xs[1];
-			const label = data.ys;
+		if (!dataset) return;
+		testPoints = [];
+		let count = 0;
+		await $dataset.forEachAsync((element) => {
+			const data = element as { xs: tf.Tensor; ys: tf.Tensor };
+			const x = data.xs.dataSync()[0];
+			const y = data.xs.dataSync()[1];
+			const label = data.ys.dataSync()[0];
 			testPoints.push({ x, y, label });
+			console.log({ x, y, label });
+			count++;
 		});
+		console.log('test points: ' + count);
+
 		testPoints = testPoints;
 	}
 
 	function setupAxes() {
 		const heatmapSize = remToPx(14);
 
-		const xScale = d3.scaleLinear().domain(xDomain).range([0, heatmapSize]);
-		const yScale = d3.scaleLinear().domain(yDomain).range([heatmapSize, 0]);
+		const xScale = d3.scaleLinear().domain($sampleDomain.x).range([0, heatmapSize]);
+		const yScale = d3.scaleLinear().domain($sampleDomain.y).range([heatmapSize, 0]);
 
 		d3.select(gx)
 			.call(d3.axisBottom(xScale).ticks(5).tickSize(5))
@@ -94,6 +105,61 @@
 
 	let gx: SVGGElement;
 	let gy: SVGGElement;
+
+	function setupZoom(): void {
+		const heatmapSize = remToPx(14);
+
+		zoomBehavior = zoom<SVGSVGElement, unknown>()
+			.scaleExtent([0.5, 5])
+			.extent([
+				[0, 0],
+				[heatmapSize, heatmapSize]
+			])
+			.on('zoom', zoomed);
+
+		d3.select(svg).call(zoomBehavior);
+	}
+
+	function zoomed(event: d3.D3ZoomEvent<SVGSVGElement, unknown>): void {
+		const { transform } = event;
+		const domain = $sampleDomain;
+		const heatmapSize = remToPx(14);
+
+		const xScale = d3.scaleLinear().domain(domain.x).range([0, heatmapSize]);
+		const yScale = d3.scaleLinear().domain(domain.y).range([heatmapSize, 0]);
+
+		const newXDomain = transform.rescaleX(xScale).domain();
+		const newYDomain = transform.rescaleY(yScale).domain();
+
+		sampleDomain.update((d) => ({
+			x: newXDomain as [number, number],
+			y: newYDomain as [number, number]
+		}));
+
+		updateChart();
+	}
+
+	function updateChart(): void {
+		setupAxes();
+		drawTestPoints();
+	}
+
+	function resetZoom(): void {
+		sampleDomain.set({
+			x: [-3, 3],
+			y: [-3, 3]
+		});
+		d3.select(svg).call(zoomBehavior.transform, d3.zoomIdentity);
+		updateChart();
+	}
+
+	const unsubscribe = sampleDomain.subscribe(() => {
+		if (svg) {
+			updateChart();
+		}
+	});
+
+	onDestroy(unsubscribe);
 </script>
 
 <div>
@@ -106,8 +172,8 @@
 				customDensity={60}
 				size={14}
 				strokeWidth={2}
-				{xDomain}
-				{yDomain}
+				xDomain={$sampleDomain.x}
+				yDomain={$sampleDomain.y}
 			/>
 		{:else if isEqual($model.layers[0].inputShape, [2])}
 			<Heatmap
@@ -115,13 +181,14 @@
 				{layerName}
 				class="h-56 w-56 rounded-[0.15rem]"
 				customDensity={60}
-				{xDomain}
-				{yDomain}
+				xDomain={$sampleDomain.x}
+				yDomain={$sampleDomain.y}
 			/>
 		{/if}
-		<svg bind:this={svg} class="pointer-events-none absolute left-0 top-0" overflow="visible">
+		<svg bind:this={svg} class="absolute left-0 top-0" overflow="visible">
 			<g bind:this={gx} class="translate-y-56"></g>
 			<g bind:this={gy}></g>
 		</svg>
 	</div>
+	<Button on:click={resetZoom}>Reset Zoom</Button>
 </div>
