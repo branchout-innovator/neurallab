@@ -38,7 +38,7 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import SvelteMarkdown from 'svelte-markdown';
 	import ResizableHandle from '$lib/components/ui/resizable/resizable-handle.svelte';
-
+	import ImageComponent from './ImageComponent.svelte';
 	const SAMPLE_DENSITY = 20;
 	let sample_x_domain: [number, number] = [-3, 3];
 	let sample_y_domain: [number, number] = [-3, 3];
@@ -199,7 +199,7 @@
 	function getWeightsBetweenLayers(model: tf.Sequential, layerIndex: number): tf.Tensor {
 		const weights = model.layers[layerIndex].getWeights();
 		return weights[0]; // Assuming the first tensor in weights array is the weight matrix
-	}
+	}	
 	let canvasWidth = 150;
 
 	let tfModel: tf.Sequential;
@@ -329,7 +329,7 @@
 
 Activation functions are mathematical functions applied to the output of a neuron (like a filter). They introduce non-linearity (where input changes are not proportional to output changes) to the model, which allows it to learn and predict patterns more accurately. 
 <br>
-![image0](/picture0.png)
+![picture0](/static/picture0)
 <br>
 ## When to use Different Activation Functions:
 #### **Output Layers:**
@@ -346,7 +346,7 @@ softmax(x<sub>i</sub>) = e<sup>x<sub>i</sub></sup>/∑<sub>j</sub>e<sup>x<sub>j<
 Either linear activation functions or no activation function is used. 
 #### **Hidden Layers:**
 
-### ReLU: 
+### ReLU:
 Simple and effective activation function that helps to alleviate the vanishing gradient problem (derivatives of positive inputs are 1): 
 ReLU(x) = max(0,x)
 
@@ -354,6 +354,7 @@ ReLU(x) = max(0,x)
 Similar to sigmoid but with a range of [-1, 1]. Can be more effective at training the network because of a larger gradient: 
 tanh(x) = e<sup>x</sup>-e<sup>-x<sup>/e<sup>x</sup>+e<sup>-x</sup>
 <br>
+![image1](/path/image1.png)
 <br>
 # Chatgpt response: 
 Imagine your brain as a big, super-smart machine with lots of tiny switches inside. These switches help you decide what to do based on the information you get, like deciding whether to jump when you see a puddle or to say "hello" when you see a friend.
@@ -414,7 +415,7 @@ Activation functions help the computer's brain understand and decide things bett
 					</h2>
 					<span class="inline-block h-4 w-4"></span>
 					<p>{pagetext[Number(position)]}</p>
-					<SvelteMarkdown {source} />
+					<SvelteMarkdown {source} renderers={{ image: ImageComponent }} />
 				</div>
 			</div>
 		</div>
