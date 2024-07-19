@@ -93,6 +93,22 @@
 	body {
 		@apply bg-background text-foreground;
 	}
+	ul, ol {
+		list-style: revert;
+		@apply list-inside;
+	}
+	h1 {
+		@apply text-2xl;
+	}
+	h2 {
+		@apply text-xl;
+	}
+	h3 {
+		@apply text-lg;
+	}
+	p {
+		text-indent: 2.75rem;
+	}
 }
 @layer base {
 	ul, ol {
@@ -112,4 +128,9 @@ main {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
+}
+
+p {
+	font-size: 0.875rem/* 14px */;
+    line-height: 1.25rem/* 20px */;
 }

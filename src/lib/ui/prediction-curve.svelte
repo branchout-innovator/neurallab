@@ -17,15 +17,13 @@
 		customDensity?: number;
 		size?: number;
 		strokeWidth?: number;
-		xDomain: [number, number];
-		yDomain: [number, number];
 	};
 
 	export let nodeIndex: number;
 	export let layerName: string;
 	export let customDensity: $$Props['customDensity'] = undefined;
-	export let xDomain: [number, number];
-	export let yDomain: [number, number];
+	const sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> =
+		getContext('sampleDomain');
 
 	const sampledOutputs: Writable<SampledOutputs<number[]>> = getContext('sampledOutputs');
 	const getTfModel = getContext('getTfModel') as () => tf.Sequential;
@@ -43,7 +41,13 @@
 	$: {
 		(async () => {
 			nodeOutputs = customDensity
-				? await getSampledOutputForNode1D(tfModel, layerName, nodeIndex, customDensity, xDomain)
+				? await getSampledOutputForNode1D(
+						tfModel,
+						layerName,
+						nodeIndex,
+						customDensity,
+						$sampleDomain.x
+					)
 				: $sampledOutputs && $sampledOutputs[layerName] && $sampledOutputs[layerName][nodeIndex];
 		})();
 	}
@@ -58,8 +62,8 @@
 		const chartHeight = pxSize;
 
 		const numSamples = nodeOutputs.length;
-		const xScale = d3.scaleLinear().domain(xDomain).range([0, chartWidth]);
-		const yScale = d3.scaleLinear().domain(yDomain).range([chartHeight, 0]);
+		const xScale = d3.scaleLinear().domain($sampleDomain.x).range([0, chartWidth]);
+		const yScale = d3.scaleLinear().domain($sampleDomain.y).range([chartHeight, 0]);
 
 		const line = d3
 			.line<number>()
@@ -68,7 +72,7 @@
 					d3
 						.scaleLinear()
 						.domain([0, numSamples - 1])
-						.range(xDomain)(i)
+						.range($sampleDomain.x)(i)
 				)
 			)
 			.y((d) => yScale(d));

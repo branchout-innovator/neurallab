@@ -19,6 +19,7 @@
 	import Plus from 'lucide-svelte/icons/plus';
 	import Minus from 'lucide-svelte/icons/minus';
 	import Brain from 'lucide-svelte/icons/brain';
+	import CirclePause from 'lucide-svelte/icons/circle-pause';
 	import Activity from 'lucide-svelte/icons/activity';
 	import RefreshCw from 'lucide-svelte/icons/refresh-cw';
 	import { writable, type Writable } from 'svelte/store';
@@ -150,8 +151,15 @@
 			);
 	};
 
+	let isTraining = false;
+
 	const trainModel = async () => {
 		if (!tfModel) return;
+		if (isTraining) {
+			isTraining = false;
+			tfModel.stopTraining = true;
+			return;
+		}
 		// The model needs to be "big enough" to benefit from GPU acceleration
 		// So with the small models in the Tensorflow playground its actually faster to use CPU
 		// await tf.setBackend('webgl');
@@ -159,19 +167,19 @@
 
 		const data = dataset;
 
-		toast.loading(`Training for ${epochs} epochs...`);
+		// toast.loading(`Training for ${epochs} epochs...`);
 
 		// Train the model using the data.
-		currentEpoch = 0;
 
 		try {
-			const history = await tfModel.fitDataset(data, {
-				epochs: Number(epochs),
+			isTraining = true;
+			const history = await tfModel.fitDataset(data.batch(64), {
+				epochs: 1000000,
 				callbacks: {
 					async onEpochEnd(epoch, logs) {
 						if (!tfModel) return;
-						currentEpoch = epoch + 1;
-						if (currentEpoch % 5 === 0) tfModel = tfModel;
+						currentEpoch++;
+						if (epoch % 5 === 0) tfModel = tfModel;
 						try {
 							await sampleOutputs();
 						} catch (e) {
@@ -192,7 +200,7 @@
 			// prediction.print(); // Should print a value close to 4 (2^2)
 
 			// Open the browser devtools to see the output
-			toast.success(`Training complete!`);
+			// toast.success(`Training complete!`);
 			tfModel = tfModel;
 		} catch (e) {
 			console.error(e);
@@ -314,17 +322,12 @@
 		changePage(1);
 	}
 	let articletitle = [
-		'sdjfnd',
+		'What are Loss Functions? (Neural Nets)',
 		'sjokccjdj',
 		'skgkoifjnm',
 		'mkdjvijdmcvjijfmkijnjrjdnigjnskdnj fhdjsnd'
 	];
-	let pagetext = [
-		'asbfhsbd',
-		'sjhcbfujesndnjdjs',
-		'ijgnfjvnfdnkm',
-		'kbjfncmfcjfdncjfndcvfdmckvnjfdmkvjnfkmxv fdmmc'
-	];
+	let pagetext = ['', '', '', ''];
 	function changePage(d: number) {
 		let pageNum = Number(position);
 		if ((pageNum != 0 || d != -1) && (pageNum != pagetext.length - 1 || d != 1)) {
@@ -353,9 +356,28 @@
 		$sampleDomain.y = (is1D ? [-10, 120] : [-3, 3]) as [number, number];
 	}
 
-	function toggle() {
-		window.document.body.classList.toggle('dark-mode');
-	}
+	const loadSampleDataset = async (url: string, numFeatures: number) => {
+		let blob = await fetch(url).then((r) => r.blob());
+		loadUploadedCsv(blob, {
+			inside_circle: { isLabel: true }
+		}).then((d) => {
+			$dataset = d;
+			getNSamplesFromDataset(d, 100).then((a) => console.log('moug ', a));
+		});
+		if ($model.layers[0]) {
+			$model.layers[0].inputShape = [numFeatures];
+			console.log('features: ', numFeatures);
+			updateTFModel($model);
+		}
+	};
+
+	sampleDomain.subscribe((v) => {
+		sampleOutputs();
+	});
+
+	onMount(async () => {
+		loadSampleDataset('/circle_dataset.csv', 2);
+	});
 </script>
 
 <svelte:head>
@@ -368,7 +390,9 @@
 		<div class="container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
 			<div class="h-1/8 container flex w-full flex-row items-end">
 				<div class="flex h-full w-1/3">
-					<Button variant="outline" class="ml-auto" size="icon" on:click={pageLeft}>&lt;</Button>
+					<Button variant="outline" class="ml-auto h-full" size="icon" on:click={pageLeft}
+						>&lt;</Button
+					>
 				</div>
 				<div class="w-1/3">
 					<DropdownMenu.Root>
@@ -387,7 +411,9 @@
 					</DropdownMenu.Root>
 				</div>
 				<div class="flex h-full w-1/3">
-					<Button variant="outline" class="mr-auto" size="icon" on:click={pageRight}>&gt;</Button>
+					<Button variant="outline" class="mr-auto h-full" size="icon" on:click={pageRight}
+						>&gt;</Button
+					>
 				</div>
 			</div>
 			<div class="flex w-full overflow-y-auto">
@@ -405,7 +431,7 @@
 		</div>
 	</Resizable.Pane>
 	<Resizable.Handle withHandle />
-	<Resizable.Pane defaultSize={75}>
+	<Resizable.Pane defaultSize={60} class="p-4">
 		<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
 			<!-- Controls (header) -->
 			<Tabs.Root value="NL" class="h-auto w-full">
@@ -413,7 +439,7 @@
 					<Tabs.Trigger value="NL">NeuralLab</Tabs.Trigger>
 					<Tabs.Trigger value="settings">Settings</Tabs.Trigger>
 				</Tabs.List>
-				<Tabs.Content value="settings" class="h-auto">
+				<Tabs.Content value="settings">
 					<Card.Root class="h-full">
 						<Card.Header>
 							<Card.Title>Settings</Card.Title>
@@ -560,6 +586,14 @@
 									</Dialog.Content>
 								</Dialog.Root>
 							</div>
+							<div class="flex flex-1 items-start space-x-2">
+								<br />
+								Choose Mode Here
+								<div>
+									<br />
+								</div>
+								<ThemeToggle></ThemeToggle>
+							</div>
 						</Card.Content>
 					</Card.Root>
 				</Tabs.Content>
@@ -618,8 +652,13 @@
 						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
 							<Button on:click={trainModel}>
-								<Brain class="mr-2 h-4 w-4"></Brain>
-								Train
+								{#if isTraining}
+									<CirclePause class="mr-2 h-4 w-4"></CirclePause>
+									Train
+								{:else}
+									<Brain class="mr-2 h-4 w-4"></Brain>
+									Train
+								{/if}
 							</Button>
 						</div>
 					</div>
