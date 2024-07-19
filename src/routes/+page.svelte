@@ -405,7 +405,7 @@
 	<meta name="description" content="Design and visualize neural networks in your browser." />
 </svelte:head>
 <!--<div class="container flex h-full max-w-full flex-row gap-4">-->
-<Resizable.PaneGroup direction="horizontal" class="flex h-full max-w-full flex-row">
+<Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row">
 	<Resizable.Pane defaultSize={40}>
 		<div class="container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
 			<div class="h-1/8 container flex w-full flex-row items-end">
