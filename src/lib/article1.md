@@ -1,61 +1,52 @@
-## What are Neural Networks? (Basics of Neural Networks)
-#### Written by: Raina Gao Edited by: Max Lee
+#### Loss functions are used to determine the difference between the predicted values and the actual values of a model. The smaller the error, or loss, the more accurate the model. The goal of a model is to minimize this loss. Different loss functions are used for different tasks: 
 
+<br></br>
 
+## **Regression Loss Functions:** 
+### Mean Squared Error (MSE):
+MSE measures the average of the squares of the errors. Because the error is squared, it is used because it penalizes larger errors. MSE functions are differentiable (good for gradient descent optimization) and easy to read. However, it is also greatly influenced by outliers and can be difficult to compare to other data sets depending on the scale. 
+MSE = (1/n)*Σ(y~i~-ŷ~i~)^2^, (y~i~: actual value, ŷ~i~: predicted value)
 
-Neural networks are computational models that serve as a fundamental component of artificial intelligence (AI) and machine learning (ML). Neural networks make decisions in a similar pattern to the human brain and can be trained by datasets to derive conclusions. Over time, as models are created based on datasets and information, neural networks improve their accuracy. For example, Google’s search engine is a neural network. 
+<br></br>
 
+### Mean Absolute Error (MAE):
+MAE measures the average of the absolute errors. The errors are not squared, so it is used because outliers do not as heavily influence it. MAE functions are also easy to read and give equal weight to all errors. However, it is not differentiable (at 0) and doesn’t penalize large errors. 
+MAE = (1/n)*Σ|y~i~-ŷ~i~|, (y~i~: actual value, ŷ~i~: predicted value)
 
-Types of neural networks include: 
-* Convolutional Neural Networks (CNNs)
-* Recurrent Neural Networks (RNNs)
+<br></br>
 
+### Huber Loss:
+Huber loss combines MSE and MAE (quadratic for small errors, linear for large). It is used because it handles outliers effectively, is differentiable everywhere, and provides a balanced measurement, combining both MSE and MAE. However, it is more complex, and choosing the δ value can be challenging. 
+L~δ~(y~i~-ŷ~i~) = {(1/2)(y~i~-ŷ~i~)for |y~i~-ŷ~i~| ≤ δ
+δ(|yi-ŷi| - (1/2)δ)for |y~i~-ŷ~i~| > δ
+(δ determines where the function changes)
 
-<br>
+<br></br>
+![Image0](/static/articleimages/image0)
+<br></br>
 
-### History of Neural Networks 
-In 1943, Warren S. McCulloch and Walter Pitts published groundbreaking research on the logical operations of neurons in the brain, likening them to binary threshold units akin to Boolean logic.
+## **Classification Loss Functions:** 
 
-In 1958, Frank Rosenblatt advanced this work with the invention of the perceptron, a model for storing and organizing information in the brain. He introduced the concept of weights, enabling computers, such as the IBM 704, to learn tasks like distinguishing between marked cards.
+### Binary Cross-Entropy Loss (Log Loss):
+Binary cross-entropy loss functions are used for binary classification problems. It is used for its clarity, smooth gradient, and flexible weighting. However, it is sensitive to outliers, heavy computationally, and is undefined for certain values (logarithmic). 
+Loss = -(1/n)Σ[y~i~log(ŷ~i~) + (1 - y~i~)log(1 - ŷ~i~)] (y~i~: actual binary label, ŷ~i~: predicted probability). 
 
-By 1974, Paul Werbos furthered the field with his exploration of backpropagation in neural networks, first noted in his PhD thesis, a pivotal concept for optimizing learning processes within these systems.
+### Categorical Cross-Entropy Loss:
+Categorical cross-entry loss functions are used for multi-class classification problems. It is used because it can handle multiple classes with probabilities, scalability, and smooth gradients. However, it is sensitive to outliers, undefined for certain values (logarithmic), and is sensitive to imbalanced datasets. 
+Loss = -ΣΣy~i~c*log(ŷ~i~c), (C is # of classes, yic is indicator if c is correct for i, and ŷic is predicted probability of c for i)
 
-In 1989, Yann LeCun integrated backpropagation with neural network architectures, utilizing constraints to successfully train algorithms for recognizing hand-written zip code digits, a breakthrough in practical machine learning applications.
+### Hinge Loss:
+Hinge loss functions are used for training support vector machines (SVMs). It is used because it maximizes the margin, is robust to outliers, and is effective for linear models. However, it is non-differentiable at the hinge point, difficult to use with multiple classes, and is sensitive to class imbalance. 
+Loss = Σmax(0, 1 - y~i~*ŷ~i~)
 
+<br></br>
+![Image1](/static/articleimages/image1)
+<br></br>
 
-### Key components of Neural Networks: 
-#### Neurons 
-At the core of neural networks are neurons that receive input signals. These neurons go through a series of steps to reach an output. 
+## **Conclusions:** 
+Loss functions are important because different loss functions can display accuracies for different aspects of models. You can also compare model accuracies to others through loss functions. Optimization algorithms, such as gradient descent, can help minimize the loss function. 
 
-#### Layers 
-There are 3 layers the neurons travel through, input: 
-1. Input layer
-* Raw data is fed into the neural network
-2. Hidden layer
-* Complex computations and transformations of data 
-* Uses weights and activation functions
-* It may include multiple hidden layers
-3. Output
-* Produce the neural network’s final output
-* May use activation functions such as Binary Classification or Multi-class Classification
+<br></br>
 
-
-
-#### Weights/Biases
-Often in hidden layers of neural networks, weights are assigned to input neurons. These inputs are multiplied by assigned weights, summed up, and applied to a threshold. If the sum exceeds this threshold, the neurons activate and pass data to nodes in the next layer. This sum is then passed through an activation function, determining the node's output. The activation function introduces non-linearity into the output, allowing the neural network to learn and model complex relationships in the data. Weights and biases are constantly adjusted as the model continues to be trained, allowing for fewer mistakes and more accurate outputs. 
-
-#### Activation function (more details in other articles)
-Activation functions are mathematical functions applied to get the output of a neuron, similar to a filter. Types of activation functions include Sigmoid function, Softmax function, ReLU, Leaky ReLU, and Tanh. 
-
-
-
-### Why Are Neural Networks Important? 
-Neural networks analyze large amounts of data, recognizing patterns and correlations, allowing computers to make intelligent decisions with minimal human assistance. Neural networks are the frameworks for AI and ML and are largely inspired by the human brain itself. 
-
-
-### References
-Hardesty, L. (2017, April 14). Explained: Neural networks | MIT News | Massachusetts Institute of Technology. MIT News. Retrieved July 16, 2024, from https://news.mit.edu/2017/explained-neural-networks-deep-learning-0414
-What is a Neural Network? (n.d.). IBM. Retrieved July 16, 2024, from https://www.ibm.com/topics/neural-networks
-
-
-
+### *References*
+Yathish, V. (2022, August 4). Loss Functions and Their Use In Neural Networks. Towards Data Science. Retrieved July 16, 2024, from https://towardsdatascience.com/loss-functions-and-their-use-in-neural-networks-a470e703f1e9
