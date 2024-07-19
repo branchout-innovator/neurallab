@@ -20,6 +20,7 @@
 	import Plus from 'lucide-svelte/icons/plus';
 	import Minus from 'lucide-svelte/icons/minus';
 	import Brain from 'lucide-svelte/icons/brain';
+	import CirclePause from 'lucide-svelte/icons/circle-pause';
 	import Activity from 'lucide-svelte/icons/activity';
 	import RefreshCw from 'lucide-svelte/icons/refresh-cw';
 	import { writable, type Writable } from 'svelte/store';
@@ -151,8 +152,15 @@
 			);
 	};
 
+	let isTraining = false;
+
 	const trainModel = async () => {
 		if (!tfModel) return;
+		if (isTraining) {
+			isTraining = false;
+			tfModel.stopTraining = true;
+			return;
+		}
 		// The model needs to be "big enough" to benefit from GPU acceleration
 		// So with the small models in the Tensorflow playground its actually faster to use CPU
 		// await tf.setBackend('webgl');
@@ -161,19 +169,19 @@
 		const data = $dataset;
 		if (!data) return;
 
-		toast.loading(`Training for ${epochs} epochs...`);
+		// toast.loading(`Training for ${epochs} epochs...`);
 
 		// Train the model using the data.
-		currentEpoch = 0;
 
 		try {
+			isTraining = true;
 			const history = await tfModel.fitDataset(data.batch(64), {
-				epochs: Number(epochs),
+				epochs: 1000000,
 				callbacks: {
 					async onEpochEnd(epoch, logs) {
 						if (!tfModel) return;
-						currentEpoch = epoch + 1;
-						if (currentEpoch % 5 === 0) tfModel = tfModel;
+						currentEpoch++;
+						if (epoch % 5 === 0) tfModel = tfModel;
 						try {
 							await sampleOutputs();
 						} catch (e) {
@@ -194,7 +202,7 @@
 			// prediction.print(); // Should print a value close to 4 (2^2)
 
 			// Open the browser devtools to see the output
-			toast.success(`Training complete!`);
+			// toast.success(`Training complete!`);
 			tfModel = tfModel;
 		} catch (e) {
 			console.error(e);
@@ -351,12 +359,7 @@
 		'skgkoifjnm',
 		'mkdjvijdmcvjijfmkijnjrjdnigjnskdnj fhdjsnd'
 	];
-	let pagetext = [
-		'',
-		'',
-		'',
-		''
-	];
+	let pagetext = ['', '', '', ''];
 	function changePage(d: number) {
 		let pageNum = Number(position);
 		if ((pageNum != 0 || d != -1) && (pageNum != pagetext.length - 1 || d != 1)) {
@@ -602,8 +605,13 @@
 						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
 							<Button on:click={trainModel}>
-								<Brain class="mr-2 h-4 w-4"></Brain>
-								Train
+								{#if isTraining}
+									<CirclePause class="mr-2 h-4 w-4"></CirclePause>
+									Train
+								{:else}
+									<Brain class="mr-2 h-4 w-4"></Brain>
+									Train
+								{/if}
 							</Button>
 						</div>
 					</div>
