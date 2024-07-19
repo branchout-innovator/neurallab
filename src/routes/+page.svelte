@@ -43,6 +43,11 @@
 	import isEqual from 'lodash.isequal';
 	import ImageComponent from './ImageComponent.svelte';
 	import mark from '$lib/article1.md?raw';
+	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
+	import ChevronRight from 'lucide-svelte/icons/chevron-right';
+	import * as Tabs from '$lib/components/ui/tabs/index.js';
+	import * as Card from '$lib/components/ui/card/index.js';
+	import ThemeToggle from '$lib/ui/theme-toggle.svelte';
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
@@ -453,150 +458,180 @@
 	<Resizable.Pane defaultSize={60} class="p-4">
 		<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
 			<!-- Controls (header) -->
-			<div class="flex flex-row flex-wrap items-end gap-4">
-				<div class="flex flex-col gap-2">
-					<Label class="flex gap-2 text-xs">
-						<Activity class="h-4 w-4"></Activity>
-						Activation Function
-					</Label>
-					<Select.Root bind:selected={selectedActivation}>
-						<Select.Trigger class="w-[180px]">
-							<Select.Value></Select.Value>
-						</Select.Trigger>
-						<Select.Content>
-							<Select.Item value="relu">ReLU</Select.Item>
-							<Select.Item value="sigmoid">Sigmoid</Select.Item>
-						</Select.Content>
-					</Select.Root>
-				</div>
-				<div class="flex flex-col gap-2">
-					<Label class="flex gap-2 text-xs">
-						<RefreshCw class="h-4 w-4"></RefreshCw>
-						Epochs
-					</Label>
-					<Input type="number" bind:value={epochs} placeholder="1000" min={1} class="w-24" />
-				</div>
-				<!-- <div class="flex flex-col gap-2">
-					<Label class="flex gap-2 text-xs">Input</Label>
-					<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
-				</div>
-				<div class="flex flex-col gap-2">
-					<Label class="flex gap-2 text-xs">Predicted Value</Label>
-					<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
-				</div> -->
-				<div class="flex flex-col gap-2">
-					<div></div>
-					<Dialog.Root>
-						<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
-							>Upload Dataset</Dialog.Trigger
-						>
-						<Dialog.Content>
-							<Dialog.Header>
-								<Dialog.Title>Upload CSV Dataset</Dialog.Title>
-								<Dialog.Description class="flex flex-col gap-2">
-									<p>Upload a dataset from a .csv file.</p>
-									<div class="flex flex-col">
-										<FileInput id="dataset-upload" class="w-32" bind:files={datasetUploadFiles} />
-									</div>
-									{#if Object.entries($csvColumnConfigs).length > 0}
-										<Table.Root>
-											<Table.Header>
-												<Table.Row>
-													<Table.Head class="flex-grow">Column Name</Table.Head>
-												</Table.Row>
-											</Table.Header>
-											{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
-												<Table.Row>
-													<Table.Cell class="font-medium">{column}</Table.Cell>
-													<RadioGroup.Root bind:value={$csvColumnConfigs[column].isLabel} asChild>
-														<Table.Cell>
-															<div class="flex items-center space-x-2">
-																<RadioGroup.Item value="false" id={`feature-${column}`}
-																></RadioGroup.Item>
-																<Label for={`feature-${column}`}>Input</Label>
-															</div>
-														</Table.Cell>
-														<Table.Cell>
-															<div class="flex items-center space-x-2">
-																<RadioGroup.Item value="true" id={`label-${column}`}
-																></RadioGroup.Item>
-																<Label for={`label-${column}`}>Output</Label>
-															</div>
-														</Table.Cell>
-													</RadioGroup.Root>
-												</Table.Row>
-											{/each}
-										</Table.Root>
-										{#if !hasLabel}
-											<p class="font-medium text-foreground">
-												Choose at least one column to use as output.
-											</p>
-										{/if}
-									{/if}
-								</Dialog.Description>
-							</Dialog.Header>
-						</Dialog.Content>
-					</Dialog.Root>
-				</div>
-				<div class="flex flex-col gap-2"></div>
-				<div class="flex-1"></div>
-				<div class="flex flex-col gap-2">
-					<Label class="flex gap-2 text-xs">Hardware</Label>
-					<Tooltip.Root>
-						<Tooltip.Trigger asChild>
-							<div class="flex h-9 flex-row flex-nowrap items-center space-x-2">
-								<Label for="hardware-backend">CPU</Label>
-								<Switch id="hardware-backend" bind:checked={useGPU} />
-								<Label for="hardware-backend">GPU</Label>
+			<Tabs.Root value="settings" class="w-full">
+				<Tabs.List class="grid w-full grid-cols-2">
+					<Tabs.Trigger value="NL">NeuralLab</Tabs.Trigger>
+					<Tabs.Trigger value="settings">Settings</Tabs.Trigger>
+				</Tabs.List>
+				<Tabs.Content value="settings">
+					<Card.Root class = "h-full">
+						<Card.Header>
+							<Card.Title>Settings</Card.Title>
+							<Card.Description>
+								Make changes to your settings and upload your dataset here.
+							</Card.Description>
+						</Card.Header>
+						<Card.Content class="space-y-3">
+							<div class="space-y-1">
+								<Dialog.Root>
+									<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
+										>Upload Dataset</Dialog.Trigger
+									>
+									<Dialog.Content>
+										<Dialog.Header>
+											<Dialog.Title>Upload CSV Dataset</Dialog.Title>
+											<Dialog.Description class="flex flex-col gap-2">
+												<p>Upload a dataset from a .csv file.</p>
+												<div class="flex flex-col">
+													<FileInput id="dataset-upload" class="w-32" bind:files={datasetUploadFiles} />
+												</div>
+												{#if Object.entries($csvColumnConfigs).length > 0}
+													<Table.Root>
+														<Table.Header>
+															<Table.Row>
+																<Table.Head class="flex-grow">Column Name</Table.Head>
+															</Table.Row>
+														</Table.Header>
+														{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
+															<Table.Row>
+																<Table.Cell class="font-medium">{column}</Table.Cell>
+																<RadioGroup.Root bind:value={$csvColumnConfigs[column].isLabel} asChild>
+																	<Table.Cell>
+																		<div class="flex items-center space-x-2">
+																			<RadioGroup.Item value="false" id={`feature-${column}`}
+																			></RadioGroup.Item>
+																			<Label for={`feature-${column}`}>Input</Label>
+																		</div>
+																	</Table.Cell>
+																	<Table.Cell>
+																		<div class="flex items-center space-x-2">
+																			<RadioGroup.Item value="true" id={`label-${column}`}
+																			></RadioGroup.Item>
+																			<Label for={`label-${column}`}>Output</Label>
+																		</div>
+																	</Table.Cell>
+																</RadioGroup.Root>
+															</Table.Row>
+														{/each}
+													</Table.Root>
+													{#if !hasLabel}
+														<p class="font-medium text-foreground">
+															Choose at least one column to use as output.
+														</p>
+													{/if}
+												{/if}
+											</Dialog.Description>
+										</Dialog.Header>
+									</Dialog.Content>
+								</Dialog.Root>
+						</div>
+						<div class="flex flex-1 items-start space-x-2">
+							<br>
+							Choose Mode Here
+							<div>
+								<br>
 							</div>
-						</Tooltip.Trigger>
-						<Tooltip.Content class="max-w-52">
-							GPU is recommended for large models but slower for small models.
-						</Tooltip.Content>
-					</Tooltip.Root>
-				</div>
-				<div class="flex flex-col gap-2">
-					<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
-					<Button on:click={trainModel}>
-						<Brain class="mr-2 h-4 w-4"></Brain>
-						Train
-					</Button>
-				</div>
-			</div>
-			<div
-				class="flex h-full w-full flex-col gap-6 overflow-x-scroll rounded-lg border p-6 text-sm"
-			>
-				<div class="ml-auto mr-auto flex flex-row items-center">
-					<Button variant="ghost" size="icon" class="h-8 w-8" on:click={addLayer}>
-						<Plus class="h-4 w-4"></Plus>
-					</Button>
-					<Button variant="ghost" size="icon" class="h-8 w-8" on:click={removeLayer}>
-						<Minus class="h-4 w-4"></Minus>
-					</Button>
-					<span class="ml-2 leading-none text-muted-foreground">{$model.layers.length} Layers</span>
-				</div>
-
-				<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
-					{#if tfModel}
-						{#each $model.layers as layer, i (i)}
-							<svelte:component
-								this={layerComponents[layer.type]}
-								{layer}
-								index={i}
-								tfLayer={tfModel.layers[i]}
-								{dataset}
-							></svelte:component>
-							{#if i < $model.layers.length - 1}
-								{@const leftLayerHeights = getNodeYPositions(layer)}
-								{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
-								{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
-								<ConnectionsVis {leftLayerHeights} {rightLayerHeights} {canvasWidth} {weights} />
+							<ThemeToggle></ThemeToggle>
+						</div>
+						</Card.Content>
+					</Card.Root>
+				</Tabs.Content>
+				<Tabs.Content value="NL">
+					<div class="flex flex-row flex-wrap items-end gap-4">
+						<div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">
+								<Activity class="h-4 w-4"></Activity>
+								Activation Function
+							</Label>
+							<Select.Root bind:selected={selectedActivation}>
+								<Select.Trigger class="w-[180px]">
+									<Select.Value></Select.Value>
+								</Select.Trigger>
+								<Select.Content>
+									<Select.Item value="relu">ReLU</Select.Item>
+									<Select.Item value="sigmoid">Sigmoid</Select.Item>
+								</Select.Content>
+							</Select.Root>
+						</div>
+						<div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">
+								<RefreshCw class="h-4 w-4"></RefreshCw>
+								Epochs
+							</Label>
+							<Input type="number" bind:value={epochs} placeholder="1000" min={1} class="w-24" />
+						</div>
+						<!-- <div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">Input</Label>
+							<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
+						</div>
+						<div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">Predicted Value</Label>
+							<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
+						</div> -->
+						<div class="flex flex-col gap-2">
+							<div></div>
+						</div>
+						<div class="flex flex-col gap-2"></div>
+						<div class="flex-1"></div>
+						<div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">Hardware</Label>
+							<Tooltip.Root>
+								<Tooltip.Trigger asChild>
+									<div class="flex h-9 flex-row flex-nowrap items-center space-x-2">
+										<Label for="hardware-backend">CPU</Label>
+										<Switch id="hardware-backend" bind:checked={useGPU} />
+										<Label for="hardware-backend">GPU</Label>
+									</div>
+								</Tooltip.Trigger>
+								<Tooltip.Content class="max-w-52">
+									GPU is recommended for large models but slower for small models.
+								</Tooltip.Content>
+							</Tooltip.Root>
+						</div>
+						<div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
+							<Button on:click={trainModel}>
+								<Brain class="mr-2 h-4 w-4"></Brain>
+								Train
+							</Button>
+						</div>
+					</div>
+					<div
+						class="flex h-full w-full flex-col gap-6 overflow-x-scroll rounded-lg border p-6 text-sm"
+					>
+						<div class="ml-auto mr-auto flex flex-row items-center">
+							<Button variant="ghost" size="icon" class="h-8 w-8" on:click={addLayer}>
+								<Plus class="h-4 w-4"></Plus>
+							</Button>
+							<Button variant="ghost" size="icon" class="h-8 w-8" on:click={removeLayer}>
+								<Minus class="h-4 w-4"></Minus>
+							</Button>
+							<span class="ml-2 leading-none text-muted-foreground">{$model.layers.length} Layers</span>
+						</div>
+		
+						<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
+							{#if tfModel}
+								{#each $model.layers as layer, i (i)}
+									<svelte:component
+										this={layerComponents[layer.type]}
+										{layer}
+										index={i}
+										tfLayer={tfModel.layers[i]}
+										{dataset}
+									></svelte:component>
+									{#if i < $model.layers.length - 1}
+										{@const leftLayerHeights = getNodeYPositions(layer)}
+										{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
+										{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
+										<ConnectionsVis {leftLayerHeights} {rightLayerHeights} {canvasWidth} {weights} />
+									{/if}
+								{/each}
 							{/if}
-						{/each}
-					{/if}
-				</div>
+						</div>
+					</div>
+				</Tabs.Content>
+			</Tabs.Root>
 			</div>
-		</div>
 	</Resizable.Pane>
 	<!--</div>-->
 </Resizable.PaneGroup>
