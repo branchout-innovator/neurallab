@@ -309,16 +309,16 @@
 		changePage(1);
 	}
 	let articletitle = [
-		'sdjfnd',
+		'What are Loss Functions? (Neural Nets)',
 		'sjokccjdj',
 		'skgkoifjnm',
 		'mkdjvijdmcvjijfmkijnjrjdnigjnskdnj fhdjsnd'
 	];
 	let pagetext = [
-		'asbfhsbd',
-		'sjhcbfujesndnjdjs',
-		'ijgnfjvnfdnkm',
-		'kbjfncmfcjfdncjfndcvfdmckvnjfdmkvjnfkmxv fdmmc'
+		'',
+		'',
+		'',
+		''
 	];
 	function changePage(d: number) {
 		let pageNum = Number(position);
@@ -354,7 +354,7 @@
 	<meta name="description" content="Design and visualize neural networks in your browser." />
 </svelte:head>
 <!--<div class="container flex h-full max-w-full flex-row gap-4">-->
-<Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row gap-4">
+<Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row">
 	<Resizable.Pane defaultSize={25}>
 		<div class="container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
 			<div class="h-1/8 container flex w-full flex-row items-end">

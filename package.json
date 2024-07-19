@@ -41,13 +41,14 @@
 		"tslib": "^2.4.1",
 		"typescript": "^5.0.0",
 		"typescript-eslint": "^8.0.0-alpha.20",
-		"vite": "^5.0.3",
+		"vite": "^4.4.0",
 		"vite-plugin-static-copy": "^1.0.5"
 	},
 	"type": "module",
 	"dependencies": {
 		"bits-ui": "^0.21.12",
 		"clsx": "^2.1.1",
+		"isEqual": "^1.0.3",
 		"mode-watcher": "^0.3.1",
 		"paneforge": "^0.0.5",
 		"svelte-markdown": "^0.4.1",

@@ -1,54 +1,52 @@
-## What are Activation Functions? (Neural Nets)
+#### Loss functions are used to determine the difference between the predicted values and the actual values of a model. The smaller the error, or loss, the more accurate the model. The goal of a model is to minimize this loss. Different loss functions are used for different tasks: 
 
-Activation functions are mathematical functions applied to the output of a neuron (like a filter). They introduce non-linearity (where input changes are not proportional to output changes) to the model, which allows it to learn and predict patterns more accurately.
-<br>
-![Image0](/articleimages/image0)
-<br>
+<br></br>
 
-## When to use Different Activation Functions:
+## **Regression Loss Functions:** 
+### Mean Squared Error (MSE):
+MSE measures the average of the squares of the errors. Because the error is squared, it is used because it penalizes larger errors. MSE functions are differentiable (good for gradient descent optimization) and easy to read. However, it is also greatly influenced by outliers and can be difficult to compare to other data sets depending on the scale. 
+MSE = (1/n)*Σ(y~i~-ŷ~i~)^2^, (y~i~: actual value, ŷ~i~: predicted value)
 
-#### **Output Layers:**
+<br></br>
 
-### Binary Classification:
+### Mean Absolute Error (MAE):
+MAE measures the average of the absolute errors. The errors are not squared, so it is used because outliers do not as heavily influence it. MAE functions are also easy to read and give equal weight to all errors. However, it is not differentiable (at 0) and doesn’t penalize large errors. 
+MAE = (1/n)*Σ|y~i~-ŷ~i~|, (y~i~: actual value, ŷ~i~: predicted value)
 
-The Sigmoid function is used for the output layer because it outputs a value from 0 to 1:
-σ(x) = 1/(1 + e<sup>-x</sup>)
+<br></br>
 
-### Multi-class Classification:
+### Huber Loss:
+Huber loss combines MSE and MAE (quadratic for small errors, linear for large). It is used because it handles outliers effectively, is differentiable everywhere, and provides a balanced measurement, combining both MSE and MAE. However, it is more complex, and choosing the δ value can be challenging. 
+L~δ~(y~i~-ŷ~i~) = {(1/2)(y~i~-ŷ~i~)for |y~i~-ŷ~i~| ≤ δ
+δ(|yi-ŷi| - (1/2)δ)for |y~i~-ŷ~i~| > δ
+(δ determines where the function changes)
 
-The Softmax function is used because it converts the outputs to probabilities that sum to 100%:
-softmax(x<sub>i</sub>) = e<sup>x<sub>i</sub></sup>/∑<sub>j</sub>e<sup>x<sub>j</sub></sup>
+<br></br>
+![Image0](/static/articleimages/image0)
+<br></br>
 
-### Regression:
+## **Classification Loss Functions:** 
 
-Either linear activation functions or no activation function is used.
+### Binary Cross-Entropy Loss (Log Loss):
+Binary cross-entropy loss functions are used for binary classification problems. It is used for its clarity, smooth gradient, and flexible weighting. However, it is sensitive to outliers, heavy computationally, and is undefined for certain values (logarithmic). 
+Loss = -(1/n)Σ[y~i~log(ŷ~i~) + (1 - y~i~)log(1 - ŷ~i~)] (y~i~: actual binary label, ŷ~i~: predicted probability). 
 
-#### **Hidden Layers:**
+### Categorical Cross-Entropy Loss:
+Categorical cross-entry loss functions are used for multi-class classification problems. It is used because it can handle multiple classes with probabilities, scalability, and smooth gradients. However, it is sensitive to outliers, undefined for certain values (logarithmic), and is sensitive to imbalanced datasets. 
+Loss = -ΣΣy~i~c*log(ŷ~i~c), (C is # of classes, yic is indicator if c is correct for i, and ŷic is predicted probability of c for i)
 
-### ReLU:
+### Hinge Loss:
+Hinge loss functions are used for training support vector machines (SVMs). It is used because it maximizes the margin, is robust to outliers, and is effective for linear models. However, it is non-differentiable at the hinge point, difficult to use with multiple classes, and is sensitive to class imbalance. 
+Loss = Σmax(0, 1 - y~i~*ŷ~i~)
 
-Simple and effective activation function that helps to alleviate the vanishing gradient problem (derivatives of positive inputs are 1):
-ReLU(x) = max(0,x)
+<br></br>
+![Image1](/static/articleimages/image1)
+<br></br>
 
-### Tanh:
+## **Conclusions:** 
+Loss functions are important because different loss functions can display accuracies for different aspects of models. You can also compare model accuracies to others through loss functions. Optimization algorithms, such as gradient descent, can help minimize the loss function. 
 
-Similar to sigmoid but with a range of [-1, 1]. Can be more effective at training the network because of a larger gradient:
-tanh(x) = e<sup>x</sup>-e<sup>-x<sup>/e<sup>x</sup>+e<sup>-x</sup>
-<br>
+<br></br>
 
-<br>
-# Chatgpt response: 
-Imagine your brain as a big, super-smart machine with lots of tiny switches inside. These switches help you decide what to do based on the information you get, like deciding whether to jump when you see a puddle or to say "hello" when you see a friend.
-## Activation Functions
-In a computer's brain (like in robots or apps that learn), there are also tiny switches called activation functions. These switches help the computer make decisions by turning "on" or "off" based on the information it receives. Here are some examples of how these activation functions work:
-- ReLU (Rectified Linear Unit):
-- Imagine a switch that stays off (at 0) if it gets a negative signal, but turns on (to the same value as the signal) when it gets a positive signal.
-- It's like if you decided only to do something if it was fun (positive), and  you'd do exactly how much fun it seemed.
-- Sigmoid:
-- This switch smoothly turns on more and more as the signal gets bigger, but it never fully reaches 1, and never fully turns off to 0.
-- Think of it like a dimmer switch for a light; as you turn it, the light gets brighter slowly, but it never gets completely dark or super bright.
-- Tanh (Hyperbolic Tangent):
-- This one is like the sigmoid but a bit different: it can handle both positive and negative signals, turning on for positive ones and turning off for negative ones, and it does it more smoothly.
-- Imagine a balance scale: it can tip to one side for good things and to the other for bad things, showing how strong each is.
-Why Are They Important?
-Activation functions help the computer's brain understand and decide things better by handling information in smart ways. Just like how you use different switches or decisions based on what you're doing, computers use these activation functions to learn and make choices more accurately.
+### *References*
+Yathish, V. (2022, August 4). Loss Functions and Their Use In Neural Networks. Towards Data Science. Retrieved July 16, 2024, from https://towardsdatascience.com/loss-functions-and-their-use-in-neural-networks-a470e703f1e9
