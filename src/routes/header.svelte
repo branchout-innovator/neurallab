@@ -25,7 +25,7 @@
 	
 	<div class = "fixed-top"><DrawerRoot>
 	<DrawerPrimitive.Trigger asChild let:builder>
-	<Button builders={[builder]} variant="outline">About NeuralLab</Button>
+	<Button builders={[builder]} variant="ghost">About NeuralLab</Button>
 	</DrawerPrimitive.Trigger>
 	<DrawerContent>
 	<div class="mx-auto w-full max-w-sm">
