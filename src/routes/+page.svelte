@@ -162,7 +162,7 @@
 		currentEpoch = 0;
 
 		try {
-			const history = await tfModel.fitDataset(data, {
+			const history = await tfModel.fitDataset(data.batch(64), {
 				epochs: Number(epochs),
 				callbacks: {
 					async onEpochEnd(epoch, logs) {
@@ -410,7 +410,9 @@
 		<div class="container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
 			<div class="h-1/8 container flex w-full flex-row items-end">
 				<div class="flex h-full w-1/3">
-					<Button variant="outline" class="ml-auto h-full" size="icon" on:click={pageLeft}>&lt;</Button>
+					<Button variant="outline" class="ml-auto h-full" size="icon" on:click={pageLeft}
+						>&lt;</Button
+					>
 				</div>
 				<div class="w-1/3">
 					<DropdownMenu.Root>
@@ -429,7 +431,9 @@
 					</DropdownMenu.Root>
 				</div>
 				<div class="flex h-full w-1/3">
-					<Button variant="outline" class="mr-auto h-full" size="icon" on:click={pageRight}>&gt;</Button>
+					<Button variant="outline" class="mr-auto h-full" size="icon" on:click={pageRight}
+						>&gt;</Button
+					>
 				</div>
 			</div>
 			<div class="flex w-full overflow-y-auto">
@@ -446,7 +450,7 @@
 		</div>
 	</Resizable.Pane>
 	<Resizable.Handle withHandle />
-	<Resizable.Pane defaultSize={60} class = "p-4">
+	<Resizable.Pane defaultSize={60} class="p-4">
 		<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
 			<!-- Controls (header) -->
 			<div class="flex flex-row flex-wrap items-end gap-4">

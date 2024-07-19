@@ -17,8 +17,9 @@
 	const dataset: Writable<tf.data.Dataset<tf.TensorContainer>> = getContext('dataset');
 
 	const model: Writable<SequentialModel> = getContext('model');
-
 	let svg: SVGSVGElement;
+	let gPoints: SVGGElement;
+	const heatmapSize = remToPx(14);
 
 	interface Sample {
 		x: number;
@@ -40,9 +41,8 @@
 
 	onMount(async () => {
 		await loadTestPoints();
-		setupAxes();
-		drawTestPoints();
 		setupZoom();
+		updateChart();
 	});
 
 	class EnoughSamplesCollectedError extends Error {
@@ -102,27 +102,11 @@
 
 	async function loadTestPoints() {
 		// Load tf dataset here
-		if (!dataset) return;
-		// testPoints = [];
-		// let count = 0;
-		// await $dataset.forEachAsync((element) => {
-		// 	const data = element as { xs: number[]; ys: number[] };
-		// 	const x = data.xs[0];
-		// 	const y = data.xs[1];
-		// 	const label = data.ys[0];
-		// 	testPoints.push({ x, y, label });
-		// 	console.log({ x, y, label });
-		// 	count++;
-		// });
-		// console.log('test points: ' + count);
-
-		// testPoints = testPoints;
+		if (!$dataset) return;
 		testPoints = await getNSamplesFromDataset2D($dataset, 100);
 	}
 
 	function setupAxes() {
-		const heatmapSize = remToPx(14);
-
 		const xScale = d3.scaleLinear().domain($sampleDomain.x).range([0, heatmapSize]);
 		const yScale = d3.scaleLinear().domain($sampleDomain.y).range([heatmapSize, 0]);
 
@@ -145,13 +129,13 @@
 		const xScale = d3.scaleLinear().domain(domain.x).range([0, heatmapSize]);
 		const yScale = d3.scaleLinear().domain([domain.y[1], domain.y[0]]).range([0, heatmapSize]);
 
-		const pointsGroup = d3.select(svg).selectAll<SVGGElement, unknown>('g.points').data([null]);
-		pointsGroup.enter().append('g').attr('class', 'points');
+		const pointsGroup = d3.select(gPoints).data([null]);
 
 		const points = pointsGroup
 			.merge(pointsGroup)
 			.selectAll<SVGCircleElement, { x: number; y: number; label: number }>('circle')
 			.data(testPoints);
+		console.log('drawing ', testPoints);
 
 		points
 			.enter()
@@ -218,7 +202,7 @@
 	}
 
 	const unsubscribe = sampleDomain.subscribe(() => {
-		if (svg) {
+		if (gPoints) {
 			updateChart();
 		}
 	});
@@ -249,9 +233,12 @@
 				yDomain={$sampleDomain.y}
 			/>
 		{/if}
-		<svg bind:this={svg} class="absolute inset-0 h-full w-full" overflow="visible">
+		<svg class="absolute inset-0 h-full w-full" overflow="visible">
 			<g bind:this={gx} class="translate-y-56"></g>
 			<g bind:this={gy}></g>
+		</svg>
+		<svg bind:this={svg} class="absolute inset-0 h-full w-full" overflow="hidden">
+			<g bind:this={gPoints} overflow="hidden"></g>
 		</svg>
 	</div>
 	<Button on:click={resetZoom}>Reset Zoom</Button>
