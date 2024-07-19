@@ -400,6 +400,10 @@
 		}
 	};
 
+	sampleDomain.subscribe((v) => {
+		sampleOutputs();
+	});
+
 	onMount(async () => {
 		loadSampleDataset('/circle_dataset.csv', 2);
 	});
@@ -464,7 +468,7 @@
 					<Tabs.Trigger value="settings">Settings</Tabs.Trigger>
 				</Tabs.List>
 				<Tabs.Content value="settings">
-					<Card.Root class = "h-full">
+					<Card.Root class="h-full">
 						<Card.Header>
 							<Card.Title>Settings</Card.Title>
 							<Card.Description>
@@ -483,7 +487,11 @@
 											<Dialog.Description class="flex flex-col gap-2">
 												<p>Upload a dataset from a .csv file.</p>
 												<div class="flex flex-col">
-													<FileInput id="dataset-upload" class="w-32" bind:files={datasetUploadFiles} />
+													<FileInput
+														id="dataset-upload"
+														class="w-32"
+														bind:files={datasetUploadFiles}
+													/>
 												</div>
 												{#if Object.entries($csvColumnConfigs).length > 0}
 													<Table.Root>
@@ -495,7 +503,10 @@
 														{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
 															<Table.Row>
 																<Table.Cell class="font-medium">{column}</Table.Cell>
-																<RadioGroup.Root bind:value={$csvColumnConfigs[column].isLabel} asChild>
+																<RadioGroup.Root
+																	bind:value={$csvColumnConfigs[column].isLabel}
+																	asChild
+																>
 																	<Table.Cell>
 																		<div class="flex items-center space-x-2">
 																			<RadioGroup.Item value="false" id={`feature-${column}`}
@@ -524,15 +535,15 @@
 										</Dialog.Header>
 									</Dialog.Content>
 								</Dialog.Root>
-						</div>
-						<div class="flex flex-1 items-start space-x-2">
-							<br>
-							Choose Mode Here
-							<div>
-								<br>
 							</div>
-							<ThemeToggle></ThemeToggle>
-						</div>
+							<div class="flex flex-1 items-start space-x-2">
+								<br />
+								Choose Mode Here
+								<div>
+									<br />
+								</div>
+								<ThemeToggle></ThemeToggle>
+							</div>
 						</Card.Content>
 					</Card.Root>
 				</Tabs.Content>
@@ -606,9 +617,11 @@
 							<Button variant="ghost" size="icon" class="h-8 w-8" on:click={removeLayer}>
 								<Minus class="h-4 w-4"></Minus>
 							</Button>
-							<span class="ml-2 leading-none text-muted-foreground">{$model.layers.length} Layers</span>
+							<span class="ml-2 leading-none text-muted-foreground"
+								>{$model.layers.length} Layers</span
+							>
 						</div>
-		
+
 						<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
 							{#if tfModel}
 								{#each $model.layers as layer, i (i)}
@@ -623,7 +636,12 @@
 										{@const leftLayerHeights = getNodeYPositions(layer)}
 										{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
 										{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
-										<ConnectionsVis {leftLayerHeights} {rightLayerHeights} {canvasWidth} {weights} />
+										<ConnectionsVis
+											{leftLayerHeights}
+											{rightLayerHeights}
+											{canvasWidth}
+											{weights}
+										/>
 									{/if}
 								{/each}
 							{/if}
@@ -631,7 +649,7 @@
 					</div>
 				</Tabs.Content>
 			</Tabs.Root>
-			</div>
+		</div>
 	</Resizable.Pane>
 	<!--</div>-->
 </Resizable.PaneGroup>
