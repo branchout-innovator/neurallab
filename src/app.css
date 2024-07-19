@@ -16,7 +16,7 @@
 		font-style: normal;
 		font-weight: 400;
 		font-display: swap;
-		src: url(/fonts/GeistVF.woff2) format('woff2');
+		src: url(/fonts/Urbanist-VariableFont_wght.woff) format('woff');
 	}
 }
 
@@ -92,6 +92,22 @@
 	}
 	body {
 		@apply bg-background text-foreground;
+	}
+	ul, ol {
+		list-style: revert;
+		@apply list-inside;
+	}
+	h1 {
+		@apply text-2xl;
+	}
+	h2 {
+		@apply text-xl;
+	}
+	h3 {
+		@apply text-lg;
+	}
+	p {
+		text-indent: 2.75rem;
 	}
 }
 @layer base {

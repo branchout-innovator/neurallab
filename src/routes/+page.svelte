@@ -346,16 +346,16 @@
 		changePage(1);
 	}
 	let articletitle = [
-		'sdjfnd',
+		'What are Loss Functions? (Neural Nets)',
 		'sjokccjdj',
 		'skgkoifjnm',
 		'mkdjvijdmcvjijfmkijnjrjdnigjnskdnj fhdjsnd'
 	];
 	let pagetext = [
-		'asbfhsbd',
-		'sjhcbfujesndnjdjs',
-		'ijgnfjvnfdnkm',
-		'kbjfncmfcjfdncjfndcvfdmckvnjfdmkvjnfkmxv fdmmc'
+		'',
+		'',
+		'',
+		''
 	];
 	function changePage(d: number) {
 		let pageNum = Number(position);
