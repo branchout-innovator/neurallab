@@ -20,7 +20,12 @@
 
 	let svg: SVGSVGElement;
 
-	let testPoints: { x: number; y: number; label: number }[] = [];
+	interface Sample {
+		x: number;
+		y: number;
+		label?: number;
+	}
+	let testPoints: Sample[] = [];
 
 	const sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> =
 		getContext('sampleDomain');
@@ -40,29 +45,79 @@
 		setupZoom();
 	});
 
+	class EnoughSamplesCollectedError extends Error {
+		constructor() {
+			super('EnoughSamplesCollected');
+			this.name = 'EnoughSamplesCollectedError';
+		}
+	}
+
+	async function getNSamplesFromDataset(
+		dataset: tf.data.Dataset<tf.TensorContainer>,
+		n: number
+	): Promise<tf.TensorContainer[]> {
+		const samples: tf.TensorContainer[] = [];
+
+		// Shuffle the dataset to get random samples
+		const shuffledDataset = dataset.shuffle(1000);
+
+		// Take n samples
+		const samplesDataset = shuffledDataset.take(n);
+
+		// Collect the samples
+		try {
+			await samplesDataset.forEachAsync((sample) => {
+				samples.push(sample);
+				if (samples.length >= n) {
+					// Stop iterating once we have n samples
+					throw new EnoughSamplesCollectedError();
+				}
+			});
+		} catch (error: unknown) {
+			if (error instanceof EnoughSamplesCollectedError) {
+				// We've collected enough samples, so we can ignore this error
+			} else if (error instanceof Error) {
+				// If it's another kind of Error, rethrow it
+				throw error;
+			} else {
+				// If it's not an Error object at all, throw a new Error
+				throw new Error('An unknown error occurred');
+			}
+		}
+
+		return samples.slice(0, n); // Ensure we return exactly n samples
+	}
+
+	async function getNSamplesFromDataset2D(
+		dataset: tf.data.Dataset<tf.TensorContainer>,
+		n: number
+	): Promise<Sample[]> {
+		return (await getNSamplesFromDataset(dataset, n)).map((sample): Sample => {
+			const { xs, ys } = sample as { xs: number[]; ys: number[] };
+			const [x, y] = xs;
+			const [label] = ys;
+			return { x, y, label };
+		});
+	}
+
 	async function loadTestPoints() {
 		// Load tf dataset here
-		/*
-		const dataset = tf.data.array([
-			{ xs: [1, 2], ys: 1 },
-			{ xs: [-1, -2], ys: -1 },
-			{ xs: [-1.1, -2.1], ys: 1 }
-		]);*/
 		if (!dataset) return;
-		testPoints = [];
-		let count = 0;
-		await $dataset.forEachAsync((element) => {
-			const data = element as { xs: tf.Tensor; ys: tf.Tensor };
-			const x = data.xs.dataSync()[0];
-			const y = data.xs.dataSync()[1];
-			const label = data.ys.dataSync()[0];
-			testPoints.push({ x, y, label });
-			console.log({ x, y, label });
-			count++;
-		});
-		console.log('test points: ' + count);
+		// testPoints = [];
+		// let count = 0;
+		// await $dataset.forEachAsync((element) => {
+		// 	const data = element as { xs: number[]; ys: number[] };
+		// 	const x = data.xs[0];
+		// 	const y = data.xs[1];
+		// 	const label = data.ys[0];
+		// 	testPoints.push({ x, y, label });
+		// 	console.log({ x, y, label });
+		// 	count++;
+		// });
+		// console.log('test points: ' + count);
 
-		testPoints = testPoints;
+		// testPoints = testPoints;
+		testPoints = await getNSamplesFromDataset2D($dataset, 100);
 	}
 
 	function setupAxes() {
@@ -85,22 +140,31 @@
 
 	function drawTestPoints() {
 		const heatmapSize = remToPx(14);
-		const xScale = d3.scaleLinear().domain([-3, 3]).range([0, heatmapSize]);
-		const yScale = d3.scaleLinear().domain([3, -3]).range([0, heatmapSize]);
+		const domain = $sampleDomain;
 
-		const pointsGroup = d3.select(svg).append('g').attr('class', 'points');
+		const xScale = d3.scaleLinear().domain(domain.x).range([0, heatmapSize]);
+		const yScale = d3.scaleLinear().domain([domain.y[1], domain.y[0]]).range([0, heatmapSize]);
 
-		pointsGroup
-			.selectAll('circle')
-			.data(testPoints)
+		const pointsGroup = d3.select(svg).selectAll<SVGGElement, unknown>('g.points').data([null]);
+		pointsGroup.enter().append('g').attr('class', 'points');
+
+		const points = pointsGroup
+			.merge(pointsGroup)
+			.selectAll<SVGCircleElement, { x: number; y: number; label: number }>('circle')
+			.data(testPoints);
+
+		points
 			.enter()
 			.append('circle')
+			.merge(points)
 			.attr('cx', (d) => xScale(d.x))
 			.attr('cy', (d) => yScale(d.y))
 			.attr('r', 3)
-			.style('fill', (d) => pointColorScale(d.label))
+			.style('fill', (d) => pointColorScale(d.label ?? 1))
 			.style('stroke', 'white')
 			.style('stroke-width', '0.5');
+
+		points.exit().remove();
 	}
 
 	let gx: SVGGElement;
@@ -185,7 +249,7 @@
 				yDomain={$sampleDomain.y}
 			/>
 		{/if}
-		<svg bind:this={svg} class="absolute left-0 top-0" overflow="visible">
+		<svg bind:this={svg} class="absolute inset-0 h-full w-full" overflow="visible">
 			<g bind:this={gx} class="translate-y-56"></g>
 			<g bind:this={gy}></g>
 		</svg>

@@ -56,7 +56,7 @@
 			{
 				type: 'dense',
 				units: 10,
-				inputShape: [1]
+				inputShape: [2]
 			} as DenseLayer,
 			{
 				type: 'dense',

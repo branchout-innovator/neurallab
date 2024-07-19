@@ -79,9 +79,12 @@ export const loadUploadedCsv = async (
 	return await loadCsvDataset(url, columnConfigs);
 };
 
-export async function loadCsvDataset(url: string, columnConfigs: {
-	[key: string]: tf.data.ColumnConfig;
-}) {
+export async function loadCsvDataset(
+	url: string,
+	columnConfigs: {
+		[key: string]: tf.data.ColumnConfig;
+	}
+) {
 	const csvDataset = tf.data.csv(url, {
 		columnConfigs
 	});
@@ -94,8 +97,8 @@ export async function loadCsvDataset(url: string, columnConfigs: {
 			// Convert xs(features) and ys(labels) from object form (keyed by
 			// column name) to array form.
 			return { xs: Object.values(xs), ys: Object.values(ys) };
-		})
-		.batch(64);
+		});
+	// .batch(64);
 
 	const it = await flattenedDataset.iterator();
 	const xs = [];
