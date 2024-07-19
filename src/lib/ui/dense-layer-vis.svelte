@@ -18,7 +18,6 @@
 	export let layer: DenseLayer;
 	export let index: number;
 	export let tfLayer: tf.layers.Layer;
-	export let dataset: tf.data.Dataset<tf.TensorContainer>;
 
 	const model: Writable<SequentialModel> = getContext('model');
 
@@ -113,7 +112,7 @@
 					{/if}
 				</HoverCard.Trigger>
 				<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
-					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} {xDomain} {yDomain} {dataset}/>
+					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} />
 				</HoverCard.Content>
 			</HoverCard.Root>
 

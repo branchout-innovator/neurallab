@@ -66,7 +66,6 @@
 
 	function updateHeatmap() {
 		if (!ctx || !nodeOutputs || !chartWidth || !chartHeight) {
-			console.log(ctx, nodeOutputs, chartWidth, chartHeight);
 			return;
 		}
 		canvas.width = chartWidth;

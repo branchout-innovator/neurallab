@@ -76,12 +76,20 @@ export const loadUploadedCsv = async (
 ) => {
 	const url = URL.createObjectURL(csvFile);
 
+	return await loadCsvDataset(url, columnConfigs);
+};
+
+export async function loadCsvDataset(
+	url: string,
+	columnConfigs: {
+		[key: string]: tf.data.ColumnConfig;
+	}
+) {
 	const csvDataset = tf.data.csv(url, {
 		columnConfigs
 	});
 
 	// const numOfFeatures = (await csvDataset.columnNames()).length - 1;
-
 	// Prepare the Dataset for training.
 	const flattenedDataset = csvDataset
 		// @ts-expect-error unclear type for map
@@ -89,8 +97,8 @@ export const loadUploadedCsv = async (
 			// Convert xs(features) and ys(labels) from object form (keyed by
 			// column name) to array form.
 			return { xs: Object.values(xs), ys: Object.values(ys) };
-		})
-		.batch(64);
+		});
+	// .batch(64);
 
 	const it = await flattenedDataset.iterator();
 	const xs = [];
@@ -110,7 +118,7 @@ export const loadUploadedCsv = async (
 	console.log(labelsTensor.shape);
 
 	return flattenedDataset;
-};
+}
 
 export interface SampledOutputs<Sample> {
 	/** Key: layer.name in Tensorflow layers */
