@@ -10,7 +10,8 @@
 		type DenseLayer,
 		type Layer,
 		type SequentialModel,
-		updateSampledOutputs1D
+		updateSampledOutputs1D,
+		loadCsvDataset
 	} from '$lib/structures';
 	import * as tf from '@tensorflow/tfjs';
 	import { onMount, setContext, SvelteComponent } from 'svelte';
@@ -60,7 +61,7 @@
 			{
 				type: 'dense',
 				units: 10,
-				inputShape: [1]
+				inputShape: [2]
 			} as DenseLayer,
 			{
 				type: 'dense',
@@ -157,7 +158,8 @@
 		// await tf.setBackend('webgl');
 		console.log(tf.getBackend());
 
-		const data = dataset;
+		const data = $dataset;
+		if (!data) return;
 
 		toast.loading(`Training for ${epochs} epochs...`);
 
@@ -256,11 +258,43 @@
 
 	let datasetUploadFiles: FileList;
 
-	let dataset: tf.data.Dataset<tf.TensorContainer>;
+	let dataset: Writable<tf.data.Dataset<tf.TensorContainer> | undefined> = writable(undefined);
+	setContext('dataset', dataset);
 
 	let csvColumnConfigs: Writable<{
 		[key: string]: { isLabel: 'true' | 'false' };
 	}> = writable({});
+
+	async function getNSamplesFromDataset(
+		dataset: tf.data.Dataset<tf.TensorContainer>,
+		n: number
+	): Promise<tf.TensorContainer[]> {
+		const samples: tf.TensorContainer[] = [];
+
+		// Shuffle the dataset to get random samples
+		const shuffledDataset = dataset.shuffle(1000);
+
+		// Take n samples
+		const samplesDataset = shuffledDataset.take(n);
+
+		// Collect the samples
+		await samplesDataset.batch(n).forEachAsync((sample) => {
+			samples.push(sample);
+		});
+
+		return samples;
+	}
+
+	async function logDataset(dataset: tf.data.Dataset<tf.TensorContainer>) {
+		await dataset.forEachAsync((element) => {
+			console.log(element);
+			// const data = element as { xs: tf.Tensor; ys: tf.Tensor };
+			// const x = data.xs.dataSync()[0];
+			// const y = data.xs.dataSync()[1];
+			// const label = data.ys.dataSync()[0];
+			// console.log({ x, y, label });
+		});
+	}
 
 	$: {
 		(async () => {
@@ -272,8 +306,6 @@
 						isLabel: 'false'
 					};
 				}
-			} else {
-				dataset = await generateDataset();
 			}
 		})();
 	}
@@ -297,7 +329,7 @@
 				}
 			}
 			if (hasLabel) {
-				loadUploadedCsv(datasetUploadFiles[0], config).then((d) => (dataset = d));
+				loadUploadedCsv(datasetUploadFiles[0], config).then((d) => ($dataset = d));
 			}
 			if ($model.layers[0]) {
 				$model.layers[0].inputShape = [featureCount];
@@ -352,6 +384,25 @@
 		$sampleDomain.x = (is1D ? [-11, 11] : [-3, 3]) as [number, number];
 		$sampleDomain.y = (is1D ? [-10, 120] : [-3, 3]) as [number, number];
 	}
+
+	const loadSampleDataset = async (url: string, numFeatures: number) => {
+		let blob = await fetch(url).then((r) => r.blob());
+		loadUploadedCsv(blob, {
+			inside_circle: { isLabel: true }
+		}).then((d) => {
+			$dataset = d;
+			getNSamplesFromDataset(d, 100).then((a) => console.log('moug ', a));
+		});
+		if ($model.layers[0]) {
+			$model.layers[0].inputShape = [numFeatures];
+			console.log('features: ', numFeatures);
+			updateTFModel($model);
+		}
+	};
+
+	onMount(async () => {
+		loadSampleDataset('/circle_dataset.csv', 2);
+	});
 </script>
 
 <svelte:head>
@@ -359,12 +410,12 @@
 	<meta name="description" content="Design and visualize neural networks in your browser." />
 </svelte:head>
 <!--<div class="container flex h-full max-w-full flex-row gap-4">-->
-<Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row gap-4">
-	<Resizable.Pane defaultSize={25}>
+<Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row">
+	<Resizable.Pane defaultSize={40}>
 		<div class="container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
 			<div class="h-1/8 container flex w-full flex-row items-end">
 				<div class="flex h-full w-1/3">
-					<Button variant="outline" class="ml-auto" size="icon" on:click={pageLeft}>&lt;</Button>
+					<Button variant="outline" class="ml-auto h-full" size="icon" on:click={pageLeft}>&lt;</Button>
 				</div>
 				<div class="w-1/3">
 					<DropdownMenu.Root>
@@ -383,25 +434,24 @@
 					</DropdownMenu.Root>
 				</div>
 				<div class="flex h-full w-1/3">
-					<Button variant="outline" class="mr-auto" size="icon" on:click={pageRight}>&gt;</Button>
+					<Button variant="outline" class="mr-auto h-full" size="icon" on:click={pageRight}>&gt;</Button>
 				</div>
 			</div>
 			<div class="flex w-full overflow-y-auto">
-				<div class="w-full p-4">
+				<div class="w-full px-8 py-4">
 					<h2
 						class="scroll-m-20 border-b pb-2 text-center text-2xl font-semibold tracking-tight transition-colors first:mt-0"
 					>
 						{articletitle[Number(position)]}
 					</h2>
 					<span class="inline-block h-4 w-4"></span>
-					<p>{pagetext[Number(position)]}</p>
 					<SvelteMarkdown {source} renderers={{ image: ImageComponent }} />
 				</div>
 			</div>
 		</div>
 	</Resizable.Pane>
 	<Resizable.Handle withHandle />
-	<Resizable.Pane defaultSize={75}>
+	<Resizable.Pane defaultSize={60} class = "p-4">
 		<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
 			<!-- Controls (header) -->
 			<Tabs.Root value="settings" class="w-full">

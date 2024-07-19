@@ -94,6 +94,17 @@
 		@apply bg-background text-foreground;
 	}
 }
+@layer base {
+	ul, ol {
+	  list-style: revert;
+	  @apply list-inside;
+	  margin:4;
+	  padding: 4;
+	}
+	p {
+		margin:4;
+	}
+}
 
 :root,
 body,

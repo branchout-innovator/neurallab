@@ -1,54 +1,61 @@
-## What are Activation Functions? (Neural Nets)
+## What are Neural Networks? (Basics of Neural Networks)
+#### Written by: Raina Gao Edited by: Max Lee
 
-Activation functions are mathematical functions applied to the output of a neuron (like a filter). They introduce non-linearity (where input changes are not proportional to output changes) to the model, which allows it to learn and predict patterns more accurately.
-<br>
-![Image0](/articleimages/image0)
-<br>
 
-## When to use Different Activation Functions:
 
-#### **Output Layers:**
+Neural networks are computational models that serve as a fundamental component of artificial intelligence (AI) and machine learning (ML). Neural networks make decisions in a similar pattern to the human brain and can be trained by datasets to derive conclusions. Over time, as models are created based on datasets and information, neural networks improve their accuracy. For example, Google’s search engine is a neural network. 
 
-### Binary Classification:
 
-The Sigmoid function is used for the output layer because it outputs a value from 0 to 1:
-σ(x) = 1/(1 + e<sup>-x</sup>)
+Types of neural networks include: 
+* Convolutional Neural Networks (CNNs)
+* Recurrent Neural Networks (RNNs)
 
-### Multi-class Classification:
-
-The Softmax function is used because it converts the outputs to probabilities that sum to 100%:
-softmax(x<sub>i</sub>) = e<sup>x<sub>i</sub></sup>/∑<sub>j</sub>e<sup>x<sub>j</sub></sup>
-
-### Regression:
-
-Either linear activation functions or no activation function is used.
-
-#### **Hidden Layers:**
-
-### ReLU:
-
-Simple and effective activation function that helps to alleviate the vanishing gradient problem (derivatives of positive inputs are 1):
-ReLU(x) = max(0,x)
-
-### Tanh:
-
-Similar to sigmoid but with a range of [-1, 1]. Can be more effective at training the network because of a larger gradient:
-tanh(x) = e<sup>x</sup>-e<sup>-x<sup>/e<sup>x</sup>+e<sup>-x</sup>
-<br>
 
 <br>
-# Chatgpt response: 
-Imagine your brain as a big, super-smart machine with lots of tiny switches inside. These switches help you decide what to do based on the information you get, like deciding whether to jump when you see a puddle or to say "hello" when you see a friend.
-## Activation Functions
-In a computer's brain (like in robots or apps that learn), there are also tiny switches called activation functions. These switches help the computer make decisions by turning "on" or "off" based on the information it receives. Here are some examples of how these activation functions work:
-- ReLU (Rectified Linear Unit):
-- Imagine a switch that stays off (at 0) if it gets a negative signal, but turns on (to the same value as the signal) when it gets a positive signal.
-- It's like if you decided only to do something if it was fun (positive), and  you'd do exactly how much fun it seemed.
-- Sigmoid:
-- This switch smoothly turns on more and more as the signal gets bigger, but it never fully reaches 1, and never fully turns off to 0.
-- Think of it like a dimmer switch for a light; as you turn it, the light gets brighter slowly, but it never gets completely dark or super bright.
-- Tanh (Hyperbolic Tangent):
-- This one is like the sigmoid but a bit different: it can handle both positive and negative signals, turning on for positive ones and turning off for negative ones, and it does it more smoothly.
-- Imagine a balance scale: it can tip to one side for good things and to the other for bad things, showing how strong each is.
-Why Are They Important?
-Activation functions help the computer's brain understand and decide things better by handling information in smart ways. Just like how you use different switches or decisions based on what you're doing, computers use these activation functions to learn and make choices more accurately.
+
+### History of Neural Networks 
+In 1943, Warren S. McCulloch and Walter Pitts published groundbreaking research on the logical operations of neurons in the brain, likening them to binary threshold units akin to Boolean logic.
+
+In 1958, Frank Rosenblatt advanced this work with the invention of the perceptron, a model for storing and organizing information in the brain. He introduced the concept of weights, enabling computers, such as the IBM 704, to learn tasks like distinguishing between marked cards.
+
+By 1974, Paul Werbos furthered the field with his exploration of backpropagation in neural networks, first noted in his PhD thesis, a pivotal concept for optimizing learning processes within these systems.
+
+In 1989, Yann LeCun integrated backpropagation with neural network architectures, utilizing constraints to successfully train algorithms for recognizing hand-written zip code digits, a breakthrough in practical machine learning applications.
+
+
+### Key components of Neural Networks: 
+#### Neurons 
+At the core of neural networks are neurons that receive input signals. These neurons go through a series of steps to reach an output. 
+
+#### Layers 
+There are 3 layers the neurons travel through, input: 
+1. Input layer
+* Raw data is fed into the neural network
+2. Hidden layer
+* Complex computations and transformations of data 
+* Uses weights and activation functions
+* It may include multiple hidden layers
+3. Output
+* Produce the neural network’s final output
+* May use activation functions such as Binary Classification or Multi-class Classification
+
+
+
+#### Weights/Biases
+Often in hidden layers of neural networks, weights are assigned to input neurons. These inputs are multiplied by assigned weights, summed up, and applied to a threshold. If the sum exceeds this threshold, the neurons activate and pass data to nodes in the next layer. This sum is then passed through an activation function, determining the node's output. The activation function introduces non-linearity into the output, allowing the neural network to learn and model complex relationships in the data. Weights and biases are constantly adjusted as the model continues to be trained, allowing for fewer mistakes and more accurate outputs. 
+
+#### Activation function (more details in other articles)
+Activation functions are mathematical functions applied to get the output of a neuron, similar to a filter. Types of activation functions include Sigmoid function, Softmax function, ReLU, Leaky ReLU, and Tanh. 
+
+
+
+### Why Are Neural Networks Important? 
+Neural networks analyze large amounts of data, recognizing patterns and correlations, allowing computers to make intelligent decisions with minimal human assistance. Neural networks are the frameworks for AI and ML and are largely inspired by the human brain itself. 
+
+
+### References
+Hardesty, L. (2017, April 14). Explained: Neural networks | MIT News | Massachusetts Institute of Technology. MIT News. Retrieved July 16, 2024, from https://news.mit.edu/2017/explained-neural-networks-deep-learning-0414
+What is a Neural Network? (n.d.). IBM. Retrieved July 16, 2024, from https://www.ibm.com/topics/neural-networks
+
+
+
