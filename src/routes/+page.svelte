@@ -454,12 +454,13 @@
 	<Resizable.Pane defaultSize={60} class = "p-4">
 		<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
 			<!-- Controls (header) -->
-			<Tabs.Root value="settings" class="w-full">
-				<Tabs.List class="grid w-full grid-cols-2">
+			<Tabs.Root value="NL" class="w-full h-full">
+				<Tabs.List class="grid w-full grid-cols-3">
 					<Tabs.Trigger value="NL">NeuralLab</Tabs.Trigger>
 					<Tabs.Trigger value="settings">Settings</Tabs.Trigger>
+					<Tabs.Trigger value="dataset">Dataset</Tabs.Trigger>
 				</Tabs.List>
-				<Tabs.Content value="settings">
+				<Tabs.Content value="settings" class = "h-full">
 					<Card.Root class = "h-full">
 						<Card.Header>
 							<Card.Title>Settings</Card.Title>
@@ -532,7 +533,7 @@
 						</Card.Content>
 					</Card.Root>
 				</Tabs.Content>
-				<Tabs.Content value="NL">
+				<Tabs.Content value="NL" class = "h-full">
 					<div class="flex flex-row flex-wrap items-end gap-4">
 						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">
