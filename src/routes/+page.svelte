@@ -439,7 +439,6 @@
 						{articletitle[Number(position)]}
 					</h2>
 					<span class="inline-block h-4 w-4"></span>
-					<p>{pagetext[Number(position)]}</p>
 					<SvelteMarkdown {source} renderers={{ image: ImageComponent }} />
 				</div>
 			</div>
