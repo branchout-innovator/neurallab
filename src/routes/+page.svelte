@@ -42,17 +42,20 @@
 	import ResizableHandle from '$lib/components/ui/resizable/resizable-handle.svelte';
 	import isEqual from 'lodash.isequal';
 	import ImageComponent from './ImageComponent.svelte';
-	import mark from '$lib/article1.md?raw';
+	import mark from '$lib/articles/article1.md?raw';
+	import mark2 from '$lib/articles/article2.md?raw';
+	import mark3 from '$lib/articles/article3.md?raw';
+	import mark4 from '$lib/articles/article4.md?raw'
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import ThemeToggle from '$lib/ui/theme-toggle.svelte';
+	import { page } from '$app/stores';
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
 	};
-
 	let selectedActivation = { value: 'relu' as ActivationIdentifier, label: 'ReLU' };
 	let epochs = 1000;
 
@@ -345,29 +348,36 @@
 	function pageRight() {
 		changePage(1);
 	}
+	const s = mark;
+	const s2 = mark2;
+	const s3 = mark3;
+	const s4 = mark4;
 	let articletitle = [
+		'What are Neural Networks? (Basics of Neural Networks)',
+		'What are Activation Functions?',
 		'What are Loss Functions? (Neural Nets)',
-		'sjokccjdj',
-		'skgkoifjnm',
-		'mkdjvijdmcvjijfmkijnjrjdnigjnskdnj fhdjsnd'
+		'Optimization Algorithms'
 	];
 	let pagetext = [
-		'',
-		'',
-		'',
-		''
+		s,
+		s2,
+		s3,
+		s4,
 	];
+	$:source = pagetext[Number(position)];
 	function changePage(d: number) {
 		let pageNum = Number(position);
 		if ((pageNum != 0 || d != -1) && (pageNum != pagetext.length - 1 || d != 1)) {
 			pageNum += d;
 		}
 		position = String(pageNum);
+		source = pagetext[pageNum];
 	}
+	
 	let position = '0';
 	let sampledOutputs = writable<SampledOutputs<number[] | number[][]>>({});
 	setContext('sampledOutputs', sampledOutputs);
-	const source = mark;
+	
 
 	const SAMPLE_DENSITY_2D = 10;
 	const SAMPLE_DENSITY_1D = 10;

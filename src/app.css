@@ -12,18 +12,18 @@
 	}
 
 	@font-face {
-		font-family: 'Geist Sans';
+		font-family: 'Carlito';
 		font-style: normal;
 		font-weight: 400;
 		font-display: swap;
-		src: url(/fonts/Urbanist-VariableFont_wght.woff) format('woff');
+		src: url(/fonts/Carlito-Regular.woff) format('woff');
 	}
 }
 
 @layer base {
 	:root {
-		--background: 0 0% 100%;
-		--foreground: 240 10% 3.9%;
+		--background: 341 50% 95%;
+		--foreground: 51 21% 62%;
 
 		--muted: 240 4.8% 95.9%;
 		--muted-foreground: 240 3.8% 46.1%;
@@ -55,8 +55,8 @@
 	}
 
 	.dark {
-		--background: 240 10% 3.9%;
-		--foreground: 0 0% 98%;
+		--background: 330 100% 71%;
+		--foreground: 341 100% 96%;
 
 		--muted: 240 3.7% 15.9%;
 		--muted-foreground: 240 5% 64.9%;
@@ -96,6 +96,7 @@
 	ul, ol {
 		list-style: revert;
 		@apply list-inside;
+		text-indent: 2.75rem;
 	}
 	h1 {
 		@apply text-2xl;
