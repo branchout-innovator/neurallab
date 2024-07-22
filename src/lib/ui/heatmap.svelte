@@ -9,15 +9,14 @@
 		nodeIndex: number;
 		layerName: string;
 		customDensity?: number;
-		xDomain?: [number, number];
-		yDomain?: [number, number];
 	};
 
 	export let nodeIndex: number;
 	export let layerName: string;
 	export let customDensity: $$Props['customDensity'] = undefined;
-	export let xDomain: [number, number] = [-3, 3];
-	export let yDomain: [number, number] = [-3, 3];
+
+	const sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> =
+		getContext('sampleDomain');
 
 	const sampledOutputs: Writable<SampledOutputs<number[][]>> = getContext('sampledOutputs');
 	const getTfModel = getContext('getTfModel') as () => tf.Sequential;
@@ -38,17 +37,19 @@
 						layerName,
 						nodeIndex,
 						customDensity,
-						xDomain,
-						yDomain
+						$sampleDomain.x,
+						$sampleDomain.y
 					)
 				: $sampledOutputs && $sampledOutputs[layerName] && $sampledOutputs[layerName][nodeIndex];
 		})();
 	}
 
-	$: if (nodeOutputs) {
-		chartWidth = customDensity || nodeOutputs.length;
-		chartHeight = customDensity || nodeOutputs.length;
-		updateHeatmap();
+	$: {
+		if (nodeOutputs) {
+			chartWidth = customDensity || nodeOutputs.length;
+			chartHeight = customDensity || nodeOutputs.length;
+			updateHeatmap();
+		}
 	}
 
 	onMount(() => {

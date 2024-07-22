@@ -100,10 +100,27 @@
 		});
 	}
 
+	async function getNSamplesFromDataset1D(
+		dataset: tf.data.Dataset<tf.TensorContainer>,
+		n: number
+	): Promise<Sample[]> {
+		return (await getNSamplesFromDataset(dataset, n)).map((sample): Sample => {
+			const { xs, ys } = sample as { xs: number[]; ys: number[] };
+			const [x] = xs;
+			const [y] = ys;
+			return { x, y, label: 0 };
+		});
+	}
+
 	async function loadTestPoints() {
 		// Load tf dataset here
 		if (!$dataset) return;
-		testPoints = await getNSamplesFromDataset2D($dataset, 100);
+		const inputShape = $model.layers[0].inputShape;
+		if (isEqual(inputShape, [1])) {
+			testPoints = await getNSamplesFromDataset1D($dataset, 100);
+		} else if (isEqual(inputShape, [2])) {
+			testPoints = await getNSamplesFromDataset2D($dataset, 100);
+		}
 	}
 
 	function setupAxes() {
@@ -145,6 +162,7 @@
 			.attr('cy', (d) => yScale(d.y))
 			.attr('r', 3)
 			.style('fill', (d) => pointColorScale(d.label ?? 1))
+			.style('fill-opacity', 0.7)
 			.style('stroke', 'white')
 			.style('stroke-width', '0.5');
 
@@ -179,10 +197,8 @@
 		const newXDomain = transform.rescaleX(xScale).domain();
 		const newYDomain = transform.rescaleY(yScale).domain();
 
-		sampleDomain.update((d) => ({
-			x: newXDomain as [number, number],
-			y: newYDomain as [number, number]
-		}));
+		$sampleDomain.x = newXDomain as [number, number];
+		$sampleDomain.y = newYDomain as [number, number];
 
 		updateChart();
 	}
@@ -220,18 +236,9 @@
 				customDensity={60}
 				size={14}
 				strokeWidth={2}
-				xDomain={$sampleDomain.x}
-				yDomain={$sampleDomain.y}
 			/>
 		{:else if isEqual($model.layers[0].inputShape, [2])}
-			<Heatmap
-				{nodeIndex}
-				{layerName}
-				class="h-56 w-56 rounded-[0.15rem]"
-				customDensity={60}
-				xDomain={$sampleDomain.x}
-				yDomain={$sampleDomain.y}
-			/>
+			<Heatmap {nodeIndex} {layerName} class="h-56 w-56 rounded-[0.15rem]" customDensity={60} />
 		{/if}
 		<svg class="absolute inset-0 h-full w-full" overflow="visible">
 			<g bind:this={gx} class="translate-y-56"></g>
