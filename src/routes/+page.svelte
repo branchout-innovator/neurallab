@@ -439,8 +439,8 @@
 					<Tabs.Trigger value="NL">NeuralLab</Tabs.Trigger>
 					<Tabs.Trigger value="settings">Settings</Tabs.Trigger>
 				</Tabs.List>
-				<Tabs.Content value="settings">
-					<Card.Root class="h-full">
+				<Tabs.Content value="settings" class = "h-full">
+					<Card.Root class = "h-full">
 						<Card.Header>
 							<Card.Title>Settings</Card.Title>
 							<Card.Description>
@@ -596,7 +596,7 @@
 						</Card.Content>
 					</Card.Root>
 				</Tabs.Content>
-				<Tabs.Content value="NL">
+				<Tabs.Content value="NL" class = "h-full">
 					<div class="flex flex-row flex-wrap items-end gap-4">
 						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">
