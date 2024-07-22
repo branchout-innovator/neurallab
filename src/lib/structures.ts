@@ -261,6 +261,53 @@ export async function getSampledOutputForNode1D(
 	return nodeOutput.squeeze().arraySync() as number[];
 }
 
+type NDArray = ElemArray;
+interface ElemArray extends Array<NDArray | number> {}
+
+function flattenArray(arr: any): number[] {
+	return Array.isArray(arr) ? arr.flatMap(flattenArray) : [arr];
+}
+
+export async function updateSampledOutputsSingle(
+	model: tf.LayersModel,
+	input: tf.TensorContainer
+): Promise<SampledOutputs<number>> {
+	const outputs: SampledOutputs<number> = {};
+
+	// Convert input to tensor if it's not already
+	let inputTensor = input instanceof tf.Tensor ? input : tf.tensor(input as tf.TensorLike);
+
+	// Add dummy batch dimension if input is 1D
+	//if (inputTensor.shape.length === 1) {
+	//	inputTensor = inputTensor.expandDims(0);
+	//}
+
+	// Ensure input has a batch dimension
+	if (inputTensor.shape[0] !== 1) {
+		inputTensor = inputTensor.expandDims(0);
+	}
+
+	let currentInput: tf.Tensor = inputTensor;
+
+	// Forward pass through each layer, storing intermediate outputs
+	for (const layer of model.layers) {
+		currentInput = layer.apply(currentInput) as tf.Tensor;
+
+		// Get the activation values for this layer
+		const activations = await currentInput.array();
+
+		// Flatten the activations using our custom function
+		const flatActivations = flattenArray(activations);
+
+		outputs[layer.name] = flatActivations;
+	}
+
+	// Clean up tensors
+	tf.dispose([inputTensor, currentInput]);
+
+	return outputs;
+}
+
 // Helper function to construct input (if needed)
 function constructInput(x: number, y: number): tf.Tensor {
 	return tf.tensor([[x, y]]);
