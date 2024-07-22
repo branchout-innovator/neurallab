@@ -614,21 +614,6 @@
 							</Select.Root>
 						</div>
 						<div class="flex flex-col gap-2">
-							<Label class="flex gap-2 text-xs">
-								<RefreshCw class="h-4 w-4"></RefreshCw>
-								Epochs
-							</Label>
-							<Input type="number" bind:value={epochs} placeholder="1000" min={1} class="w-24" />
-						</div>
-						<!-- <div class="flex flex-col gap-2">
-							<Label class="flex gap-2 text-xs">Input</Label>
-							<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
-						</div>
-						<div class="flex flex-col gap-2">
-							<Label class="flex gap-2 text-xs">Predicted Value</Label>
-							<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
-						</div> -->
-						<div class="flex flex-col gap-2">
 							<div></div>
 						</div>
 						<div class="flex flex-col gap-2"></div>
