@@ -361,8 +361,7 @@
 		loadUploadedCsv(blob, {
 			inside_circle: { isLabel: true }
 		}).then((d) => {
-			$dataset = d;
-			getNSamplesFromDataset(d, 100).then((a) => console.log('moug ', a));
+			dataset = d;
 		});
 		if ($model.layers[0]) {
 			$model.layers[0].inputShape = [numFeatures];
@@ -371,9 +370,10 @@
 		}
 	};
 
-	sampleDomain.subscribe((v) => {
+	$: {
+		sampleDomain;
 		sampleOutputs();
-	});
+	}
 
 	onMount(async () => {
 		loadSampleDataset('/circle_dataset.csv', 2);
@@ -459,21 +459,21 @@
 								<ThemeToggle></ThemeToggle>
 							</div>
 							<br />
-							<div class = "grid grid-cols-2 w-1/3 items-center">
+							<div class="grid w-1/3 grid-cols-2 items-center">
 								<div>
-								<Label class="flex gap-2 text-xs">Hardware</Label>
-								<Tooltip.Root>
-									<Tooltip.Trigger asChild>
-										<div class="flex h-9 flex-row flex-nowrap items-center space-x-2">
-											<Label for="hardware-backend">CPU</Label>
-											<Switch id="hardware-backend" bind:checked={useGPU} />
-											<Label for="hardware-backend">GPU</Label>
-										</div>
-									</Tooltip.Trigger>
-									<Tooltip.Content class="max-w-52">
-										GPU is recommended for large models but slower for small models.
-									</Tooltip.Content>
-								</Tooltip.Root>
+									<Label class="flex gap-2 text-xs">Hardware</Label>
+									<Tooltip.Root>
+										<Tooltip.Trigger asChild>
+											<div class="flex h-9 flex-row flex-nowrap items-center space-x-2">
+												<Label for="hardware-backend">CPU</Label>
+												<Switch id="hardware-backend" bind:checked={useGPU} />
+												<Label for="hardware-backend">GPU</Label>
+											</div>
+										</Tooltip.Trigger>
+										<Tooltip.Content class="max-w-52">
+											GPU is recommended for large models but slower for small models.
+										</Tooltip.Content>
+									</Tooltip.Root>
 								</div>
 								<div class="flex flex-col gap-2">
 									<div class="flex flex-col gap-2">
@@ -491,15 +491,14 @@
 									</div>
 								</div>
 							</div>
-							<div class="flex flex-row flex-wrap items-end gap-4">
-							</div>
+							<div class="flex flex-row flex-wrap items-end gap-4"></div>
 							<div>
 								<Label class="flex gap-2 text-xs">
 									<Activity class="h-4 w-4"></Activity>
 									Activation Function
 								</Label>
 							</div>
-							<br>
+							<br />
 							<div>
 								<Select.Root bind:selected={selectedActivation}>
 									<Select.Trigger class="w-[180px]">
