@@ -16,7 +16,7 @@
 		font-style: normal;
 		font-weight: 400;
 		font-display: swap;
-		src: url(/fonts/Urbanist-VariableFont_wght.woff) format('woff');
+		src: url(/fonts/GeistVF.woff2) format('woff2');
 	}
 }
 
@@ -128,4 +128,9 @@ main {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
+}
+
+p {
+	font-size: 0.875rem/* 14px */;
+    line-height: 1.25rem/* 20px */;
 }

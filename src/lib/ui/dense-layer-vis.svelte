@@ -73,8 +73,6 @@
 
 	const sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> =
 		getContext('sampleDomain');
-	$: xDomain = $sampleDomain.x;
-	$: yDomain = $sampleDomain.y;
 </script>
 
 <div class="flex flex-col items-center gap-2 rounded-lg border bg-card p-2 text-card-foreground">
@@ -98,17 +96,9 @@
 							{nodeIndex}
 							layerName={tfLayer.name}
 							class="h-5 w-5 rounded-[0.15rem]"
-							{xDomain}
-							{yDomain}
 						/>
 					{:else if isEqual($model.layers[0].inputShape, [2])}
-						<Heatmap
-							{nodeIndex}
-							layerName={tfLayer.name}
-							class="h-5 w-5 rounded-[0.15rem]"
-							{xDomain}
-							{yDomain}
-						/>
+						<Heatmap {nodeIndex} layerName={tfLayer.name} class="h-5 w-5 rounded-[0.15rem]" />
 					{/if}
 				</HoverCard.Trigger>
 				<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
