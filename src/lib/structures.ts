@@ -304,7 +304,7 @@ export async function updateSampledOutputsSingle(
 
 	// Clean up tensors
 	tf.dispose([inputTensor, currentInput]);
-
+	//console.log(outputs)
 	return outputs;
 }
 

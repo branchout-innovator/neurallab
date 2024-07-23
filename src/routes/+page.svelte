@@ -143,6 +143,7 @@
 
 	const sampleOutputs = async () => {
 		if (!tfModel) return;
+		console.log('sampling');
 		if (isEqual($model.layers[0].inputShape, [1]))
 			$sampledOutputs = await updateSampledOutputs1D(tfModel, SAMPLE_DENSITY_1D, $sampleDomain.x);
 		else if (isEqual($model.layers[0].inputShape, [2]))
@@ -153,11 +154,12 @@
 				$sampleDomain.y
 			);
 		else {
-			dataset.take(1).forEachAsync((e) => {
+			dataset.take(1).forEachAsync(async (e) => {
+				if (!tfModel) return;
 				exampleInput = (e as { xs: number[]; ys: number[] }).xs;
+				if (exampleInput != null)
+					$sampledOutputs = await updateSampledOutputsSingle(tfModel, exampleInput);
 			});
-			if (exampleInput != null)
-				$sampledOutputs = await updateSampledOutputsSingle(tfModel, exampleInput);
 		}
 	};
 
@@ -256,7 +258,7 @@
 		}
 		if (browser) {
 			try {
-				// await sampleOutputs();
+				await sampleOutputs();
 			} catch (e) {
 				console.error('Error when sampling outputs: ', e);
 			}
@@ -301,7 +303,12 @@
 
 	let hasLabel = false;
 
-	$: {
+	const updateDataset = async (
+		datasetUploadFiles: FileList,
+		csvColumnConfigs: {
+			[key: string]: { isLabel: 'true' | 'false' };
+		}
+	) => {
 		if (datasetUploadFiles && datasetUploadFiles.length) {
 			const config: {
 				[key: string]: tf.data.ColumnConfig;
@@ -318,20 +325,18 @@
 				}
 			}
 			if (hasLabel) {
-				(() => {
-					loadUploadedCsv(datasetUploadFiles[0], config).then(async (d) => {
-						dataset = d;
-						if ($model.layers[0]) {
-							$model.layers[0].inputShape = [featureCount];
-							console.log('features: ', featureCount);
-							await updateTFModel($model);
-						}
-						sampleOutputs();
-					});
-				})();
+				dataset = await loadUploadedCsv(datasetUploadFiles[0], config);
+				if ($model.layers[0]) {
+					$model.layers[0].inputShape = [featureCount];
+					console.log('features: ', featureCount);
+					await updateTFModel($model);
+				}
+				await sampleOutputs();
 			}
 		}
-	}
+	};
+
+	$: updateDataset(datasetUploadFiles, $csvColumnConfigs);
 
 	function pageLeft() {
 		changePage(-1);
