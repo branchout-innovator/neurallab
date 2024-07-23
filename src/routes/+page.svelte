@@ -10,7 +10,8 @@
 		type DenseLayer,
 		type Layer,
 		type SequentialModel,
-		updateSampledOutputs1D
+		updateSampledOutputs1D,
+		updateSampledOutputsSingle
 	} from '$lib/structures';
 	import * as tf from '@tensorflow/tfjs';
 	import { onMount, setContext, SvelteComponent } from 'svelte';
@@ -141,8 +142,11 @@
 
 	let currentEpoch = 0;
 
+	let exampleInput: tf.TensorContainer | null;
+
 	const sampleOutputs = async () => {
 		if (!tfModel) return;
+		console.log('sampling');
 		if (isEqual($model.layers[0].inputShape, [1]))
 			$sampledOutputs = await updateSampledOutputs1D(tfModel, SAMPLE_DENSITY_1D, $sampleDomain.x);
 		else if (isEqual($model.layers[0].inputShape, [2]))
@@ -152,6 +156,14 @@
 				$sampleDomain.x,
 				$sampleDomain.y
 			);
+		else {
+			dataset.take(1).forEachAsync(async (e) => {
+				if (!tfModel) return;
+				exampleInput = (e as { xs: number[]; ys: number[] }).xs;
+				if (exampleInput != null)
+					$sampledOutputs = await updateSampledOutputsSingle(tfModel, exampleInput);
+			});
+		}
 	};
 
 	let isTraining = false;
@@ -213,7 +225,7 @@
 		}
 	};
 
-	$: {
+	const updateActivations = () => {
 		for (let i = 0; i < $model.layers.length; i++) {
 			const layer = $model.layers[i];
 			if (layer.type === 'dense' && i < $model.layers.length - 1) {
@@ -221,6 +233,11 @@
 			}
 		}
 		updateTFModel($model);
+	};
+
+	$: {
+		selectedActivation.value;
+		updateActivations();
 	}
 
 	function getWeightsBetweenLayers(model: tf.Sequential, layerIndex: number): tf.Tensor {
@@ -252,7 +269,7 @@
 	};
 
 	$: {
-		updateTFModel($model);
+		// updateTFModel($model);
 	}
 
 	// $: predictedVal = tfModel?.predict(tf.tensor2d([Number(testPred)], [1, 1]));
@@ -283,15 +300,18 @@
 						isLabel: 'false'
 					};
 				}
-			} else {
-				dataset = await generateDataset();
 			}
 		})();
 	}
 
 	let hasLabel = false;
 
-	$: {
+	const updateDataset = async (
+		datasetUploadFiles: FileList,
+		csvColumnConfigs: {
+			[key: string]: { isLabel: 'true' | 'false' };
+		}
+	) => {
 		if (datasetUploadFiles && datasetUploadFiles.length) {
 			const config: {
 				[key: string]: tf.data.ColumnConfig;
@@ -308,15 +328,18 @@
 				}
 			}
 			if (hasLabel) {
-				loadUploadedCsv(datasetUploadFiles[0], config).then((d) => (dataset = d));
-			}
-			if ($model.layers[0]) {
-				$model.layers[0].inputShape = [featureCount];
-				console.log('features: ', featureCount);
-				updateTFModel($model);
+				dataset = await loadUploadedCsv(datasetUploadFiles[0], config);
+				if ($model.layers[0]) {
+					$model.layers[0].inputShape = [featureCount];
+					console.log('features: ', featureCount);
+					await updateTFModel($model);
+				}
+				await sampleOutputs();
 			}
 		}
-	}
+	};
+
+	$: updateDataset(datasetUploadFiles, $csvColumnConfigs);
 
 	function pageLeft() {
 		changePage(-1);
@@ -351,7 +374,7 @@
 	}
 	
 	let position = '0';
-	let sampledOutputs = writable<SampledOutputs<number[] | number[][]>>({});
+	let sampledOutputs = writable<SampledOutputs<number | number[] | number[][]>>({});
 	setContext('sampledOutputs', sampledOutputs);
 	
 
@@ -377,6 +400,7 @@
 			inside_circle: { isLabel: true }
 		}).then((d) => {
 			dataset = d;
+			sampleOutputs();
 		});
 		if ($model.layers[0]) {
 			$model.layers[0].inputShape = [numFeatures];
@@ -453,8 +477,8 @@
 					<Tabs.Trigger value="NL">NeuralLab</Tabs.Trigger>
 					<Tabs.Trigger value="settings">Settings</Tabs.Trigger>
 				</Tabs.List>
-				<Tabs.Content value="settings" class = "h-full">
-					<Card.Root class = "h-full">
+				<Tabs.Content value="settings" class="h-full">
+					<Card.Root class="h-full">
 						<Card.Header>
 							<Card.Title>Settings</Card.Title>
 							<Card.Description>
@@ -610,7 +634,7 @@
 						</Card.Content>
 					</Card.Root>
 				</Tabs.Content>
-				<Tabs.Content value="NL" class = "h-full">
+				<Tabs.Content value="NL" class="h-full">
 					<div class="flex flex-row flex-wrap items-end gap-4">
 						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">
