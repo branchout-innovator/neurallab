@@ -46,7 +46,8 @@
 	import mark from '$lib/articles/article1.md?raw';
 	import mark2 from '$lib/articles/article2.md?raw';
 	import mark3 from '$lib/articles/article3.md?raw';
-	import mark4 from '$lib/articles/article4.md?raw'
+	import mark4 from '$lib/articles/article4.md?raw';
+	import mark5 from '$lib/articles/article5.md?raw';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
@@ -354,21 +355,28 @@
 	function pageRight() {
 		changePage(1);
 	}
-	const s = mark;
-	const s2 = mark2;
-	const s3 = mark3;
-	const s4 = mark4;
 	let articletitle = [
-		'What are Neural Networks? (Basics of Neural Networks)',
+		['What are Neural Networks? (Basics of Neural Networks)',
 		'What are Activation Functions?',
 		'What are Loss Functions? (Neural Nets)',
-		'Optimization Algorithms'
+		'Optimization Algorithms'], 
+		['Basics of CNNs',
+			'Convolutional Layers',
+			'Pooling Layers',
+			'LeNet and advanced CNN architectures',
+		]
 	];
+	let subtitles = [
+		'Fundamentals of Neural Networks',
+		'Convolutional Neural Networks (CNNs)',
+		'Recurrent Neural Networks (RNNs)',
+	]
 	let pagetext = [
-		s,
-		s2,
-		s3,
-		s4,
+		mark,
+		mark2,
+		mark3,
+		mark4,
+		mark5,
 	];
 	$:source = pagetext[Number(position)];
 	function changePage(d: number) {
@@ -424,6 +432,9 @@
 	onMount(async () => {
 		loadSampleDataset('/circle_dataset.csv', 2);
 	});
+	function addLength(accumulator: number, a: string[]) {
+		return accumulator + a.length;
+	}
 </script>
 
 <svelte:head>
@@ -442,19 +453,28 @@
 				</div>
 				<div class="w-1/3">
 					<DropdownMenu.Root>
-						<DropdownMenu.Trigger asChild let:builder>
-							<Button variant="outline" class="h-full w-full" builders={[builder]}>Pages</Button>
-						</DropdownMenu.Trigger>
-						<DropdownMenu.Content>
-							<DropdownMenu.Label>Page Select</DropdownMenu.Label>
-							<DropdownMenu.Separator />
-							<DropdownMenu.RadioGroup bind:value={position}>
-								{#each articletitle as title, i}
-									<DropdownMenu.RadioItem value={String(i)}>{title}</DropdownMenu.RadioItem>
-								{/each}
-							</DropdownMenu.RadioGroup>
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
+                        <DropdownMenu.Trigger asChild let:builder>
+                            <Button variant="outline" class="w-full" builders={[builder]}>Article Sections</Button>
+                        </DropdownMenu.Trigger>
+                        <DropdownMenu.Content>
+                          <DropdownMenu.Label>Click for Pages</DropdownMenu.Label>
+                          <DropdownMenu.Separator />
+						  {#each articletitle as subcategory, j}
+                            <DropdownMenu.Sub>
+                              <DropdownMenu.SubTrigger>
+                                <span>{subtitles[j]}</span>
+                              </DropdownMenu.SubTrigger>
+                              <DropdownMenu.SubContent class = "w-full">
+                                <DropdownMenu.RadioGroup bind:value={position}>
+                                    {#each subcategory as title, i}
+                                        <DropdownMenu.RadioItem value={String(i+articletitle.slice(0, j).reduce(addLength, 0))}>{title}</DropdownMenu.RadioItem>
+                                    {/each}
+                                </DropdownMenu.RadioGroup>
+                              </DropdownMenu.SubContent>
+                            </DropdownMenu.Sub>
+							{/each}
+                        </DropdownMenu.Content>
+                      </DropdownMenu.Root>
 				</div>
 				<div class="flex h-full w-1/3">
 					<Button variant="outline" class="mr-auto h-full" size="icon" on:click={pageRight}
@@ -469,7 +489,7 @@
 					<h2
 						class="scroll-m-20 border-b pb-2 text-center text-2xl font-semibold tracking-tight transition-colors first:mt-0"
 					>
-						{articletitle[Number(position)]}
+						{articletitle.flat()[Number(position)]}
 					</h2>
 					<span class="inline-block h-4 w-4"></span>
 					<SvelteMarkdown {source} renderers={{ image: ImageComponent }} />
