@@ -702,7 +702,7 @@
 						</div>
 					</div>
 					<div
-						class="flex h-3/4 w-full flex-col gap-6 overflow-x-auto rounded-lg border p-1 text-sm overflow-y-hidden resize-y"
+						class="flex w-full flex-col gap-6 overflow-x-auto rounded-lg border p-1 text-sm overflow-y-hidden"
 					>
 						<div class="ml-auto mr-auto flex flex-row items-center">
 							<Button variant="ghost" size="icon" class="h-8 w-8" on:click={addLayer}>
