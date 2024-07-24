@@ -14,6 +14,7 @@
 	import EnlargedHeatmap from './detailed-vis.svelte';
 	import PredictionCurve from './prediction-curve.svelte';
 	import isEqual from 'lodash.isequal';
+	import ActivationColor from './activation-color.svelte';
 
 	export let layer: DenseLayer;
 	export let index: number;
@@ -99,6 +100,12 @@
 						/>
 					{:else if isEqual($model.layers[0].inputShape, [2])}
 						<Heatmap {nodeIndex} layerName={tfLayer.name} class="h-5 w-5 rounded-[0.15rem]" />
+					{:else}
+						<ActivationColor
+							{nodeIndex}
+							layerName={tfLayer.name}
+							class="h-5 w-5 rounded-[0.15rem]"
+						/>
 					{/if}
 				</HoverCard.Trigger>
 				<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
