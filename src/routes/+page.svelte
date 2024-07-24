@@ -175,6 +175,12 @@
 		}
 	};
 
+	const refreshModel = async () => {
+		currentEpoch = 0;
+		tfModel = createTFModel($model);
+		return;
+	}
+
 	let isTraining = false;
 
 	const trainModel = async () => {
@@ -443,15 +449,9 @@
 	<meta name="description" content="Design and visualize neural networks in your browser." />
 </svelte:head>
 <!--<div class="container flex h-full max-w-full flex-row gap-4">-->
-
-<Resizable.PaneGroup direction="horizontal" class ="container flex max-w-full flex-row gap-4 overflow-y-hidden">
+<Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row gap-4">
 	<Resizable.Pane defaultSize={25}>
-		<!--<div class = "collapse container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
-			<div class="h-1/8 container flex w-full flex-row items-end">
-				Home
-			</div>
-		</div>-->
-		<div class="flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
+		<div class="container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
 			<div class="h-1/8 container flex w-full flex-row items-end">
 				<div class="flex h-full w-1/3">
 					<Button variant="outline" class="ml-auto h-full" size="icon" on:click={pageLeft}
@@ -506,7 +506,7 @@
 	</Resizable.Pane>
 	<Resizable.Handle withHandle />
 	<Resizable.Pane defaultSize={60} class="p-4">
-		<div class="flex max-w-full flex-grow flex-col gap-4 overflow-x-hidden overflow-y-hidden py-4">
+		<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
 			<!-- Controls (header) -->
 			<Tabs.Root value="NL" class="h-auto w-full">
 				<Tabs.List class="grid w-full grid-cols-2">
@@ -666,11 +666,32 @@
 						<div class="flex flex-col gap-2"></div>
 						<div class="flex-1"></div>
 						<div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">Hardware</Label>
+							<Tooltip.Root>
+								<Tooltip.Trigger asChild>
+									<div class="flex h-9 flex-row flex-nowrap items-center space-x-2">
+										<Label for="hardware-backend">CPU</Label>
+										<Switch id="hardware-backend" bind:checked={useGPU} />
+										<Label for="hardware-backend">GPU</Label>
+									</div>
+								</Tooltip.Trigger>
+								<Tooltip.Content class="max-w-52">
+									GPU is recommended for large models but slower for small models.
+								</Tooltip.Content>
+							</Tooltip.Root>
+						</div>
+						<div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">Refresh</Label>
+							<Button on:click={refreshModel}>
+								<RefreshCw class="mr-0 h-4 w-4"/>
+							</Button>
+						</div>
+						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
 							<Button on:click={trainModel}>
 								{#if isTraining}
 									<CirclePause class="mr-2 h-4 w-4"></CirclePause>
-									Train
+									Pause
 								{:else}
 									<Brain class="mr-2 h-4 w-4"></Brain>
 									Train
@@ -714,6 +735,7 @@
 										/>
 									{/if}
 								{/each}
+								{updateTFModel($model)}
 							{/if}
 						</div>
 					</div>
