@@ -443,7 +443,7 @@
 </svelte:head>
 <!--<div class="container flex h-full max-w-full flex-row gap-4">-->
 <Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row gap-4">
-	<Resizable.Pane defaultSize={25}>
+	<Resizable.Pane defaultSize={30}>
 		<div class="container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
 			<div class="h-1/8 container flex w-full flex-row items-end">
 				<div class="flex h-full w-1/3">
@@ -498,7 +498,7 @@
 		</div>
 	</Resizable.Pane>
 	<Resizable.Handle withHandle />
-	<Resizable.Pane defaultSize={60} class="p-4">
+	<Resizable.Pane defaultSize={70} class="p-4">
 		<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
 			<!-- Controls (header) -->
 			<Tabs.Root value="NL" class="h-auto w-full">
