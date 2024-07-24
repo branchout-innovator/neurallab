@@ -96,6 +96,7 @@
 	ul, ol {
 		list-style: revert;
 		@apply list-inside;
+		text-indent: 2.75rem;
 	}
 	h1 {
 		@apply text-2xl;
