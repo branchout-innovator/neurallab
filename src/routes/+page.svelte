@@ -66,6 +66,7 @@
 		dense: DenseLayerVis as typeof SvelteComponent
 	};
 
+
 	let selectedActivation = { value: 'relu' as ActivationIdentifier, label: 'ReLU' };
 	let epochs = 1000;
 
