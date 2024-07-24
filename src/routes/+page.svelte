@@ -734,6 +734,7 @@
 										/>
 									{/if}
 								{/each}
+								{updateTFModel($model)}
 							{/if}
 						</div>
 					</div>
