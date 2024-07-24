@@ -55,7 +55,7 @@
 	import ThemeToggle from '$lib/ui/theme-toggle.svelte';
 	import { page } from '$app/stores';
 	import { Progress } from "$lib/components/ui/progress";
-
+	import detailedVis from "$lib/ui/detailed-vis.svelte";
 	let value = 0;
 	onMount(() => {
 		const interval = setInterval(() => (value = 100 * document.getElementById("article")!.scrollTop / (document.getElementById("article")!.scrollHeight - document.getElementById("article")!.clientHeight)) , 100);
@@ -65,6 +65,7 @@
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
 	};
+
 	let selectedActivation = { value: 'relu' as ActivationIdentifier, label: 'ReLU' };
 	let epochs = 1000;
 
@@ -106,8 +107,8 @@
 	};
 
 	const removeLayer = () => {
-		$model.layers = [...$model.layers.slice(0, $model.layers.length - 1)];
-		if ($model.layers.length > 0) {
+		if ($model.layers.length > 1) {
+			$model.layers = [...$model.layers.slice(0, $model.layers.length - 1)];
 			const lastLayer = $model.layers[$model.layers.length - 1];
 			if (lastLayer.type === 'dense') {
 				($model.layers[$model.layers.length - 1] as DenseLayer).activation = undefined;
@@ -442,21 +443,15 @@
 	<meta name="description" content="Design and visualize neural networks in your browser." />
 </svelte:head>
 <!--<div class="container flex h-full max-w-full flex-row gap-4">-->
-<<<<<<< HEAD
-<Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row gap-4">
-	<Resizable.Pane defaultSize={30}>
-		<div class="container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
-=======
 
 <Resizable.PaneGroup direction="horizontal" class ="container flex max-w-full flex-row gap-4 overflow-y-hidden">
 	<Resizable.Pane defaultSize={25}>
-		<div class = "visible container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
+		<!--<div class = "collapse container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
 			<div class="h-1/8 container flex w-full flex-row items-end">
 				Home
 			</div>
-		</div>
-		<div class="collapse container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
->>>>>>> b247cfc2f9e5d3fa507c4fa6fd7900ed67601a03
+		</div>-->
+		<div class="flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
 			<div class="h-1/8 container flex w-full flex-row items-end">
 				<div class="flex h-full w-1/3">
 					<Button variant="outline" class="ml-auto h-full" size="icon" on:click={pageLeft}
@@ -510,13 +505,8 @@
 		</div>
 	</Resizable.Pane>
 	<Resizable.Handle withHandle />
-<<<<<<< HEAD
-	<Resizable.Pane defaultSize={70} class="p-4">
-		<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
-=======
 	<Resizable.Pane defaultSize={60} class="p-4">
 		<div class="flex max-w-full flex-grow flex-col gap-4 overflow-x-hidden overflow-y-hidden py-4">
->>>>>>> b247cfc2f9e5d3fa507c4fa6fd7900ed67601a03
 			<!-- Controls (header) -->
 			<Tabs.Root value="NL" class="h-auto w-full">
 				<Tabs.List class="grid w-full grid-cols-2">
