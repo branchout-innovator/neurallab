@@ -174,6 +174,12 @@
 		}
 	};
 
+	const refreshModel = async () => {
+		currentEpoch = 0;
+		tfModel = createTFModel($model);
+		return;
+	}
+
 	let isTraining = false;
 
 	const trainModel = async () => {
@@ -701,11 +707,17 @@
 							</Tooltip.Root>
 						</div>
 						<div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">Refresh</Label>
+							<Button on:click={refreshModel}>
+								<RefreshCw class="mr-0 h-4 w-4"/>
+							</Button>
+						</div>
+						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
 							<Button on:click={trainModel}>
 								{#if isTraining}
 									<CirclePause class="mr-2 h-4 w-4"></CirclePause>
-									Train
+									Pause
 								{:else}
 									<Brain class="mr-2 h-4 w-4"></Brain>
 									Train
