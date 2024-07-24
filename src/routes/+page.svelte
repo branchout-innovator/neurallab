@@ -174,13 +174,14 @@
 		}
 	};
 
-	const refreshModel = async () => {
+	let isTraining = false;
+
+	const refreshModel = () => {
+		isTraining = false;
+		tfModel!.stopTraining = true;
 		currentEpoch = 0;
 		tfModel = createTFModel($model);
-		return;
 	}
-
-	let isTraining = false;
 
 	const trainModel = async () => {
 		if (!tfModel) return;
