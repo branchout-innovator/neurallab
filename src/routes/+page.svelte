@@ -52,6 +52,13 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import ThemeToggle from '$lib/ui/theme-toggle.svelte';
 	import { page } from '$app/stores';
+	import { Progress } from "$lib/components/ui/progress";
+
+	let value = 0;
+	onMount(() => {
+		const interval = setInterval(() => (value = 100 * document.getElementById("article")!.scrollTop / (document.getElementById("article")!.scrollHeight - document.getElementById("article")!.clientHeight)) , 100);
+		return () => clearInterval(interval);
+	});
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
@@ -431,7 +438,9 @@
 					>
 				</div>
 			</div>
-			<div class="flex w-full overflow-y-auto">
+			<span class="inline-block h-8 w-4"/>
+			<Progress {value} />
+			<div id="article" class="flex w-full overflow-y-auto">
 				<div class="w-full p-4">
 					<h2
 						class="scroll-m-20 border-b pb-2 text-center text-2xl font-semibold tracking-tight transition-colors first:mt-0"
