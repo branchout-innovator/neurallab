@@ -55,7 +55,7 @@
 	import ThemeToggle from '$lib/ui/theme-toggle.svelte';
 	import { page } from '$app/stores';
 	import { Progress } from "$lib/components/ui/progress";
-
+	import detailedVis from "$lib/ui/detailed-vis.svelte";
 	let value = 0;
 	onMount(() => {
 		const interval = setInterval(() => (value = 100 * document.getElementById("article")!.scrollTop / (document.getElementById("article")!.scrollHeight - document.getElementById("article")!.clientHeight)) , 100);
@@ -65,6 +65,7 @@
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
 	};
+
 	let selectedActivation = { value: 'relu' as ActivationIdentifier, label: 'ReLU' };
 	let epochs = 1000;
 
@@ -106,8 +107,8 @@
 	};
 
 	const removeLayer = () => {
-		$model.layers = [...$model.layers.slice(0, $model.layers.length - 1)];
-		if ($model.layers.length > 0) {
+		if ($model.layers.length > 1) {
+			$model.layers = [...$model.layers.slice(0, $model.layers.length - 1)];
 			const lastLayer = $model.layers[$model.layers.length - 1];
 			if (lastLayer.type === 'dense') {
 				($model.layers[$model.layers.length - 1] as DenseLayer).activation = undefined;
