@@ -48,7 +48,9 @@
 						customDensity,
 						$sampleDomain.x
 					)
-				: $sampledOutputs && $sampledOutputs[layerName] && $sampledOutputs[layerName][nodeIndex];
+				: $sampledOutputs &&
+					$sampledOutputs[layerName] &&
+					$sampledOutputs[layerName].values[nodeIndex];
 		})();
 	}
 

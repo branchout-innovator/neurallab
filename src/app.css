@@ -12,18 +12,18 @@
 	}
 
 	@font-face {
-		font-family: 'Carlito';
+		font-family: 'Geist Sans';
 		font-style: normal;
 		font-weight: 400;
 		font-display: swap;
-		src: url(/fonts/Carlito-Regular.woff) format('woff');
+		src: url(/fonts/GeistVF.woff2) format('woff2');
 	}
 }
 
 @layer base {
 	:root {
-		--background: 33 20% 88%;
-		--foreground: 32 5% 45%;
+		--background: 0 0% 100%;
+		--foreground: 240 10% 3.9%;
 
 		--muted: 48 33% 94%;
 		--muted-foreground: 240 3.8% 46.1%;
@@ -55,8 +55,8 @@
 	}
 
 	.dark {
-		--background: 32 5% 20%;
-		--foreground: 33 20% 88%;
+		--background: 240 10% 3.9%;
+		--foreground: 0 0% 98%;
 
 		--muted: 240 3.7% 15.9%;
 		--muted-foreground: 240 5% 64.9%;

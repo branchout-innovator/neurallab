@@ -40,7 +40,9 @@
 						$sampleDomain.x,
 						$sampleDomain.y
 					)
-				: $sampledOutputs && $sampledOutputs[layerName] && $sampledOutputs[layerName][nodeIndex];
+				: $sampledOutputs &&
+					$sampledOutputs[layerName] &&
+					$sampledOutputs[layerName].values[nodeIndex];
 		})();
 	}
 

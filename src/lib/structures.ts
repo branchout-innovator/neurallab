@@ -18,6 +18,8 @@ export type ActivationIdentifier =
 	| 'gelu'
 	| 'gelu_new';
 
+export type LayerType = 'dense' | 'conv2d' | 'maxpooling' | 'flatten';
+
 export interface Layer {
 	type: string;
 	inputShape?: number[];
@@ -30,10 +32,34 @@ export type DenseLayer = Layer & {
 	activation?: ActivationIdentifier;
 };
 
+export type Conv2DLayer = Layer & {
+	type: 'conv2d';
+	/** Kernel size in each dimension */
+	kernelSize: [number, number];
+	/** Stride in each dimension */
+	strides: [number, number];
+	/** The amount of nodes */
+	filters: number;
+	activation?: ActivationIdentifier;
+};
+
+export type MaxPoolingLayer = Layer & {
+	type: 'maxpooling';
+	/** Pooling size in each dimension */
+	poolSize: [number, number];
+	/** Stride in each dimension */
+	strides: [number, number];
+};
+
+export type FlattenLayer = Layer & {
+	type: 'flatten';
+};
+
 export type SequentialModel = {
 	layers: Layer[];
 	loss: string;
 	optimizer: string | tf.Optimizer;
+	learningRate?: number;
 };
 
 export const layerToTF = (layer: Layer): tf.layers.Layer => {
@@ -47,7 +73,31 @@ export const layerToTF = (layer: Layer): tf.layers.Layer => {
 				kernelInitializer: 'glorotUniform'
 			});
 		}
-		// Add more cases for other layer types as needed
+		case 'conv2d': {
+			const conv2dLayer = layer as Conv2DLayer;
+			return tf.layers.conv2d({
+				filters: conv2dLayer.filters,
+				kernelSize: conv2dLayer.kernelSize,
+				strides: conv2dLayer.strides,
+				inputShape: conv2dLayer.inputShape,
+				activation: conv2dLayer.activation,
+				kernelInitializer: 'glorotUniform'
+			});
+		}
+		case 'maxpooling': {
+			const maxPoolingLayer = layer as MaxPoolingLayer;
+			return tf.layers.maxPooling2d({
+				poolSize: maxPoolingLayer.poolSize,
+				strides: maxPoolingLayer.strides,
+				inputShape: maxPoolingLayer.inputShape
+			});
+		}
+		case 'flatten': {
+			const flattenLayer = layer as FlattenLayer;
+			return tf.layers.flatten({
+				inputShape: flattenLayer.inputShape
+			});
+		}
 		default:
 			throw new Error(`Unsupported layer type: ${layer.type}`);
 	}
@@ -60,9 +110,11 @@ export const createTFModel = (model: SequentialModel): tf.Sequential => {
 		tfModel.add(layerToTF(layer));
 	});
 
+	const optimizer = tf.train.adam(model.learningRate);
+
 	tfModel.compile({
 		loss: model.loss,
-		optimizer: model.optimizer
+		optimizer: tf.train.adam(model.learningRate)
 	});
 
 	return tfModel;
@@ -117,12 +169,14 @@ export async function loadCsvDataset(
 	console.log(featuresTensor.shape);
 	console.log(labelsTensor.shape);
 
-	return flattenedDataset;
+	return { dataset: flattenedDataset, columnNames: await csvDataset.columnNames() };
 }
 
-export interface SampledOutputs<Sample> {
-	/** Key: layer.name in Tensorflow layers */
-	[key: string]: Sample[];
+export interface SampledOutputs<T> {
+	[layerName: string]: {
+		shape: number[];
+		values: T[];
+	};
 }
 
 export async function updateSampledOutputs(
@@ -149,7 +203,11 @@ export async function updateSampledOutputs(
 			.transpose()
 			.reshape([-1, DENSITY, DENSITY]);
 
-		outputs[layer.name] = reshapedOutput.arraySync() as number[][][];
+		// Store the shape and values
+		outputs[layer.name] = {
+			shape: currentInput.shape.slice(1), // Remove batch dimension
+			values: reshapedOutput.arraySync() as number[][][]
+		};
 	}
 
 	return outputs;
@@ -217,7 +275,11 @@ export async function updateSampledOutputs1D(
 		// Reshape the output to [numNodes, DENSITY]
 		const reshapedOutput = currentInput.transpose();
 
-		outputs[layer.name] = reshapedOutput.arraySync() as number[][];
+		// Store the shape and values
+		outputs[layer.name] = {
+			shape: currentInput.shape.slice(1), // Remove batch dimension
+			values: reshapedOutput.arraySync() as number[][]
+		};
 	}
 
 	return outputs;
@@ -259,6 +321,48 @@ export async function getSampledOutputForNode1D(
 	const nodeOutput = currentInput.slice([0, nodeIndex], [-1, 1]);
 
 	return nodeOutput.squeeze().arraySync() as number[];
+}
+
+export type NestedArray = number | NestedArray[];
+
+function removeFirstDimension(arr: NestedArray): NestedArray {
+	return Array.isArray(arr) ? arr[0] : arr;
+}
+
+export async function updateSampledOutputsSingle(
+	model: tf.LayersModel,
+	input: tf.TensorContainer
+): Promise<SampledOutputs<NestedArray>> {
+	const outputs: SampledOutputs<NestedArray> = {};
+
+	// Convert input to tensor if it's not already
+	let inputTensor = input instanceof tf.Tensor ? input : tf.tensor(input as tf.TensorLike);
+
+	// Ensure input has a batch dimension
+	if (inputTensor.shape[0] !== 1) {
+		inputTensor = inputTensor.expandDims(0);
+	}
+
+	let currentInput: tf.Tensor = inputTensor;
+
+	// Forward pass through each layer, storing intermediate outputs
+	for (const layer of model.layers) {
+		currentInput = layer.apply(currentInput) as tf.Tensor;
+
+		// Get the activation values for this layer
+		const activations = (await currentInput.array()) as NestedArray;
+
+		// Store the shape and values
+		outputs[layer.name] = {
+			shape: currentInput.shape.slice(1), // Remove batch dimension
+			values: removeFirstDimension(activations) as NestedArray[] // Remove batch dimension
+		};
+	}
+
+	// Clean up tensors
+	tf.dispose([inputTensor, currentInput]);
+
+	return outputs;
 }
 
 // Helper function to construct input (if needed)

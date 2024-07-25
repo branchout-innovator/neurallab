@@ -155,7 +155,7 @@
 			.merge(pointsGroup)
 			.selectAll<SVGCircleElement, { x: number; y: number; label: number }>('circle')
 			.data(testPoints);
-		console.log('drawing ', testPoints);
+		// console.log('drawing ', testPoints);
 
 		points
 			.enter()
@@ -260,5 +260,5 @@
 			<g bind:this={gPoints} overflow="hidden"></g>
 		</svg>
 	</div>
-	<Button on:click={resetZoom}>Reset Zoom</Button>
+	<Button on:click={resetZoom} class="my-2">Reset Zoom</Button>
 </div>
