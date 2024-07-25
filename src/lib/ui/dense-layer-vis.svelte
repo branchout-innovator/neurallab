@@ -92,13 +92,13 @@
 		<div class="relative flex h-6 w-6 items-center justify-center">
 			<HoverCard.Root>
 				<HoverCard.Trigger>
-					{#if isEqual($model.layers[0].inputShape, [1])}
+					{#if isEqual($model.layers[0]?.inputShape, [1])}
 						<PredictionCurve
 							{nodeIndex}
 							layerName={tfLayer.name}
 							class="h-5 w-5 rounded-[0.15rem]"
 						/>
-					{:else if isEqual($model.layers[0].inputShape, [2])}
+					{:else if isEqual($model.layers[0]?.inputShape, [2])}
 						<Heatmap {nodeIndex} layerName={tfLayer.name} class="h-5 w-5 rounded-[0.15rem]" />
 					{:else}
 						<ActivationColor

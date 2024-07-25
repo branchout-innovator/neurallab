@@ -18,6 +18,8 @@ export type ActivationIdentifier =
 	| 'gelu'
 	| 'gelu_new';
 
+export type LayerType = 'dense' | 'conv2d' | 'maxpooling' | 'flatten';
+
 export interface Layer {
 	type: string;
 	inputShape?: number[];
@@ -57,7 +59,7 @@ export type SequentialModel = {
 	layers: Layer[];
 	loss: string;
 	optimizer: string | tf.Optimizer;
-	learningRate?:number;
+	learningRate?: number;
 };
 
 export const layerToTF = (layer: Layer): tf.layers.Layer => {
@@ -102,20 +104,20 @@ export const layerToTF = (layer: Layer): tf.layers.Layer => {
 };
 
 export const createTFModel = (model: SequentialModel): tf.Sequential => {
-    const tfModel = tf.sequential();
+	const tfModel = tf.sequential();
 
-    model.layers.forEach((layer) => {
-        tfModel.add(layerToTF(layer));
-    });
+	model.layers.forEach((layer) => {
+		tfModel.add(layerToTF(layer));
+	});
 
 	const optimizer = tf.train.adam(model.learningRate);
 
-    tfModel.compile({
-        loss: model.loss,
-        optimizer: tf.train.adam(model.learningRate)
-    });
+	tfModel.compile({
+		loss: model.loss,
+		optimizer: tf.train.adam(model.learningRate)
+	});
 
-    return tfModel;
+	return tfModel;
 };
 
 export const loadUploadedCsv = async (

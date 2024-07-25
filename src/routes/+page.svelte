@@ -12,9 +12,11 @@
 		type SequentialModel,
 		updateSampledOutputs1D,
 		updateSampledOutputsSingle,
-
-		type NestedArray
-
+		type NestedArray,
+		type LayerType,
+		type Conv2DLayer,
+		type MaxPoolingLayer,
+		type FlattenLayer
 	} from '$lib/structures';
 	import * as tf from '@tensorflow/tfjs';
 	import { onMount, setContext, SvelteComponent } from 'svelte';
@@ -86,7 +88,6 @@
 	let epochs = 1000;
 	let alpha = 0.01;
 
-
 	const model = writable<SequentialModel>({
 		layers: [
 			{
@@ -117,31 +118,59 @@
         updateModel();
     });*/
 
-
 	setContext('model', model);
 
-	const addLayer = () => {
+	const addLayer = (type: LayerType) => {
 		const lastLayer = $model.layers[$model.layers.length - 1] as DenseLayer;
 		// if (lastLayer.type === 'dense')
 		// 	($model.layers[$model.layers.length - 1] as DenseLayer).activation =
 		// 		selectedActivation.value as ActivationIdentifier;
-		$model.layers = [
-			...$model.layers,
-			{
-				type: 'dense',
-				units: 1
-			} as DenseLayer
-		];
+		let layer: Layer;
+		switch (type) {
+			case 'dense': {
+				layer = {
+					type: 'dense',
+					units: 1
+				} as DenseLayer;
+				break;
+			}
+			case 'conv2d': {
+				layer = {
+					type: 'conv2d',
+					filters: 8,
+					kernelSize: [5, 5],
+					strides: [1, 1]
+				} as Conv2DLayer;
+				break;
+			}
+			case 'maxpooling': {
+				layer = {
+					type: 'maxpooling',
+					poolSize: [2, 2],
+					strides: [2, 2]
+				} as MaxPoolingLayer;
+				break;
+			}
+			case 'flatten': {
+				layer = {
+					type: 'flatten'
+				} as FlattenLayer;
+			}
+		}
+		$model.layers = [...$model.layers, layer];
+		if ($model.layers.length === 1) {
+			$model.layers[0].inputShape = [$featureCount];
+		}
 		console.log($model.layers);
 		refreshModel();
 		updateTFModel($model);
 	};
 
 	const removeLayer = () => {
-		if ($model.layers.length > 1) {
+		if ($model.layers.length > 0) {
 			$model.layers = [...$model.layers.slice(0, $model.layers.length - 1)];
 			const lastLayer = $model.layers[$model.layers.length - 1];
-			if (lastLayer.type === 'dense') {
+			if (lastLayer?.type === 'dense') {
 				($model.layers[$model.layers.length - 1] as DenseLayer).activation = undefined;
 			}
 		}
@@ -186,9 +215,10 @@
 
 	const sampleOutputs = async () => {
 		if (!tfModel) return;
-		if (isEqual($model.layers[0].inputShape, [1]))
+		if (!$model.layers[0]) return;
+		if (isEqual($model.layers[0]?.inputShape, [1]))
 			$sampledOutputs = await updateSampledOutputs1D(tfModel, SAMPLE_DENSITY_1D, $sampleDomain.x);
-		else if (isEqual($model.layers[0].inputShape, [2]))
+		else if (isEqual($model.layers[0]?.inputShape, [2]))
 			$sampledOutputs = await updateSampledOutputs(
 				tfModel,
 				SAMPLE_DENSITY_2D,
@@ -287,8 +317,9 @@
 		updateActivations();
 	}
 
-	function getWeightsBetweenLayers(model: tf.Sequential, layerIndex: number): tf.Tensor {
+	function getWeightsBetweenLayers(model: tf.Sequential, layerIndex: number): tf.Tensor | null {
 		const weights = model.layers[layerIndex].getWeights();
+		if (!weights) return null;
 		return weights[0]; // Assuming the first tensor in weights array is the weight matrix
 	}
 	let canvasWidth = 150;
@@ -299,6 +330,7 @@
 	});
 
 	const updateTFModel = async (model: SequentialModel) => {
+		if (model.layers.length === 0) return;
 		if (!tfModel) {
 			tfModel = createTFModel(model);
 		} else {
@@ -354,6 +386,7 @@
 	}
 
 	let hasLabel = false;
+	let featureCount: Writable<number> = writable(-1);
 
 	const updateDataset = async (
 		datasetUploadFiles: FileList,
@@ -366,14 +399,14 @@
 				[key: string]: tf.data.ColumnConfig;
 			} = {};
 			hasLabel = false;
-			let featureCount = 0;
+			$featureCount = 0;
 			for (const column in $csvColumnConfigs) {
 				const isLabel = $csvColumnConfigs[column].isLabel === 'true';
 				config[column] = { isLabel };
 				if (isLabel) {
 					hasLabel = true;
 				} else {
-					featureCount++;
+					$featureCount++;
 				}
 			}
 			if (hasLabel) {
@@ -381,8 +414,8 @@
 				dataset = result.dataset;
 				columnNames = result.columnNames;
 				if ($model.layers[0]) {
-					$model.layers[0].inputShape = [featureCount];
-					console.log('features: ', featureCount);
+					$model.layers[0].inputShape = [$featureCount];
+					console.log('features: ', $featureCount);
 					await updateTFModel($model);
 				}
 				await sampleOutputs();
@@ -440,8 +473,8 @@
 	});
 	setContext('sampleDomain', sampleDomain);
 
-	$: is1D = isEqual($model.layers[0].inputShape, [1]);
-	$: is2D = isEqual($model.layers[0].inputShape, [2]);
+	$: is1D = isEqual($model.layers[0]?.inputShape, [1]);
+	$: is2D = isEqual($model.layers[0]?.inputShape, [2]);
 
 	$: {
 		$sampleDomain.x = (is1D ? [-11, 11] : [-3, 3]) as [number, number];
@@ -459,6 +492,7 @@
 			columnNames = d.columnNames;
 			sampleOutputs();
 		});
+		$featureCount = numFeatures;
 		if ($model.layers[0]) {
 			$model.layers[0].inputShape = [numFeatures];
 			console.log('features: ', numFeatures);
@@ -584,11 +618,15 @@
 									</Tooltip.Root>
 								</div>
 								<div class="flex flex-col gap-2">
-									<Label class="flex gap-2 text-xs">
-										&#945;
-										Alpha Level
-									</Label>
-									<Input type="number" bind:value={alpha} placeholder="0.01" min={1} max={5} class="w-24"/>
+									<Label class="flex gap-2 text-xs">&#945; Alpha Level</Label>
+									<Input
+										type="number"
+										bind:value={alpha}
+										placeholder="0.01"
+										min={1}
+										max={5}
+										class="w-24"
+									/>
 								</div>
 							</div>
 							<div class="flex flex-row flex-wrap items-end gap-4"></div>
@@ -695,8 +733,8 @@
 						</Card.Content>
 					</Card.Root>
 				</Tabs.Content>
-				<Tabs.Content value="NL" class = "h-full">
-					<div class="flex flex-row flex-wrap items-end gap-4 mb-3">
+				<Tabs.Content value="NL" class="h-full">
+					<div class="mb-3 flex flex-row flex-wrap items-end gap-4">
 						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">
 								<Activity class="h-4 w-4"></Activity>
@@ -771,9 +809,28 @@
 						class="flex w-full flex-col gap-6 overflow-x-auto overflow-y-hidden rounded-lg border p-1 text-sm"
 					>
 						<div class="ml-auto mr-auto flex flex-row items-center">
-							<Button variant="ghost" size="icon" class="h-8 w-8" on:click={addLayer}>
-								<Plus class="h-4 w-4"></Plus>
-							</Button>
+							<DropdownMenu.Root>
+								<DropdownMenu.Trigger>
+									<Button variant="ghost" size="icon" class="h-8 w-8">
+										<Plus class="h-4 w-4"></Plus>
+									</Button>
+								</DropdownMenu.Trigger>
+								<DropdownMenu.Content>
+									<DropdownMenu.Group>
+										<DropdownMenu.Item on:click={() => addLayer('dense')}>Dense</DropdownMenu.Item>
+										<DropdownMenu.Item
+											on:click={() => {
+												addLayer('conv2d');
+												addLayer('maxpooling');
+											}}>Convolutional</DropdownMenu.Item
+										>
+										<DropdownMenu.Item on:click={() => addLayer('flatten')}
+											>Flatten</DropdownMenu.Item
+										>
+									</DropdownMenu.Group>
+								</DropdownMenu.Content>
+							</DropdownMenu.Root>
+
 							<Button variant="ghost" size="icon" class="h-8 w-8" on:click={removeLayer}>
 								<Minus class="h-4 w-4"></Minus>
 							</Button>
@@ -781,18 +838,20 @@
 								>{$model.layers.length} Layers</span
 							>
 						</div>
-						
-						
+
 						<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
 							{#if tfModel}
 								<Features {columnNames} />
-								{#if $model.layers[0].inputShape}
-									<ConnectionsVis
-										leftLayerHeights={getNodeYPositionsInput($model.layers[0].inputShape[0])}
-										rightLayerHeights={getNodeYPositions($model.layers[0])}
-										{canvasWidth}
-										weights={getWeightsBetweenLayers(tfModel, 0)}
-									/>
+								{#if $model.layers[0]?.inputShape}
+									{@const weights = getWeightsBetweenLayers(tfModel, 0)}
+									{#if weights}
+										<ConnectionsVis
+											leftLayerHeights={getNodeYPositionsInput($model.layers[0].inputShape[0])}
+											rightLayerHeights={getNodeYPositions($model.layers[0])}
+											{canvasWidth}
+											{weights}
+										/>
+									{/if}
 								{/if}
 								{#each $model.layers as layer, i (i)}
 									<svelte:component
@@ -806,12 +865,14 @@
 										{@const leftLayerHeights = getNodeYPositions(layer)}
 										{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
 										{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
-										<ConnectionsVis
-											{leftLayerHeights}
-											{rightLayerHeights}
-											{canvasWidth}
-											{weights}
-										/>
+										{#if weights}
+											<ConnectionsVis
+												{leftLayerHeights}
+												{rightLayerHeights}
+												{canvasWidth}
+												{weights}
+											/>
+										{/if}
 									{/if}
 								{/each}
 							{/if}
