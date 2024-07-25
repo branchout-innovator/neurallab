@@ -47,6 +47,7 @@
 	import mark2 from '$lib/articles/article2.md?raw';
 	import mark3 from '$lib/articles/article3.md?raw';
 	import mark4 from '$lib/articles/article4.md?raw';
+	import mark5 from '$lib/articles/article5.md?raw';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
@@ -54,10 +55,25 @@
 	import ThemeToggle from '$lib/ui/theme-toggle.svelte';
 	import { page } from '$app/stores';
 	import Features from '$lib/ui/features.svelte';
+	import { Progress } from '$lib/components/ui/progress';
+	import detailedVis from '$lib/ui/detailed-vis.svelte';
+	let value = 0;
+	onMount(() => {
+		const interval = setInterval(
+			() =>
+				(value =
+					(100 * document.getElementById('article')!.scrollTop) /
+					(document.getElementById('article')!.scrollHeight -
+						document.getElementById('article')!.clientHeight)),
+			100
+		);
+		return () => clearInterval(interval);
+	});
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
 	};
+
 	let selectedActivation = { value: 'relu' as ActivationIdentifier, label: 'ReLU' };
 	let epochs = 1000;
 
@@ -95,12 +111,13 @@
 			} as DenseLayer
 		];
 		console.log($model.layers);
+		refreshModel();
 		updateTFModel($model);
 	};
 
 	const removeLayer = () => {
-		$model.layers = [...$model.layers.slice(0, $model.layers.length - 1)];
-		if ($model.layers.length > 0) {
+		if ($model.layers.length > 1) {
+			$model.layers = [...$model.layers.slice(0, $model.layers.length - 1)];
 			const lastLayer = $model.layers[$model.layers.length - 1];
 			if (lastLayer.type === 'dense') {
 				($model.layers[$model.layers.length - 1] as DenseLayer).activation = undefined;
@@ -168,6 +185,13 @@
 
 	let isTraining = false;
 
+	const refreshModel = () => {
+		isTraining = false;
+		tfModel!.stopTraining = true;
+		currentEpoch = 0;
+		tfModel = createTFModel($model);
+	};
+
 	const trainModel = async () => {
 		if (!tfModel) return;
 		if (isTraining) {
@@ -193,6 +217,7 @@
 				callbacks: {
 					async onEpochEnd(epoch, logs) {
 						if (!tfModel) return;
+						if (!isTraining) return;
 						currentEpoch++;
 						if (epoch % 5 === 0) tfModel = tfModel;
 						try {
@@ -259,6 +284,7 @@
 			const newModel = createTFModel(model);
 			tfModel = newModel;
 		}
+		refreshModel();
 		if (browser) {
 			try {
 				await sampleOutputs();
@@ -350,17 +376,26 @@
 	function pageRight() {
 		changePage(1);
 	}
-	const s = mark;
-	const s2 = mark2;
-	const s3 = mark3;
-	const s4 = mark4;
 	let articletitle = [
-		'What are Neural Networks? (Basics of Neural Networks)',
-		'What are Activation Functions?',
-		'What are Loss Functions? (Neural Nets)',
-		'Optimization Algorithms'
+		[
+			'What are Neural Networks? (Basics of Neural Networks)',
+			'What are Activation Functions?',
+			'What are Loss Functions? (Neural Nets)',
+			'Optimization Algorithms'
+		],
+		[
+			'Basics of CNNs',
+			'Convolutional Layers',
+			'Pooling Layers',
+			'LeNet and advanced CNN architectures'
+		]
 	];
-	let pagetext = [s, s2, s3, s4];
+	let subtitles = [
+		'Fundamentals of Neural Networks',
+		'Convolutional Neural Networks (CNNs)',
+		'Recurrent Neural Networks (RNNs)'
+	];
+	let pagetext = [mark, mark2, mark3, mark4, mark5];
 	$: source = pagetext[Number(position)];
 	function changePage(d: number) {
 		let pageNum = Number(position);
@@ -417,6 +452,10 @@
 	onMount(async () => {
 		loadSampleDataset('/circle_dataset.csv', 2);
 	});
+	function addLength(accumulator: number, a: string[]) {
+		return accumulator + a.length;
+	}
+	$: updateTFModel($model);
 </script>
 
 <svelte:head>
@@ -436,16 +475,29 @@
 				<div class="w-1/3">
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger asChild let:builder>
-							<Button variant="outline" class="h-full w-full" builders={[builder]}>Pages</Button>
+							<Button variant="outline" class="w-full" builders={[builder]}>Article Sections</Button
+							>
 						</DropdownMenu.Trigger>
 						<DropdownMenu.Content>
-							<DropdownMenu.Label>Page Select</DropdownMenu.Label>
+							<DropdownMenu.Label>Click for Pages</DropdownMenu.Label>
 							<DropdownMenu.Separator />
-							<DropdownMenu.RadioGroup bind:value={position}>
-								{#each articletitle as title, i}
-									<DropdownMenu.RadioItem value={String(i)}>{title}</DropdownMenu.RadioItem>
-								{/each}
-							</DropdownMenu.RadioGroup>
+							{#each articletitle as subcategory, j}
+								<DropdownMenu.Sub>
+									<DropdownMenu.SubTrigger>
+										<span>{subtitles[j]}</span>
+									</DropdownMenu.SubTrigger>
+									<DropdownMenu.SubContent class="w-full">
+										<DropdownMenu.RadioGroup bind:value={position}>
+											{#each subcategory as title, i}
+												<DropdownMenu.RadioItem
+													value={String(i + articletitle.slice(0, j).reduce(addLength, 0))}
+													>{title}</DropdownMenu.RadioItem
+												>
+											{/each}
+										</DropdownMenu.RadioGroup>
+									</DropdownMenu.SubContent>
+								</DropdownMenu.Sub>
+							{/each}
 						</DropdownMenu.Content>
 					</DropdownMenu.Root>
 				</div>
@@ -455,12 +507,14 @@
 					>
 				</div>
 			</div>
-			<div class="flex w-full overflow-y-auto">
+			<span class="inline-block h-8 w-4" />
+			<Progress {value} />
+			<div id="article" class="flex w-full overflow-y-auto">
 				<div class="w-full p-4">
 					<h2
 						class="scroll-m-20 border-b pb-2 text-center text-2xl font-semibold tracking-tight transition-colors first:mt-0"
 					>
-						{articletitle[Number(position)]}
+						{articletitle.flat()[Number(position)]}
 					</h2>
 					<span class="inline-block h-4 w-4"></span>
 					<SvelteMarkdown {source} renderers={{ image: ImageComponent }} />
@@ -481,17 +535,11 @@
 					<Card.Root class="h-full">
 						<Card.Header>
 							<Card.Title>Settings</Card.Title>
-							<Card.Description>
-								Make changes to your settings and upload your dataset here.
-							</Card.Description>
+							<div class="float-left">Make changes to your settings here.</div>
 						</Card.Header>
 						<Card.Content class="space-y-3">
 							<div class="flex flex-1 items-start space-x-2">
-								<Label class="flex gap-2 text-xs">
-									<br />
-									Choose Mode Here
-								</Label>
-								<br />
+								<Label class="flex gap-2 text-xs">Choose Mode Here</Label>
 							</div>
 							<div>
 								<ThemeToggle></ThemeToggle>
@@ -513,21 +561,6 @@
 										</Tooltip.Content>
 									</Tooltip.Root>
 								</div>
-								<div class="flex flex-col gap-2">
-									<div class="flex flex-col gap-2">
-										<Label class="flex gap-2 text-xs">
-											<RefreshCw class="h-4 w-4"></RefreshCw>
-											Epochs
-										</Label>
-										<Input
-											type="number"
-											bind:value={epochs}
-											placeholder="1000"
-											min={1}
-											class="w-24"
-										/>
-									</div>
-								</div>
 							</div>
 							<div class="flex flex-row flex-wrap items-end gap-4"></div>
 							<div>
@@ -536,7 +569,6 @@
 									Activation Function
 								</Label>
 							</div>
-							<br />
 							<div>
 								<Select.Root bind:selected={selectedActivation}>
 									<Select.Trigger class="w-[180px]">
@@ -562,95 +594,86 @@
 								<div class="flex flex-col gap-2"></div>
 								<div class="flex-1"></div>
 								<div class="flex flex-col gap-2"></div>-->
-							<br />
-							<div class="space-y-1">
-								<Dialog.Root>
-									<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
-										>Upload Dataset</Dialog.Trigger
-									>
-									<Dialog.Content>
-										<Dialog.Header>
-											<Dialog.Title>Upload CSV Dataset</Dialog.Title>
-											<Dialog.Description class="flex flex-col gap-2">
-												<p>Upload a dataset from a .csv file.</p>
-												<div class="flex flex-col">
-													<FileInput
-														id="dataset-upload"
-														class="w-32"
-														bind:files={datasetUploadFiles}
-													/>
-												</div>
-												{#if Object.entries($csvColumnConfigs).length > 0}
-													<Table.Root>
-														<Table.Header>
-															<Table.Row>
-																<Table.Head class="flex-grow">Column Name</Table.Head>
-															</Table.Row>
-														</Table.Header>
-														{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
-															<Table.Row>
-																<Table.Cell class="font-medium">{column}</Table.Cell>
-																<RadioGroup.Root
-																	bind:value={$csvColumnConfigs[column].isLabel}
-																	asChild
-																>
-																	<Table.Cell>
-																		<div class="flex items-center space-x-2">
-																			<RadioGroup.Item value="false" id={`feature-${column}`}
-																			></RadioGroup.Item>
-																			<Label for={`feature-${column}`}>Input</Label>
-																		</div>
-																	</Table.Cell>
-																	<Table.Cell>
-																		<div class="flex items-center space-x-2">
-																			<RadioGroup.Item value="true" id={`label-${column}`}
-																			></RadioGroup.Item>
-																			<Label for={`label-${column}`}>Output</Label>
-																		</div>
-																	</Table.Cell>
-																</RadioGroup.Root>
-															</Table.Row>
-														{/each}
-													</Table.Root>
-													{#if !hasLabel}
-														<p class="font-medium text-foreground">
-															Choose at least one column to use as output.
-														</p>
-													{/if}
-												{/if}
-											</Dialog.Description>
-										</Dialog.Header>
-									</Dialog.Content>
-								</Dialog.Root>
-							</div>
-							<div class="flex flex-1 items-start space-x-2">
-								<br />
-								Choose Mode Here
-								<div>
-									<br />
-								</div>
-								<ThemeToggle></ThemeToggle>
-							</div>
 						</Card.Content>
 					</Card.Root>
 				</Tabs.Content>
 				<Tabs.Content value="NL" class="h-full">
-					<div class="flex flex-row flex-wrap items-end gap-4">
+					<div class="mb-2 flex flex-row flex-wrap items-end gap-4">
 						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">
-								<Activity class="h-4 w-4"></Activity>
-								Activation Function
+								<RefreshCw class="h-4 w-4"></RefreshCw>
+								Epochs
 							</Label>
-							<Select.Root bind:selected={selectedActivation}>
-								<Select.Trigger class="w-[180px]">
-									<Select.Value></Select.Value>
-								</Select.Trigger>
-								<Select.Content>
-									<Select.Item value="relu">ReLU</Select.Item>
-									<Select.Item value="sigmoid">Sigmoid</Select.Item>
-								</Select.Content>
-							</Select.Root>
+							<Input type="number" bind:value={epochs} placeholder="1000" min={1} class="w-24" />
 						</div>
+						<div class="space-y-1">
+							<Dialog.Root>
+								<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
+									>Upload Dataset</Dialog.Trigger
+								>
+								<Dialog.Content>
+									<Dialog.Header>
+										<Dialog.Title>Upload CSV Dataset</Dialog.Title>
+										<Dialog.Description class="flex flex-col gap-2">
+											<p>Upload a dataset from a .csv file.</p>
+											<div class="flex flex-col">
+												<FileInput
+													id="dataset-upload"
+													class="w-32"
+													bind:files={datasetUploadFiles}
+												/>
+											</div>
+											{#if Object.entries($csvColumnConfigs).length > 0}
+												<Table.Root>
+													<Table.Header>
+														<Table.Row>
+															<Table.Head class="flex-grow">Column Name</Table.Head>
+														</Table.Row>
+													</Table.Header>
+													{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
+														<Table.Row>
+															<Table.Cell class="font-medium">{column}</Table.Cell>
+															<RadioGroup.Root
+																bind:value={$csvColumnConfigs[column].isLabel}
+																asChild
+															>
+																<Table.Cell>
+																	<div class="flex items-center space-x-2">
+																		<RadioGroup.Item value="false" id={`feature-${column}`}
+																		></RadioGroup.Item>
+																		<Label for={`feature-${column}`}>Input</Label>
+																	</div>
+																</Table.Cell>
+																<Table.Cell>
+																	<div class="flex items-center space-x-2">
+																		<RadioGroup.Item value="true" id={`label-${column}`}
+																		></RadioGroup.Item>
+																		<Label for={`label-${column}`}>Output</Label>
+																	</div>
+																</Table.Cell>
+															</RadioGroup.Root>
+														</Table.Row>
+													{/each}
+												</Table.Root>
+												{#if !hasLabel}
+													<p class="font-medium text-foreground">
+														Choose at least one column to use as output.
+													</p>
+												{/if}
+											{/if}
+										</Dialog.Description>
+									</Dialog.Header>
+								</Dialog.Content>
+							</Dialog.Root>
+						</div>
+						<!-- <div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">Input</Label>
+							<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
+						</div>
+						<div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">Predicted Value</Label>
+							<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
+						</div> -->
 						<div class="flex flex-col gap-2">
 							<div></div>
 						</div>
@@ -672,11 +695,17 @@
 							</Tooltip.Root>
 						</div>
 						<div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">Refresh</Label>
+							<Button on:click={refreshModel}>
+								<RefreshCw class="mr-0 h-4 w-4" />
+							</Button>
+						</div>
+						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
 							<Button on:click={trainModel}>
 								{#if isTraining}
 									<CirclePause class="mr-2 h-4 w-4"></CirclePause>
-									Train
+									Pause
 								{:else}
 									<Brain class="mr-2 h-4 w-4"></Brain>
 									Train
@@ -685,7 +714,7 @@
 						</div>
 					</div>
 					<div
-						class="flex h-full w-full flex-col gap-6 overflow-x-scroll rounded-lg border p-6 text-sm"
+						class="flex w-full flex-col gap-6 overflow-x-auto overflow-y-hidden rounded-lg border p-1 text-sm"
 					>
 						<div class="ml-auto mr-auto flex flex-row items-center">
 							<Button variant="ghost" size="icon" class="h-8 w-8" on:click={addLayer}>
@@ -698,7 +727,6 @@
 								>{$model.layers.length} Layers</span
 							>
 						</div>
-
 						<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
 							{#if tfModel}
 								<Features {columnNames} />

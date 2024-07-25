@@ -248,5 +248,5 @@
 			<g bind:this={gPoints} overflow="hidden"></g>
 		</svg>
 	</div>
-	<Button on:click={resetZoom}>Reset Zoom</Button>
+	<Button on:click={resetZoom} class="my-2">Reset Zoom</Button>
 </div>
