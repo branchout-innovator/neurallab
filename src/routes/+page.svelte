@@ -444,6 +444,7 @@
 	function addLength(accumulator: number, a: string[]) {
 		return accumulator + a.length;
 	}
+	$:updateTFModel($model);
 </script>
 
 <svelte:head>
@@ -737,7 +738,6 @@
 										/>
 									{/if}
 								{/each}
-								{updateTFModel($model)}
 							{/if}
 						</div>
 					</div>
