@@ -57,6 +57,7 @@ export type SequentialModel = {
 	layers: Layer[];
 	loss: string;
 	optimizer: string | tf.Optimizer;
+	learningRate?:number;
 };
 
 export const layerToTF = (layer: Layer): tf.layers.Layer => {
@@ -101,18 +102,20 @@ export const layerToTF = (layer: Layer): tf.layers.Layer => {
 };
 
 export const createTFModel = (model: SequentialModel): tf.Sequential => {
-	const tfModel = tf.sequential();
+    const tfModel = tf.sequential();
 
-	model.layers.forEach((layer) => {
-		tfModel.add(layerToTF(layer));
-	});
+    model.layers.forEach((layer) => {
+        tfModel.add(layerToTF(layer));
+    });
 
-	tfModel.compile({
-		loss: model.loss,
-		optimizer: model.optimizer
-	});
+	const optimizer = tf.train.adam(model.learningRate);
 
-	return tfModel;
+    tfModel.compile({
+        loss: model.loss,
+        optimizer: tf.train.adam(model.learningRate)
+    });
+
+    return tfModel;
 };
 
 export const loadUploadedCsv = async (
