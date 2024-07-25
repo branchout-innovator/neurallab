@@ -10,10 +10,13 @@
 	import type { Writable } from 'svelte/store';
 	import { zoom } from 'd3';
 	import { Button } from '$lib/components/ui/button';
+	
 	//import type { Dataset } from '@tensorflow/tfjs';
 
 	export let nodeIndex: number;
 	export let layerName: string;
+
+
 	const dataset: Writable<tf.data.Dataset<tf.TensorContainer>> = getContext('dataset');
 
 	const model: Writable<SequentialModel> = getContext('model');
@@ -43,6 +46,7 @@
 		await loadTestPoints();
 		setupZoom();
 		updateChart();
+		resetZoom();
 	});
 
 	class EnoughSamplesCollectedError extends Error {

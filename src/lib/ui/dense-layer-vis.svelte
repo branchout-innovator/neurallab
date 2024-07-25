@@ -15,6 +15,7 @@
 	import PredictionCurve from './prediction-curve.svelte';
 	import isEqual from 'lodash.isequal';
 	import ActivationColor from './activation-color.svelte';
+	import Losschart from './losschart.svelte';
 
 	export let layer: DenseLayer;
 	export let index: number;
@@ -29,6 +30,7 @@
 		// 	nextLayer.inputShape = [layer.units];
 		// }
 	};
+
 
 	$: biases = tfLayer.getWeights()[1];
 
@@ -109,7 +111,8 @@
 					{/if}
 				</HoverCard.Trigger>
 				<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
-					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} />
+					<!--<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name}/>-->
+					<Losschart class="h-56 w-56 rounded-[0.15rem]" />
 				</HoverCard.Content>
 			</HoverCard.Root>
 
