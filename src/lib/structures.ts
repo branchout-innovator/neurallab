@@ -30,6 +30,29 @@ export type DenseLayer = Layer & {
 	activation?: ActivationIdentifier;
 };
 
+export type Conv2DLayer = Layer & {
+	type: 'conv2d';
+	/** Kernel size in each dimension */
+	kernelSize: [number, number];
+	/** Stride in each dimension */
+	strides: [number, number];
+	/** The amount of nodes */
+	filters: number;
+	activation?: ActivationIdentifier;
+};
+
+export type MaxPoolingLayer = Layer & {
+	type: 'maxpooling';
+	/** Pooling size in each dimension */
+	poolSize: [number, number];
+	/** Stride in each dimension */
+	strides: [number, number];
+};
+
+export type FlattenLayer = Layer & {
+	type: 'flatten';
+};
+
 export type SequentialModel = {
 	layers: Layer[];
 	loss: string;
@@ -47,7 +70,31 @@ export const layerToTF = (layer: Layer): tf.layers.Layer => {
 				kernelInitializer: 'glorotUniform'
 			});
 		}
-		// Add more cases for other layer types as needed
+		case 'conv2d': {
+			const conv2dLayer = layer as Conv2DLayer;
+			return tf.layers.conv2d({
+				filters: conv2dLayer.filters,
+				kernelSize: conv2dLayer.kernelSize,
+				strides: conv2dLayer.strides,
+				inputShape: conv2dLayer.inputShape,
+				activation: conv2dLayer.activation,
+				kernelInitializer: 'glorotUniform'
+			});
+		}
+		case 'maxpooling': {
+			const maxPoolingLayer = layer as MaxPoolingLayer;
+			return tf.layers.maxPooling2d({
+				poolSize: maxPoolingLayer.poolSize,
+				strides: maxPoolingLayer.strides,
+				inputShape: maxPoolingLayer.inputShape
+			});
+		}
+		case 'flatten': {
+			const flattenLayer = layer as FlattenLayer;
+			return tf.layers.flatten({
+				inputShape: flattenLayer.inputShape
+			});
+		}
 		default:
 			throw new Error(`Unsupported layer type: ${layer.type}`);
 	}
@@ -117,12 +164,14 @@ export async function loadCsvDataset(
 	console.log(featuresTensor.shape);
 	console.log(labelsTensor.shape);
 
-	return {dataset: flattenedDataset, columnNames: await csvDataset.columnNames()};
+	return { dataset: flattenedDataset, columnNames: await csvDataset.columnNames() };
 }
 
-export interface SampledOutputs<Sample> {
-	/** Key: layer.name in Tensorflow layers */
-	[key: string]: Sample[];
+export interface SampledOutputs<T> {
+	[layerName: string]: {
+		shape: number[];
+		values: T[];
+	};
 }
 
 export async function updateSampledOutputs(
@@ -149,7 +198,11 @@ export async function updateSampledOutputs(
 			.transpose()
 			.reshape([-1, DENSITY, DENSITY]);
 
-		outputs[layer.name] = reshapedOutput.arraySync() as number[][][];
+		// Store the shape and values
+		outputs[layer.name] = {
+			shape: currentInput.shape.slice(1), // Remove batch dimension
+			values: reshapedOutput.arraySync() as number[][][]
+		};
 	}
 
 	return outputs;
@@ -217,7 +270,11 @@ export async function updateSampledOutputs1D(
 		// Reshape the output to [numNodes, DENSITY]
 		const reshapedOutput = currentInput.transpose();
 
-		outputs[layer.name] = reshapedOutput.arraySync() as number[][];
+		// Store the shape and values
+		outputs[layer.name] = {
+			shape: currentInput.shape.slice(1), // Remove batch dimension
+			values: reshapedOutput.arraySync() as number[][]
+		};
 	}
 
 	return outputs;
@@ -261,26 +318,20 @@ export async function getSampledOutputForNode1D(
 	return nodeOutput.squeeze().arraySync() as number[];
 }
 
-type NDArray = ElemArray;
-interface ElemArray extends Array<NDArray | number> {}
+export type NestedArray = number | NestedArray[];
 
-function flattenArray(arr: any): number[] {
-	return Array.isArray(arr) ? arr.flatMap(flattenArray) : [arr];
+function removeFirstDimension(arr: NestedArray): NestedArray {
+	return Array.isArray(arr) ? arr[0] : arr;
 }
 
 export async function updateSampledOutputsSingle(
 	model: tf.LayersModel,
 	input: tf.TensorContainer
-): Promise<SampledOutputs<number>> {
-	const outputs: SampledOutputs<number> = {};
+): Promise<SampledOutputs<NestedArray>> {
+	const outputs: SampledOutputs<NestedArray> = {};
 
 	// Convert input to tensor if it's not already
 	let inputTensor = input instanceof tf.Tensor ? input : tf.tensor(input as tf.TensorLike);
-
-	// Add dummy batch dimension if input is 1D
-	//if (inputTensor.shape.length === 1) {
-	//	inputTensor = inputTensor.expandDims(0);
-	//}
 
 	// Ensure input has a batch dimension
 	if (inputTensor.shape[0] !== 1) {
@@ -294,17 +345,18 @@ export async function updateSampledOutputsSingle(
 		currentInput = layer.apply(currentInput) as tf.Tensor;
 
 		// Get the activation values for this layer
-		const activations = await currentInput.array();
+		const activations = (await currentInput.array()) as NestedArray;
 
-		// Flatten the activations using our custom function
-		const flatActivations = flattenArray(activations);
-
-		outputs[layer.name] = flatActivations;
+		// Store the shape and values
+		outputs[layer.name] = {
+			shape: currentInput.shape.slice(1), // Remove batch dimension
+			values: removeFirstDimension(activations) as NestedArray[] // Remove batch dimension
+		};
 	}
 
 	// Clean up tensors
 	tf.dispose([inputTensor, currentInput]);
-	//console.log(outputs)
+
 	return outputs;
 }
 

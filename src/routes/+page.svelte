@@ -11,11 +11,17 @@
 		type Layer,
 		type SequentialModel,
 		updateSampledOutputs1D,
-		updateSampledOutputsSingle
+		updateSampledOutputsSingle,
+
+		type NestedArray
+
 	} from '$lib/structures';
 	import * as tf from '@tensorflow/tfjs';
 	import { onMount, setContext, SvelteComponent } from 'svelte';
 	import DenseLayerVis from '$lib/ui/dense-layer-vis.svelte';
+	import ConvVis from '$lib/ui/conv-vis.svelte';
+	import MaxPoolingVis from '$lib/ui/max-pooling-vis.svelte';
+	import FlattenVis from '$lib/ui/flatten-vis.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Plus from 'lucide-svelte/icons/plus';
 	import Minus from 'lucide-svelte/icons/minus';
@@ -56,7 +62,6 @@
 	import { page } from '$app/stores';
 	import Features from '$lib/ui/features.svelte';
 	import { Progress } from '$lib/components/ui/progress';
-	import detailedVis from '$lib/ui/detailed-vis.svelte';
 	let value = 0;
 	onMount(() => {
 		const interval = setInterval(
@@ -71,7 +76,10 @@
 	});
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
-		dense: DenseLayerVis as typeof SvelteComponent
+		dense: DenseLayerVis as typeof SvelteComponent,
+		conv2d: ConvVis as typeof SvelteComponent,
+		maxpooling: MaxPoolingVis as typeof SvelteComponent,
+		flatten: FlattenVis as typeof SvelteComponent
 	};
 
 	let selectedActivation = { value: 'relu' as ActivationIdentifier, label: 'ReLU' };
@@ -407,7 +415,7 @@
 	}
 
 	let position = '0';
-	let sampledOutputs = writable<SampledOutputs<number | number[] | number[][]>>({});
+	let sampledOutputs = writable<SampledOutputs<NestedArray>>({});
 	setContext('sampledOutputs', sampledOutputs);
 
 	const SAMPLE_DENSITY_2D = 10;
