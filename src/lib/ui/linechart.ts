@@ -30,7 +30,7 @@ export class AppendingLineChart {
     let margin = {top: 2, right: 0, bottom: 2, left: 2};
     let width = totalWidth - margin.left - margin.right;
     let height = totalHeight - margin.top - margin.bottom;
-    console.log(container[0]);
+    console.log(container);
     this.xScale = d3.scaleLinear()
       .domain([0, 0])
       .range([0, width]);
