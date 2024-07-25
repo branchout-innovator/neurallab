@@ -104,6 +104,7 @@
 			} as DenseLayer
 		];
 		console.log($model.layers);
+		refreshModel();
 		updateTFModel($model);
 	};
 
@@ -210,6 +211,7 @@
 				callbacks: {
 					async onEpochEnd(epoch, logs) {
 						if (!tfModel) return;
+						if (!isTraining) return;
 						currentEpoch++;
 						if (epoch % 5 === 0) tfModel = tfModel;
 						try {
@@ -276,6 +278,7 @@
 			const newModel = createTFModel(model);
 			tfModel = newModel;
 		}
+		refreshModel();
 		if (browser) {
 			try {
 				await sampleOutputs();
