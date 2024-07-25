@@ -214,17 +214,8 @@
 
 	function resetZoom(): void {
 		sampleDomain.set({
-			x: [domain[0]-10, domain[1]],
-			y: [range[0]-10, range[1]]
-		});
-		d3.select(svg).call(zoomBehavior.transform, d3.zoomIdentity);
-		updateChart();
-	}
-
-	export function changeZoom(domain: number[], range: number[]): void {
-		sampleDomain.set({
-			x: [domain[0]-10, domain[1]],
-			y: [range[0]-10, range[1]]
+			x: [domain[0]-5, domain[1]-5],
+			y: [range[0]-5, range[1]-5]
 		});
 		d3.select(svg).call(zoomBehavior.transform, d3.zoomIdentity);
 		updateChart();

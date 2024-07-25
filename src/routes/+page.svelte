@@ -64,6 +64,8 @@
 	import { page } from '$app/stores';
 	import Features from '$lib/ui/features.svelte';
 	import { Progress } from '$lib/components/ui/progress';
+	import Slider from '@bulatdashiev/svelte-slider';
+
 	let value = 0;
 	onMount(() => {
 		const interval = setInterval(
@@ -513,6 +515,8 @@
 		return accumulator + a.length;
 	}
 	$: updateTFModel($model);
+	let domain = [2, 8];
+	let range = [2,8];
 </script>
 
 <svelte:head>
@@ -647,6 +651,17 @@
 										<Select.Item value="sigmoid">Sigmoid</Select.Item>
 									</Select.Content>
 								</Select.Root>
+								<div>
+									Domain:
+									left bound: {domain[0]-5}
+									right bound: {domain[1]-5}
+									<Slider max="10" step="1" bind:value={domain} range slider />
+									Range:
+									bottom bound: {range[0]-5}
+									top bound: {range[1]-5}
+									<Slider max="10" step="1" bind:value={range} range slider />
+									<!-- <Button on:click={heatmap.changeZoom(domain, range)}>Change Axes</Button> -->
+									</div>
 							</div>
 							<!-- <div class="flex flex-col gap-2">
 								<Label class="flex gap-2 text-xs">Input</Label>
@@ -860,6 +875,8 @@
 										{layer}
 										index={i}
 										tfLayer={tfModel.layers[i]}
+										domain = {domain}
+										range = {range}
 										{dataset}
 									></svelte:component>
 									{#if i < $model.layers.length - 1}
