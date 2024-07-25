@@ -13,3 +13,8 @@ export const getNodeYPositions = (layer: Layer): number[] => {
 			throw new Error(`Unsupported layer type: ${layer.type}`);
 	}
 };
+
+export const getNodeYPositionsInput = (features: number): number[] => {
+	const nodeSpacing = remToPx(2);
+	return Array.from({ length: features }, (_, i) => i * nodeSpacing + nodeSpacing / 2);
+};

@@ -27,7 +27,7 @@
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { toast } from 'svelte-sonner';
 	import ConnectionsVis from '$lib/ui/connections-vis.svelte';
-	import { getNodeYPositions } from '$lib/ui/connections-vis';
+	import { getNodeYPositions, getNodeYPositionsInput } from '$lib/ui/connections-vis';
 	import { Switch } from '$lib/components/ui/switch/index.js';
 	import { browser } from '$app/environment';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
@@ -54,17 +54,26 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import ThemeToggle from '$lib/ui/theme-toggle.svelte';
 	import { page } from '$app/stores';
-	import { Progress } from "$lib/components/ui/progress";
-
+	import Features from '$lib/ui/features.svelte';
+	import { Progress } from '$lib/components/ui/progress';
+	import detailedVis from '$lib/ui/detailed-vis.svelte';
 	let value = 0;
 	onMount(() => {
-		const interval = setInterval(() => (value = 100 * document.getElementById("article")!.scrollTop / (document.getElementById("article")!.scrollHeight - document.getElementById("article")!.clientHeight)) , 100);
+		const interval = setInterval(
+			() =>
+				(value =
+					(100 * document.getElementById('article')!.scrollTop) /
+					(document.getElementById('article')!.scrollHeight -
+						document.getElementById('article')!.clientHeight)),
+			100
+		);
 		return () => clearInterval(interval);
 	});
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
 	};
+
 	let selectedActivation = { value: 'relu' as ActivationIdentifier, label: 'ReLU' };
 	let epochs = 1000;
 	let alpha = 0.01;
@@ -116,12 +125,13 @@
 			} as DenseLayer
 		];
 		console.log($model.layers);
+		refreshModel();
 		updateTFModel($model);
 	};
 
 	const removeLayer = () => {
-		$model.layers = [...$model.layers.slice(0, $model.layers.length - 1)];
-		if ($model.layers.length > 0) {
+		if ($model.layers.length > 1) {
+			$model.layers = [...$model.layers.slice(0, $model.layers.length - 1)];
 			const lastLayer = $model.layers[$model.layers.length - 1];
 			if (lastLayer.type === 'dense') {
 				($model.layers[$model.layers.length - 1] as DenseLayer).activation = undefined;
@@ -168,7 +178,6 @@
 
 	const sampleOutputs = async () => {
 		if (!tfModel) return;
-		console.log('sampling');
 		if (isEqual($model.layers[0].inputShape, [1]))
 			$sampledOutputs = await updateSampledOutputs1D(tfModel, SAMPLE_DENSITY_1D, $sampleDomain.x);
 		else if (isEqual($model.layers[0].inputShape, [2]))
@@ -189,6 +198,13 @@
 	};
 
 	let isTraining = false;
+
+	const refreshModel = () => {
+		isTraining = false;
+		tfModel!.stopTraining = true;
+		currentEpoch = 0;
+		tfModel = createTFModel($model);
+	};
 
 	const trainModel = async () => {
 		if (!tfModel) return;
@@ -215,6 +231,7 @@
 				callbacks: {
 					async onEpochEnd(epoch, logs) {
 						if (!tfModel) return;
+						if (!isTraining) return;
 						currentEpoch++;
 						if (epoch % 5 === 0) tfModel = tfModel;
 						try {
@@ -281,6 +298,7 @@
 			const newModel = createTFModel(model);
 			tfModel = newModel;
 		}
+		refreshModel();
 		if (browser) {
 			try {
 				await sampleOutputs();
@@ -311,6 +329,7 @@
 	let csvColumnConfigs: Writable<{
 		[key: string]: { isLabel: 'true' | 'false' };
 	}> = writable({});
+	setContext('csvColumnConfigs', csvColumnConfigs);
 
 	$: {
 		(async () => {
@@ -350,7 +369,9 @@
 				}
 			}
 			if (hasLabel) {
-				dataset = await loadUploadedCsv(datasetUploadFiles[0], config);
+				const result = await loadUploadedCsv(datasetUploadFiles[0], config);
+				dataset = result.dataset;
+				columnNames = result.columnNames;
 				if ($model.layers[0]) {
 					$model.layers[0].inputShape = [featureCount];
 					console.log('features: ', featureCount);
@@ -370,29 +391,26 @@
 		changePage(1);
 	}
 	let articletitle = [
-		['What are Neural Networks? (Basics of Neural Networks)',
-		'What are Activation Functions?',
-		'What are Loss Functions? (Neural Nets)',
-		'Optimization Algorithms'], 
-		['Basics of CNNs',
+		[
+			'What are Neural Networks? (Basics of Neural Networks)',
+			'What are Activation Functions?',
+			'What are Loss Functions? (Neural Nets)',
+			'Optimization Algorithms'
+		],
+		[
+			'Basics of CNNs',
 			'Convolutional Layers',
 			'Pooling Layers',
-			'LeNet and advanced CNN architectures',
+			'LeNet and advanced CNN architectures'
 		]
 	];
 	let subtitles = [
 		'Fundamentals of Neural Networks',
 		'Convolutional Neural Networks (CNNs)',
-		'Recurrent Neural Networks (RNNs)',
-	]
-	let pagetext = [
-		mark,
-		mark2,
-		mark3,
-		mark4,
-		mark5,
+		'Recurrent Neural Networks (RNNs)'
 	];
-	$:source = pagetext[Number(position)];
+	let pagetext = [mark, mark2, mark3, mark4, mark5];
+	$: source = pagetext[Number(position)];
 	function changePage(d: number) {
 		let pageNum = Number(position);
 		if ((pageNum != 0 || d != -1) && (pageNum != pagetext.length - 1 || d != 1)) {
@@ -401,11 +419,10 @@
 		position = String(pageNum);
 		source = pagetext[pageNum];
 	}
-	
+
 	let position = '0';
 	let sampledOutputs = writable<SampledOutputs<number | number[] | number[][]>>({});
 	setContext('sampledOutputs', sampledOutputs);
-	
 
 	const SAMPLE_DENSITY_2D = 10;
 	const SAMPLE_DENSITY_1D = 10;
@@ -423,12 +440,15 @@
 		$sampleDomain.y = (is1D ? [-10, 120] : [-3, 3]) as [number, number];
 	}
 
+	let columnNames: string[] = [];
+
 	const loadSampleDataset = async (url: string, numFeatures: number) => {
 		let blob = await fetch(url).then((r) => r.blob());
 		loadUploadedCsv(blob, {
 			inside_circle: { isLabel: true }
 		}).then((d) => {
-			dataset = d;
+			dataset = d.dataset;
+			columnNames = d.columnNames;
 			sampleOutputs();
 		});
 		if ($model.layers[0]) {
@@ -449,6 +469,7 @@
 	function addLength(accumulator: number, a: string[]) {
 		return accumulator + a.length;
 	}
+	$: updateTFModel($model);
 </script>
 
 <svelte:head>
@@ -456,15 +477,9 @@
 	<meta name="description" content="Design and visualize neural networks in your browser." />
 </svelte:head>
 <!--<div class="container flex h-full max-w-full flex-row gap-4">-->
-
-<Resizable.PaneGroup direction="horizontal" class ="container flex max-w-full flex-row gap-4 overflow-y-hidden">
+<Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row gap-4">
 	<Resizable.Pane defaultSize={25}>
-		<div class = "visible container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
-			<div class="h-1/8 container flex w-full flex-row items-end">
-				Home
-			</div>
-		</div>
-		<div class="collapse container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
+		<div class="container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
 			<div class="h-1/8 container flex w-full flex-row items-end">
 				<div class="flex h-full w-1/3">
 					<Button variant="outline" class="ml-auto h-full" size="icon" on:click={pageLeft}
@@ -473,28 +488,32 @@
 				</div>
 				<div class="w-1/3">
 					<DropdownMenu.Root>
-                        <DropdownMenu.Trigger asChild let:builder>
-                            <Button variant="outline" class="w-full" builders={[builder]}>Article Sections</Button>
-                        </DropdownMenu.Trigger>
-                        <DropdownMenu.Content>
-                          <DropdownMenu.Label>Click for Pages</DropdownMenu.Label>
-                          <DropdownMenu.Separator />
-						  {#each articletitle as subcategory, j}
-                            <DropdownMenu.Sub>
-                              <DropdownMenu.SubTrigger>
-                                <span>{subtitles[j]}</span>
-                              </DropdownMenu.SubTrigger>
-                              <DropdownMenu.SubContent class = "w-full">
-                                <DropdownMenu.RadioGroup bind:value={position}>
-                                    {#each subcategory as title, i}
-                                        <DropdownMenu.RadioItem value={String(i+articletitle.slice(0, j).reduce(addLength, 0))}>{title}</DropdownMenu.RadioItem>
-                                    {/each}
-                                </DropdownMenu.RadioGroup>
-                              </DropdownMenu.SubContent>
-                            </DropdownMenu.Sub>
+						<DropdownMenu.Trigger asChild let:builder>
+							<Button variant="outline" class="w-full" builders={[builder]}>Article Sections</Button
+							>
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content>
+							<DropdownMenu.Label>Click for Pages</DropdownMenu.Label>
+							<DropdownMenu.Separator />
+							{#each articletitle as subcategory, j}
+								<DropdownMenu.Sub>
+									<DropdownMenu.SubTrigger>
+										<span>{subtitles[j]}</span>
+									</DropdownMenu.SubTrigger>
+									<DropdownMenu.SubContent class="w-full">
+										<DropdownMenu.RadioGroup bind:value={position}>
+											{#each subcategory as title, i}
+												<DropdownMenu.RadioItem
+													value={String(i + articletitle.slice(0, j).reduce(addLength, 0))}
+													>{title}</DropdownMenu.RadioItem
+												>
+											{/each}
+										</DropdownMenu.RadioGroup>
+									</DropdownMenu.SubContent>
+								</DropdownMenu.Sub>
 							{/each}
-                        </DropdownMenu.Content>
-                      </DropdownMenu.Root>
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
 				</div>
 				<div class="flex h-full w-1/3">
 					<Button variant="outline" class="mr-auto h-full" size="icon" on:click={pageRight}
@@ -502,7 +521,7 @@
 					>
 				</div>
 			</div>
-			<span class="inline-block h-8 w-4"/>
+			<span class="inline-block h-8 w-4" />
 			<Progress {value} />
 			<div id="article" class="flex w-full overflow-y-auto">
 				<div class="w-full p-4">
@@ -519,7 +538,7 @@
 	</Resizable.Pane>
 	<Resizable.Handle withHandle />
 	<Resizable.Pane defaultSize={60} class="p-4">
-		<div class="flex max-w-full flex-grow flex-col gap-4 overflow-x-hidden overflow-y-hidden py-4">
+		<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
 			<!-- Controls (header) -->
 			<Tabs.Root value="NL" class="h-auto w-full">
 				<Tabs.List class="grid w-full grid-cols-2">
@@ -530,15 +549,11 @@
 					<Card.Root class="h-full">
 						<Card.Header>
 							<Card.Title>Settings</Card.Title>
-								<div class = "float-left">
-								Make changes to your settings here.
-								</div>
+							<div class="float-left">Make changes to your settings here.</div>
 						</Card.Header>
 						<Card.Content class="space-y-3">
 							<div class="flex flex-1 items-start space-x-2">
-								<Label class="flex gap-2 text-xs">
-									Choose Mode Here
-								</Label>
+								<Label class="flex gap-2 text-xs">Choose Mode Here</Label>
 							</div>
 							<div>
 								<ThemeToggle></ThemeToggle>
@@ -711,11 +726,32 @@
 						<div class="flex flex-col gap-2"></div>
 						<div class="flex-1"></div>
 						<div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">Hardware</Label>
+							<Tooltip.Root>
+								<Tooltip.Trigger asChild>
+									<div class="flex h-9 flex-row flex-nowrap items-center space-x-2">
+										<Label for="hardware-backend">CPU</Label>
+										<Switch id="hardware-backend" bind:checked={useGPU} />
+										<Label for="hardware-backend">GPU</Label>
+									</div>
+								</Tooltip.Trigger>
+								<Tooltip.Content class="max-w-52">
+									GPU is recommended for large models but slower for small models.
+								</Tooltip.Content>
+							</Tooltip.Root>
+						</div>
+						<div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">Refresh</Label>
+							<Button on:click={refreshModel}>
+								<RefreshCw class="mr-0 h-4 w-4" />
+							</Button>
+						</div>
+						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
 							<Button on:click={trainModel}>
 								{#if isTraining}
 									<CirclePause class="mr-2 h-4 w-4"></CirclePause>
-									Train
+									Pause
 								{:else}
 									<Brain class="mr-2 h-4 w-4"></Brain>
 									Train
@@ -724,7 +760,7 @@
 						</div>
 					</div>
 					<div
-						class="flex h-3/4 w-full flex-col gap-6 overflow-x-auto rounded-lg border p-1 text-sm overflow-y-hidden resize-y"
+						class="flex w-full flex-col gap-6 overflow-x-auto overflow-y-hidden rounded-lg border p-1 text-sm"
 					>
 						<div class="ml-auto mr-auto flex flex-row items-center">
 							<Button variant="ghost" size="icon" class="h-8 w-8" on:click={addLayer}>
@@ -739,6 +775,15 @@
 						</div>
 						<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
 							{#if tfModel}
+								<Features {columnNames} />
+								{#if $model.layers[0].inputShape}
+									<ConnectionsVis
+										leftLayerHeights={getNodeYPositionsInput($model.layers[0].inputShape[0])}
+										rightLayerHeights={getNodeYPositions($model.layers[0])}
+										{canvasWidth}
+										weights={getWeightsBetweenLayers(tfModel, 0)}
+									/>
+								{/if}
 								{#each $model.layers as layer, i (i)}
 									<svelte:component
 										this={layerComponents[layer.type]}

@@ -120,7 +120,7 @@ export async function loadCsvDataset(
 	console.log(featuresTensor.shape);
 	console.log(labelsTensor.shape);
 
-	return flattenedDataset;
+	return {dataset: flattenedDataset, columnNames: await csvDataset.columnNames()};
 }
 
 export interface SampledOutputs<Sample> {
