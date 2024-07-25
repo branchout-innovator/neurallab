@@ -54,10 +54,19 @@
 	import * as Card from '$lib/components/ui/card/index.js';
 	import ThemeToggle from '$lib/ui/theme-toggle.svelte';
 	import { page } from '$app/stores';
+	import Slider from '@bulatdashiev/svelte-slider';
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
 	};
+
+	let layer: DenseLayerVis;
+    $: {
+        for (let key in layerComponents) {
+            layer = ((layerComponents[key] as unknown) as DenseLayerVis);
+        }
+    }
+	
 	let selectedActivation = { value: 'relu' as ActivationIdentifier, label: 'ReLU' };
 	let epochs = 1000;
 
@@ -409,6 +418,8 @@
 	onMount(async () => {
 		loadSampleDataset('/circle_dataset.csv', 2);
 	});
+  	let domain = [0,20];
+	let range = [0,20];
 </script>
 
 <svelte:head>
@@ -560,6 +571,17 @@
 										<Select.Item value="sigmoid">Sigmoid</Select.Item>
 									</Select.Content>
 								</Select.Root>
+								<br />
+								<div>
+								Domain:
+								left bound: {domain[0]-10}
+								right bound: {domain[1]}
+								<Slider max="10" step="1" bind:value={domain} range slider />
+								Range:
+								bottom bound: {range[0]-10}
+								top bound: {range[1]}
+								<Slider max="10" step="1" bind:value={range} range slider />
+								<!-- <Button on:click={heatmap.changeZoom(domain, range)}>Change Axes</Button> -->
 							</div>
 							<!-- <div class="flex flex-col gap-2">
 								<Label class="flex gap-2 text-xs">Input</Label>
@@ -721,6 +743,8 @@
 										index={i}
 										tfLayer={tfModel.layers[i]}
 										{dataset}
+										domain = {domain}
+										range = {range}
 									></svelte:component>
 									{#if i < $model.layers.length - 1}
 										{@const leftLayerHeights = getNodeYPositions(layer)}

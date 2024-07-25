@@ -14,6 +14,8 @@
 
 	export let nodeIndex: number;
 	export let layerName: string;
+	export let domain: number[];
+	export let range: number[];
 	const dataset: Writable<tf.data.Dataset<tf.TensorContainer>> = getContext('dataset');
 
 	const model: Writable<SequentialModel> = getContext('model');
@@ -43,6 +45,7 @@
 		await loadTestPoints();
 		setupZoom();
 		updateChart();
+		resetZoom();
 	});
 
 	class EnoughSamplesCollectedError extends Error {
@@ -210,8 +213,17 @@
 
 	function resetZoom(): void {
 		sampleDomain.set({
-			x: [-3, 3],
-			y: [-3, 3]
+			x: [domain[0]-10, domain[1]],
+			y: [range[0]-10, range[1]]
+		});
+		d3.select(svg).call(zoomBehavior.transform, d3.zoomIdentity);
+		updateChart();
+	}
+
+	export function changeZoom(domain: number[], range: number[]): void {
+		sampleDomain.set({
+			x: [domain[0]-10, domain[1]],
+			y: [range[0]-10, range[1]]
 		});
 		d3.select(svg).call(zoomBehavior.transform, d3.zoomIdentity);
 		updateChart();
