@@ -20,9 +20,17 @@
 	export let layer: DenseLayer;
 	export let index: number;
 	export let tfLayer: tf.layers.Layer;
+	export let domain: number[];
+	export let range: number[];
 
 	const model: Writable<SequentialModel> = getContext('model');
 
+	let heatmap: EnlargedHeatmap;
+
+	export function update(domain: number[], range: number[]) {
+		heatmap.changeZoom(domain, range);
+	}
+	
 	const setUnits = (units: number) => {
 		($model.layers[index] as DenseLayer).units = units;
 		// const nextLayer = $model.layers[index + 1] as DenseLayer;
@@ -76,6 +84,11 @@
 
 	const sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> =
 		getContext('sampleDomain');
+	
+	let mapComponent: EnlargedHeatmap;
+    export function zoom() {
+        mapComponent.setZoom();
+    }
 </script>
 
 <div class="flex flex-col items-center gap-2 rounded-lg border bg-card p-2 text-card-foreground">
@@ -94,13 +107,13 @@
 		<div class="relative flex h-6 w-6 items-center justify-center">
 			<HoverCard.Root>
 				<HoverCard.Trigger>
-					{#if isEqual($model.layers[0].inputShape, [1])}
+					{#if isEqual($model.layers[0]?.inputShape, [1])}
 						<PredictionCurve
 							{nodeIndex}
 							layerName={tfLayer.name}
 							class="h-5 w-5 rounded-[0.15rem]"
 						/>
-					{:else if isEqual($model.layers[0].inputShape, [2])}
+					{:else if isEqual($model.layers[0]?.inputShape, [2])}
 						<Heatmap {nodeIndex} layerName={tfLayer.name} class="h-5 w-5 rounded-[0.15rem]" />
 					{:else}
 						<ActivationColor
@@ -111,8 +124,7 @@
 					{/if}
 				</HoverCard.Trigger>
 				<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
-					<!--<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name}/>-->
-					<Losschart class="h-56 w-56 rounded-[0.15rem]" />
+					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} domain = {domain} range = {range}/>
 				</HoverCard.Content>
 			</HoverCard.Root>
 

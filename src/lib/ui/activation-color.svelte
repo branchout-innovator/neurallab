@@ -20,15 +20,15 @@
 
 	let color = '#ffffff00';
 
-	$: activationVal = $sampledOutputs[layerName] && $sampledOutputs[layerName][nodeIndex];
+	$: activationVal = $sampledOutputs[layerName] && $sampledOutputs[layerName].values[nodeIndex];
 
 	function updateColor() {
 		if (!$sampledOutputs[layerName]) return;
 		const colorScale = d3
 			.scaleSequential(d3.interpolateRdBu)
-			.domain([d3.max($sampledOutputs[layerName]) ?? 1, -1]);
+			.domain([d3.max($sampledOutputs[layerName].values) ?? 1, -1]);
 
-		color = d3.rgb(colorScale($sampledOutputs[layerName][nodeIndex])).toString();
+		color = d3.rgb(colorScale($sampledOutputs[layerName].values[nodeIndex])).toString();
 	}
 
 	$: {

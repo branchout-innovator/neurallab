@@ -8,6 +8,9 @@ export const getNodeYPositions = (layer: Layer): number[] => {
 			const nodeSpacing = remToPx(2);
 			return Array.from({ length: denseLayer.units }, (_, i) => i * nodeSpacing + nodeSpacing / 2);
 		}
+		case 'flatten': {
+			return [];
+		}
 		// Add more cases for other layer types as needed
 		default:
 			throw new Error(`Unsupported layer type: ${layer.type}`);
