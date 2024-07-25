@@ -226,7 +226,7 @@
 				$sampleDomain.y
 			);
 		else {
-			dataset.take(1).forEachAsync(async (e) => {
+			$dataset.take(1).forEachAsync(async (e) => {
 				if (!tfModel) return;
 				exampleInput = (e as { xs: number[]; ys: number[] }).xs;
 				if (exampleInput != null)
@@ -256,7 +256,7 @@
 		// await tf.setBackend('webgl');
 		console.log(tf.getBackend());
 
-		const data = dataset;
+		const data = $dataset;
 
 		// toast.loading(`Training for ${epochs} epochs...`);
 
@@ -364,7 +364,8 @@
 
 	let datasetUploadFiles: FileList;
 
-	let dataset: tf.data.Dataset<tf.TensorContainer>;
+	let dataset: Writable<tf.data.Dataset<tf.TensorContainer>> = writable();
+	setContext('dataset', dataset);
 
 	let csvColumnConfigs: Writable<{
 		[key: string]: { isLabel: 'true' | 'false' };
@@ -411,7 +412,7 @@
 			}
 			if (hasLabel) {
 				const result = await loadUploadedCsv(datasetUploadFiles[0], config);
-				dataset = result.dataset;
+				$dataset = result.dataset;
 				columnNames = result.columnNames;
 				if ($model.layers[0]) {
 					$model.layers[0].inputShape = [$featureCount];
@@ -488,7 +489,7 @@
 		loadUploadedCsv(blob, {
 			inside_circle: { isLabel: true }
 		}).then((d) => {
-			dataset = d.dataset;
+			$dataset = d.dataset;
 			columnNames = d.columnNames;
 			sampleOutputs();
 		});
