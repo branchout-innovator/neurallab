@@ -688,7 +688,7 @@
 					</Card.Root>
 				</Tabs.Content>
 				<Tabs.Content value="NL" class = "h-full">
-					<div class="flex flex-row flex-wrap items-end gap-4">
+					<div class="flex flex-row flex-wrap items-end gap-4 mb-3">
 						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">
 								<Activity class="h-4 w-4"></Activity>
@@ -773,6 +773,8 @@
 								>{$model.layers.length} Layers</span
 							>
 						</div>
+						
+						
 						<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
 							{#if tfModel}
 								<Features {columnNames} />
