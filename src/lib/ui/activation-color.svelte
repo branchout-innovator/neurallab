@@ -23,7 +23,10 @@
 	$: activationVal = $sampledOutputs[layerName] && $sampledOutputs[layerName][nodeIndex];
 
 	function updateColor() {
-		const colorScale = d3.scaleSequential(d3.interpolateRdBu).domain([-1, 1]);
+		if (!$sampledOutputs[layerName]) return;
+		const colorScale = d3
+			.scaleSequential(d3.interpolateRdBu)
+			.domain([d3.max($sampledOutputs[layerName]) ?? 1, -1]);
 
 		color = d3.rgb(colorScale($sampledOutputs[layerName][nodeIndex])).toString();
 	}

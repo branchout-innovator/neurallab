@@ -27,7 +27,7 @@
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { toast } from 'svelte-sonner';
 	import ConnectionsVis from '$lib/ui/connections-vis.svelte';
-	import { getNodeYPositions } from '$lib/ui/connections-vis';
+	import { getNodeYPositions, getNodeYPositionsInput } from '$lib/ui/connections-vis';
 	import { Switch } from '$lib/components/ui/switch/index.js';
 	import { browser } from '$app/environment';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
@@ -46,13 +46,14 @@
 	import mark from '$lib/articles/article1.md?raw';
 	import mark2 from '$lib/articles/article2.md?raw';
 	import mark3 from '$lib/articles/article3.md?raw';
-	import mark4 from '$lib/articles/article4.md?raw'
+	import mark4 from '$lib/articles/article4.md?raw';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import ThemeToggle from '$lib/ui/theme-toggle.svelte';
 	import { page } from '$app/stores';
+	import Features from '$lib/ui/features.svelte';
 
 	const layerComponents: Record<string, typeof SvelteComponent> = {
 		dense: DenseLayerVis as typeof SvelteComponent
@@ -146,7 +147,6 @@
 
 	const sampleOutputs = async () => {
 		if (!tfModel) return;
-		console.log('sampling');
 		if (isEqual($model.layers[0].inputShape, [1]))
 			$sampledOutputs = await updateSampledOutputs1D(tfModel, SAMPLE_DENSITY_1D, $sampleDomain.x);
 		else if (isEqual($model.layers[0].inputShape, [2]))
@@ -289,6 +289,7 @@
 	let csvColumnConfigs: Writable<{
 		[key: string]: { isLabel: 'true' | 'false' };
 	}> = writable({});
+	setContext('csvColumnConfigs', csvColumnConfigs);
 
 	$: {
 		(async () => {
@@ -328,7 +329,9 @@
 				}
 			}
 			if (hasLabel) {
-				dataset = await loadUploadedCsv(datasetUploadFiles[0], config);
+				const result = await loadUploadedCsv(datasetUploadFiles[0], config);
+				dataset = result.dataset;
+				columnNames = result.columnNames;
 				if ($model.layers[0]) {
 					$model.layers[0].inputShape = [featureCount];
 					console.log('features: ', featureCount);
@@ -357,13 +360,8 @@
 		'What are Loss Functions? (Neural Nets)',
 		'Optimization Algorithms'
 	];
-	let pagetext = [
-		s,
-		s2,
-		s3,
-		s4,
-	];
-	$:source = pagetext[Number(position)];
+	let pagetext = [s, s2, s3, s4];
+	$: source = pagetext[Number(position)];
 	function changePage(d: number) {
 		let pageNum = Number(position);
 		if ((pageNum != 0 || d != -1) && (pageNum != pagetext.length - 1 || d != 1)) {
@@ -372,11 +370,10 @@
 		position = String(pageNum);
 		source = pagetext[pageNum];
 	}
-	
+
 	let position = '0';
 	let sampledOutputs = writable<SampledOutputs<number | number[] | number[][]>>({});
 	setContext('sampledOutputs', sampledOutputs);
-	
 
 	const SAMPLE_DENSITY_2D = 10;
 	const SAMPLE_DENSITY_1D = 10;
@@ -394,12 +391,15 @@
 		$sampleDomain.y = (is1D ? [-10, 120] : [-3, 3]) as [number, number];
 	}
 
+	let columnNames: string[] = [];
+
 	const loadSampleDataset = async (url: string, numFeatures: number) => {
 		let blob = await fetch(url).then((r) => r.blob());
 		loadUploadedCsv(blob, {
 			inside_circle: { isLabel: true }
 		}).then((d) => {
-			dataset = d;
+			dataset = d.dataset;
+			columnNames = d.columnNames;
 			sampleOutputs();
 		});
 		if ($model.layers[0]) {
@@ -701,6 +701,15 @@
 
 						<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
 							{#if tfModel}
+								<Features {columnNames} />
+								{#if $model.layers[0].inputShape}
+									<ConnectionsVis
+										leftLayerHeights={getNodeYPositionsInput($model.layers[0].inputShape[0])}
+										rightLayerHeights={getNodeYPositions($model.layers[0])}
+										{canvasWidth}
+										weights={getWeightsBetweenLayers(tfModel, 0)}
+									/>
+								{/if}
 								{#each $model.layers as layer, i (i)}
 									<svelte:component
 										this={layerComponents[layer.type]}
