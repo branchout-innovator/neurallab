@@ -22,6 +22,8 @@
 	export let tfLayer: tf.layers.Layer;
 	export let domain: number[];
 	export let range: number[];
+	export let columnNames: string[];
+	export let currentExample: { xs: number[]; ys: number[] } | null;
 
 	const model: Writable<SequentialModel> = getContext('model');
 
@@ -124,7 +126,7 @@
 					{/if}
 				</HoverCard.Trigger>
 				<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
-					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} domain = {domain} range = {range}/>
+					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} domain = {domain} range = {range} columnNames={columnNames} currentExample={currentExample}/>
 					<!--<Losschart class="h-56 w-56 rounded-[0.15rem]" />-->
 				</HoverCard.Content>
 			</HoverCard.Root>

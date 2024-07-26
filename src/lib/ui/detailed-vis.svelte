@@ -10,7 +10,18 @@
 	import type { Writable } from 'svelte/store';
 	import { zoom } from 'd3';
 	import { Button } from '$lib/components/ui/button';
+	import { getSampledOutputForNode, type SampledOutputs } from '$lib/structures';
 
+	export let columnNames: string[];
+	export let currentExample: { xs: number[]; ys: number[] } | null;
+
+	const csvColumnConfigs: Writable<{
+		[key: string]: { isLabel: 'true' | 'false' };
+	}> = getContext('csvColumnConfigs');
+
+	$: inputFeatures = columnNames
+		.filter((c) => $csvColumnConfigs[c]?.isLabel === 'false')
+		.map((c, i) => ({ name: c, value: currentExample?.xs[i] }));
 	//import type { Dataset } from '@tensorflow/tfjs';
 
 	export let nodeIndex: number;
@@ -23,6 +34,9 @@
 	let svg: SVGSVGElement;
 	let gPoints: SVGGElement;
 	const heatmapSize = remToPx(14);
+
+	const sampledOutputs: Writable<SampledOutputs<number>> = getContext('sampledOutputs');
+	$: activationVal = $sampledOutputs[layerName] && $sampledOutputs[layerName].values[nodeIndex];
 
 	interface Sample {
 		x: number;
@@ -244,6 +258,7 @@
 </script>
 
 <div>
+	{#if isEqual($model.layers[0].inputShape, [1]) || isEqual($model.layers[0].inputShape, [2])}
     <div class="relative mb-4 ml-4">
         {#if isEqual($model.layers[0].inputShape, [1])}
             <PredictionCurve
@@ -255,18 +270,21 @@
                 strokeWidth={2}
             />
         {:else if isEqual($model.layers[0].inputShape, [2])}
-            <Heatmap {nodeIndex} {layerName} class="h-56 w-56 rounded-[0.15rem]" customDensity={60} />
+            <Heatmap {nodeIndex} {layerName} class="h-56 w-56 rounded-[0.15rem]" customDensity={60} />	
         {/if}
-        <svg class="absolute inset-0 h-full w-full" overflow="visible">
-            <g bind:this={gx} class="translate-y-56"></g>
-            <g bind:this={gy}></g>
-        </svg>
-        <svg bind:this={svg} class="absolute inset-0 h-full w-full" overflow="hidden">
-            <g bind:this={gPoints} overflow="hidden"></g>
-        </svg>
+			<svg class="absolute inset-0 h-full w-full" overflow="visible">
+				<g bind:this={gx} class="translate-y-56"></g>
+				<g bind:this={gy}></g>
+			</svg>
+			<svg bind:this={svg} class="absolute inset-0 h-full w-full" overflow="hidden">
+				<g bind:this={gPoints} overflow="hidden"></g>
+			</svg>
     </div>
-	{#if isEqual($model.layers[0].inputShape, [1]) || isEqual($model.layers[0].inputShape, [2])}
     <Button on:click={resetZoom} class="my-2">Reset Zoom</Button>
     <div id="smallbox" class="absolute bg-white text-black border border-gray-400 rounded px-2 py-1 text-xs shadow-lg" style="visibility: hidden;"></div>
+	{:else}
+	<div class="flex items-center px-2 py-1 font-medium">
+		<span>{'activation value: ' + String(activationVal)}</span>
+	</div>
 	{/if}
 </div>

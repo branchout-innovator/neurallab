@@ -961,8 +961,10 @@
 										{layer}
 										index={i}
 										tfLayer={tfModel.layers[i]}
-										{domain}
-										{range}
+										domain={domain}
+										range={range}
+										columnNames={columnNames}
+										currentExample={currentExample}
 										{dataset}
 									></svelte:component>
 									{#if i < $model.layers.length - 1}
