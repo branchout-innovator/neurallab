@@ -52,6 +52,7 @@
 		"@unovis/ts": "^1.4.3",
 		"bits-ui": "^0.21.12",
 		"clsx": "^2.1.1",
+		"cmdk-sv": "^0.0.18",
 		"d3-transition": "^3.0.1",
 		"flowbite-svelte": "^0.46.15",
 		"isEqual": "^1.0.3",
