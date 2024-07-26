@@ -61,13 +61,34 @@
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
+	import * as Command from '$lib/components/ui/command';
 	import ThemeToggle from '$lib/ui/theme-toggle.svelte';
-	import { page } from '$app/stores';
 	import Features from '$lib/ui/features.svelte';
+	import Labels from '$lib/ui/labels.svelte';
 	import { Progress } from '$lib/components/ui/progress';
 	import Slider from '@bulatdashiev/svelte-slider';
 	import Losschart from '$lib/ui/losschart.svelte';
 	import * as HoverCard from '$lib/components/ui/hover-card';
+
+	let isImageDataset = false;
+	let outputColumn = '';
+
+	$: {
+		if (datasetUploadFiles && datasetUploadFiles.length > 0) {
+			(async () => {
+				$csvColumnConfigs = {};
+				const { columns } = d3.csvParse(await datasetUploadFiles[0].text());
+				isImageDataset = columns.length > 50;
+				console.log('image? ' + isImageDataset);
+				for (const column of columns) {
+					$csvColumnConfigs[column] = {
+						isLabel: 'false'
+					};
+				}
+			})();
+		}
+	}
+
 	let value = 0;
 	let losschart: Losschart;
 	let currentloss = 0;
@@ -421,15 +442,29 @@
 			} = {};
 			hasLabel = false;
 			$featureCount = 0;
-			for (const column in $csvColumnConfigs) {
-				const isLabel = $csvColumnConfigs[column].isLabel === 'true';
-				config[column] = { isLabel };
-				if (isLabel) {
-					hasLabel = true;
-				} else {
-					$featureCount++;
+
+			if (isImageDataset) {
+				for (const column in $csvColumnConfigs) {
+					if (column === outputColumn) {
+						config[column] = { isLabel: true };
+						hasLabel = true;
+					} else if (!column.includes('x')) {
+						config[column] = { isLabel: false };
+						$featureCount++;
+					}
+				}
+			} else {
+				for (const column in $csvColumnConfigs) {
+					const isLabel = $csvColumnConfigs[column].isLabel === 'true';
+					config[column] = { isLabel };
+					if (isLabel) {
+						hasLabel = true;
+					} else {
+						$featureCount++;
+					}
 				}
 			}
+
 			if (hasLabel) {
 				const result = await loadUploadedCsv(datasetUploadFiles[0], config);
 				$dataset = result.dataset;
@@ -711,41 +746,58 @@
 													/>
 												</div>
 												{#if Object.entries($csvColumnConfigs).length > 0}
-													<Table.Root>
-														<Table.Header>
-															<Table.Row>
-																<Table.Head class="flex-grow">Column Name</Table.Head>
-															</Table.Row>
-														</Table.Header>
-														{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
-															<Table.Row>
-																<Table.Cell class="font-medium">{column}</Table.Cell>
-																<RadioGroup.Root
-																	bind:value={$csvColumnConfigs[column].isLabel}
-																	asChild
-																>
-																	<Table.Cell>
-																		<div class="flex items-center space-x-2">
-																			<RadioGroup.Item value="false" id={`feature-${column}`}
-																			></RadioGroup.Item>
-																			<Label for={`feature-${column}`}>Input</Label>
-																		</div>
-																	</Table.Cell>
-																	<Table.Cell>
-																		<div class="flex items-center space-x-2">
-																			<RadioGroup.Item value="true" id={`label-${column}`}
-																			></RadioGroup.Item>
-																			<Label for={`label-${column}`}>Output</Label>
-																		</div>
-																	</Table.Cell>
-																</RadioGroup.Root>
-															</Table.Row>
-														{/each}
-													</Table.Root>
-													{#if !hasLabel}
-														<p class="font-medium text-foreground">
-															Choose at least one column to use as output.
-														</p>
+													{#if isImageDataset}
+														<div class="flex flex-col gap-2">
+															<Label>Select Output Column</Label>
+															<Command.Root>
+																<Command.Input placeholder="Search output column..." />
+																<Command.List>
+																	<Command.Empty>No results found.</Command.Empty>
+																	{#each Object.keys($csvColumnConfigs).filter((col) => !col.includes('x')) as column}
+																		<Command.Item onSelect={() => (outputColumn = column)}>
+																			{column}
+																		</Command.Item>
+																	{/each}
+																</Command.List>
+															</Command.Root>
+														</div>
+													{:else}
+														<Table.Root>
+															<Table.Header>
+																<Table.Row>
+																	<Table.Head class="flex-grow">Column Name</Table.Head>
+																</Table.Row>
+															</Table.Header>
+															{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
+																<Table.Row>
+																	<Table.Cell class="font-medium">{column}</Table.Cell>
+																	<RadioGroup.Root
+																		bind:value={$csvColumnConfigs[column].isLabel}
+																		asChild
+																	>
+																		<Table.Cell>
+																			<div class="flex items-center space-x-2">
+																				<RadioGroup.Item value="false" id={`feature-${column}`}
+																				></RadioGroup.Item>
+																				<Label for={`feature-${column}`}>Input</Label>
+																			</div>
+																		</Table.Cell>
+																		<Table.Cell>
+																			<div class="flex items-center space-x-2">
+																				<RadioGroup.Item value="true" id={`label-${column}`}
+																				></RadioGroup.Item>
+																				<Label for={`label-${column}`}>Output</Label>
+																			</div>
+																		</Table.Cell>
+																	</RadioGroup.Root>
+																</Table.Row>
+															{/each}
+														</Table.Root>
+														{#if !hasLabel}
+															<p class="font-medium text-foreground">
+																Choose at least one column to use as output.
+															</p>
+														{/if}
 													{/if}
 												{/if}
 											</Dialog.Description>
@@ -927,6 +979,7 @@
 										{/if}
 									{/if}
 								{/each}
+								<Labels {columnNames} {currentExample} />
 							{/if}
 						</div>
 					</div>
