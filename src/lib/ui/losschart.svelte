@@ -6,29 +6,27 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import * as tf from '@tensorflow/tfjs';
     import {AppendingLineChart} from './linechart';
-	type $$Props = HTMLAttributes<HTMLCanvasElement> 
 
-    let lineChart = new AppendingLineChart(d3.select("#linechart"),
+	type $$Props = HTMLAttributes<HTMLCanvasElement> & {
+        prevPoints: number[];
+    }
+
+    export let prevPoints: number[];
+    
+    let lineChart: AppendingLineChart;
+    onMount(() => {
+    lineChart = new AppendingLineChart(d3.select("#linechart"),
         ["#777", "black"]);
+        prevPoints.forEach(point => {
+            updateGraph(point);
+        });
+    });
 	const sampledOutputs: Writable<SampledOutputs<number[][]>> = getContext('sampledOutputs');
 	const getTfModel = getContext('getTfModel') as () => tf.Sequential;
-	let tfModel = getTfModel();
 
 
-	onMount(() => {
-		updateHeatmap();
-	});
-
-	function updateHeatmap() {
-		lineChart.addDataPoint(1);
-        lineChart.addDataPoint(1);
-        lineChart.addDataPoint(1);
-        lineChart.addDataPoint(1);
-        lineChart.addDataPoint(1);
-        lineChart.addDataPoint(1);
-        lineChart.addDataPoint(1);
-        lineChart.addDataPoint(1);
-        lineChart.addDataPoint(1);
+	export function updateGraph(loss: number) {
+		lineChart.addDataPoint(loss);
 	}
 
 	function setupAxes() {

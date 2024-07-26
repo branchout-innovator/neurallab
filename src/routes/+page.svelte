@@ -31,6 +31,7 @@
 	import CirclePause from 'lucide-svelte/icons/circle-pause';
 	import Activity from 'lucide-svelte/icons/activity';
 	import RefreshCw from 'lucide-svelte/icons/refresh-cw';
+	import TrendingDown from 'lucide-svelte/icons/trending-down';
 	import { writable, type Writable } from 'svelte/store';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { toast } from 'svelte-sonner';
@@ -65,8 +66,12 @@
 	import Features from '$lib/ui/features.svelte';
 	import { Progress } from '$lib/components/ui/progress';
 	import Slider from '@bulatdashiev/svelte-slider';
-
+	import Losschart from '$lib/ui/losschart.svelte';
+	import * as HoverCard from '$lib/components/ui/hover-card';
 	let value = 0;
+	let losschart: Losschart;
+	let currentloss = 0;
+	let prevPoints: number[] = [];
 	onMount(() => {
 		const interval = setInterval(
 			() =>
@@ -244,6 +249,8 @@
 		tfModel!.stopTraining = true;
 		currentEpoch = 0;
 		tfModel = createTFModel($model);
+		currentloss = 0;
+		prevPoints = [];
 	};
 
 	const trainModel = async () => {
@@ -263,7 +270,6 @@
 		// toast.loading(`Training for ${epochs} epochs...`);
 
 		// Train the model using the data.
-
 		try {
 			isTraining = true;
 			const history = await tfModel.fitDataset(data.batch(64), {
@@ -278,6 +284,11 @@
 							await sampleOutputs();
 						} catch (e) {
 							console.error('Error while sampling outputs: ', e);
+						}
+						if (logs) {
+							currentloss = Math.round(logs.loss*1000)/1000;
+							losschart?.updateGraph(logs.loss);
+							prevPoints[prevPoints.length] = logs.loss
 						}
 						// set tfModel.stopTraining = true to stop training
 					}
@@ -516,7 +527,7 @@
 	}
 	$: updateTFModel($model);
 	let domain = [2, 8];
-	let range = [2,8];
+	let range = [2, 8];
 </script>
 
 <svelte:head>
@@ -773,7 +784,21 @@
 							</Label>
 							<Input type="number" bind:value={epochs} placeholder="1000" min={1} class="w-24" />
 						</div>
-
+						<div class="flex flex-col gap-2">
+							<Label class="flex gap-2 text-xs">
+								Current Loss: {currentloss}
+							</Label>
+							<HoverCard.Root>
+								<HoverCard.Trigger>
+									<Button>
+										<TrendingDown class="h-4 w-4 mr-2" /> Loss Graph
+									</Button>
+								</HoverCard.Trigger>
+								<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
+									<Losschart prevPoints={prevPoints} class="h-56 w-80 rounded-[0.15rem]" bind:this={losschart}/>
+								</HoverCard.Content>
+							</HoverCard.Root>
+						</div>
 						<!-- <div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">Input</Label>
 							<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />

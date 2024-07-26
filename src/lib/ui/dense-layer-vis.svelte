@@ -125,6 +125,7 @@
 				</HoverCard.Trigger>
 				<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
 					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} domain = {domain} range = {range}/>
+					<!--<Losschart class="h-56 w-56 rounded-[0.15rem]" />-->
 				</HoverCard.Content>
 			</HoverCard.Root>
 

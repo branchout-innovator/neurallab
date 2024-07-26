@@ -47,6 +47,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@types/d3-selection": "^3.0.10",
 		"@unovis/svelte": "^1.4.3",
 		"@unovis/ts": "^1.4.3",
 		"bits-ui": "^0.21.12",

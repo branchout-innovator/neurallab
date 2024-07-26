@@ -25,12 +25,12 @@ export class AppendingLineChart {
     this.lineColors = lineColors;
     this.numLines = lineColors.length;
     let node = container.node() as HTMLElement;
-    let totalWidth = 50;
-    let totalHeight = 50;
+    let totalWidth = node.offsetWidth;
+    let totalHeight = node.offsetHeight;
     let margin = {top: 2, right: 0, bottom: 2, left: 2};
     let width = totalWidth - margin.left - margin.right;
     let height = totalHeight - margin.top - margin.bottom;
-    console.log(container);
+    console.log(container.node());
     this.xScale = d3.scaleLinear()
       .domain([0, 0])
       .range([0, width]);
@@ -38,7 +38,6 @@ export class AppendingLineChart {
     this.yScale = d3.scaleLinear()
       .domain([0, 0])
       .range([height, 0]);
-
     this.svg = container.append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
