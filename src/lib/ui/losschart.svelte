@@ -5,7 +5,7 @@
 	import * as d3 from 'd3';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import * as tf from '@tensorflow/tfjs';
-    import {AppendingLineChart} from './linechart';
+    import {AppendingLineChart} from '../../lib/ui/linechart';
 
 	type $$Props = HTMLAttributes<HTMLCanvasElement> & {
         prevPoints: number[];
@@ -16,7 +16,7 @@
     let lineChart: AppendingLineChart;
     onMount(() => {
     lineChart = new AppendingLineChart(d3.select("#linechart"),
-        ["#777", "black"]);
+        ["gray","gray"]);
         prevPoints.forEach(point => {
             updateGraph(point);
         });
