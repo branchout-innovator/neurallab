@@ -524,7 +524,7 @@
 	const SAMPLE_DENSITY_2D = 10;
 	const SAMPLE_DENSITY_1D = 10;
 	let sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> = writable({
-		x: [domain[0],domain[1]],
+		x: [domain[0], domain[1]],
 		y: [range[0], range[1]]
 	});
 	setContext('sampleDomain', sampleDomain);
@@ -979,7 +979,11 @@
 										{/if}
 									{/if}
 								{/each}
-								<Labels {columnNames} {currentExample} />
+								<Labels
+									{columnNames}
+									{currentExample}
+									tfLayer={tfModel.layers[tfModel.layers.length - 1]}
+								/>
 							{/if}
 						</div>
 					</div>
