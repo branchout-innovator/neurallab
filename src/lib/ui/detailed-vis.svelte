@@ -10,7 +10,18 @@
 	import type { Writable } from 'svelte/store';
 	import { zoom } from 'd3';
 	import { Button } from '$lib/components/ui/button';
-	
+	import { getSampledOutputForNode, type SampledOutputs } from '$lib/structures';
+
+	export let columnNames: string[];
+	export let currentExample: { xs: number[]; ys: number[] } | null;
+
+	const csvColumnConfigs: Writable<{
+		[key: string]: { isLabel: 'true' | 'false' };
+	}> = getContext('csvColumnConfigs');
+
+	$: inputFeatures = columnNames
+		.filter((c) => $csvColumnConfigs[c]?.isLabel === 'false')
+		.map((c, i) => ({ name: c, value: currentExample?.xs[i] }));
 	//import type { Dataset } from '@tensorflow/tfjs';
 
 	export let nodeIndex: number;
@@ -23,6 +34,9 @@
 	let svg: SVGSVGElement;
 	let gPoints: SVGGElement;
 	const heatmapSize = remToPx(14);
+
+	const sampledOutputs: Writable<SampledOutputs<number>> = getContext('sampledOutputs');
+	$: activationVal = $sampledOutputs[layerName] && $sampledOutputs[layerName].values[nodeIndex];
 
 	interface Sample {
 		x: number;
@@ -42,12 +56,15 @@
 		.range(['#3B82F6', '#e8eaeb', '#EF4444'])
 		.clamp(true);
 
-	onMount(async () => {
-		await loadTestPoints();
-		setupZoom();
-		updateChart();
-		resetZoom();
-	});
+    let smallbox: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
+
+    onMount(async () => {
+        smallbox = d3.select("#smallbox");
+        await loadTestPoints();
+        setupZoom();
+        updateChart();
+        resetZoom();
+    });
 
 	class EnoughSamplesCollectedError extends Error {
 		constructor() {
@@ -144,34 +161,44 @@
 	}
 
 	function drawTestPoints() {
-		const heatmapSize = remToPx(14);
-		const domain = $sampleDomain;
+        const heatmapSize = remToPx(14);
+        const domain = $sampleDomain;
 
-		const xScale = d3.scaleLinear().domain(domain.x).range([0, heatmapSize]);
-		const yScale = d3.scaleLinear().domain([domain.y[1], domain.y[0]]).range([0, heatmapSize]);
+        const xScale = d3.scaleLinear().domain(domain.x).range([0, heatmapSize]);
+        const yScale = d3.scaleLinear().domain([domain.y[1], domain.y[0]]).range([0, heatmapSize]);
 
-		const pointsGroup = d3.select(gPoints).data([null]);
+        const pointsGroup = d3.select(gPoints).data([null]);
 
-		const points = pointsGroup
-			.merge(pointsGroup)
-			.selectAll<SVGCircleElement, { x: number; y: number; label: number }>('circle')
-			.data(testPoints);
-		// console.log('drawing ', testPoints);
+        const points = pointsGroup
+            .merge(pointsGroup)
+            .selectAll<SVGCircleElement, { x: number; y: number; label: number }>('circle')
+            .data(testPoints);
 
-		points
-			.enter()
-			.append('circle')
-			.merge(points)
-			.attr('cx', (d) => xScale(d.x))
-			.attr('cy', (d) => yScale(d.y))
-			.attr('r', 3)
-			.style('fill', (d) => pointColorScale(d.label ?? 1))
-			.style('fill-opacity', 0.7)
-			.style('stroke', 'white')
-			.style('stroke-width', '0.5');
+        points
+            .enter()
+            .append('circle')
+            .merge(points)
+            .attr('cx', (d) => xScale(d.x))
+            .attr('cy', (d) => yScale(d.y))
+            .attr('r', 3)
+            .style('fill', (d) => pointColorScale(d.label ?? 1))
+            .style('fill-opacity', 0.7)
+            .style('stroke', 'white')
+            .style('stroke-width', '0.5')
+            .on('mouseover', function (event, d) {
+                const [x, y] = d3.pointer(event);
+                smallbox.style('visibility', 'visible')
+                    .style('left', `${x + 5}px`)
+                    .style('top', `${y - 28}px`)
+                    .text(`x: ${d.x.toFixed(2)}, y: ${d.y.toFixed(2)}`);
+            })
+            .on('mouseout', () => {
+                smallbox.style('visibility', 'hidden');
+            });
 
-		points.exit().remove();
-	}
+        points.exit().remove();
+    }
+
 
 	let gx: SVGGElement;
 	let gy: SVGGElement;
@@ -214,8 +241,8 @@
 
 	function resetZoom(): void {
 		sampleDomain.set({
-			x: [domain[0]-5, domain[1]-5],
-			y: [range[0]-5, range[1]-5]
+			x: [domain[0] - 5, domain[1] - 5],
+			y: [range[0] - 5, range[1] - 5]
 		});
 		d3.select(svg).call(zoomBehavior.transform, d3.zoomIdentity);
 		updateChart();
@@ -231,26 +258,33 @@
 </script>
 
 <div>
-	<div class="relative mb-4 ml-4">
-		{#if isEqual($model.layers[0].inputShape, [1])}
-			<PredictionCurve
-				{nodeIndex}
-				{layerName}
-				class="h-56 w-56 rounded-[0.15rem]"
-				customDensity={60}
-				size={14}
-				strokeWidth={2}
-			/>
-		{:else if isEqual($model.layers[0].inputShape, [2])}
-			<Heatmap {nodeIndex} {layerName} class="h-56 w-56 rounded-[0.15rem]" customDensity={60} />
-		{/if}
-		<svg class="absolute inset-0 h-full w-full" overflow="visible">
-			<g bind:this={gx} class="translate-y-56"></g>
-			<g bind:this={gy}></g>
-		</svg>
-		<svg bind:this={svg} class="absolute inset-0 h-full w-full" overflow="hidden">
-			<g bind:this={gPoints} overflow="hidden"></g>
-		</svg>
+	{#if isEqual($model.layers[0].inputShape, [1]) || isEqual($model.layers[0].inputShape, [2])}
+    <div class="relative mb-4 ml-4">
+        {#if isEqual($model.layers[0].inputShape, [1])}
+            <PredictionCurve
+                {nodeIndex}
+                {layerName}
+                class="h-56 w-56 rounded-[0.15rem]"
+                customDensity={60}
+                size={14}
+                strokeWidth={2}
+            />
+        {:else if isEqual($model.layers[0].inputShape, [2])}
+            <Heatmap {nodeIndex} {layerName} class="h-56 w-56 rounded-[0.15rem]" customDensity={60} />	
+        {/if}
+			<svg class="absolute inset-0 h-full w-full" overflow="visible">
+				<g bind:this={gx} class="translate-y-56"></g>
+				<g bind:this={gy}></g>
+			</svg>
+			<svg bind:this={svg} class="absolute inset-0 h-full w-full" overflow="hidden">
+				<g bind:this={gPoints} overflow="hidden"></g>
+			</svg>
+    </div>
+    <Button on:click={resetZoom} class="my-2">Reset Zoom</Button>
+    <div id="smallbox" class="absolute bg-white text-black border border-gray-400 rounded px-2 py-1 text-xs shadow-lg" style="visibility: hidden;"></div>
+	{:else}
+	<div class="flex items-center px-2 py-1 font-medium">
+		<span>{'activation value: ' + String(activationVal)}</span>
 	</div>
-	<Button on:click={resetZoom} class="my-2">Reset Zoom</Button>
+	{/if}
 </div>

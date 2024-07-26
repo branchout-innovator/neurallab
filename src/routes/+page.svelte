@@ -61,17 +61,40 @@
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
 	import * as Card from '$lib/components/ui/card/index.js';
+	import * as Command from '$lib/components/ui/command';
 	import ThemeToggle from '$lib/ui/theme-toggle.svelte';
-	import { page } from '$app/stores';
 	import Features from '$lib/ui/features.svelte';
+	import Labels from '$lib/ui/labels.svelte';
 	import { Progress } from '$lib/components/ui/progress';
 	import Slider from '@bulatdashiev/svelte-slider';
 	import Losschart from '$lib/ui/losschart.svelte';
 	import * as HoverCard from '$lib/components/ui/hover-card';
+
+	let isImageDataset = false;
+	let outputColumn = '';
+
+	$: {
+		if (datasetUploadFiles && datasetUploadFiles.length > 0) {
+			(async () => {
+				$csvColumnConfigs = {};
+				const { columns } = d3.csvParse(await datasetUploadFiles[0].text());
+				isImageDataset = columns.length > 50;
+				console.log('image? ' + isImageDataset);
+				for (const column of columns) {
+					$csvColumnConfigs[column] = {
+						isLabel: 'false'
+					};
+				}
+			})();
+		}
+	}
+
 	let value = 0;
 	let losschart: Losschart;
 	let currentloss = 0;
 	let prevPoints: number[] = [];
+	let domain = [2, 8];
+	let range = [2, 8];
 	onMount(() => {
 		const interval = setInterval(
 			() =>
@@ -90,7 +113,7 @@
 		maxpooling: MaxPoolingVis as typeof SvelteComponent,
 		flatten: FlattenVis as typeof SvelteComponent
 	};
-	
+
 	let selectedActivation = { value: 'relu' as ActivationIdentifier, label: 'ReLU' };
 	let epochs = 1000;
 	let alpha = 0.01;
@@ -100,7 +123,7 @@
 			{
 				type: 'dense',
 				units: 10,
-				inputShape: [1]
+				inputShape: [2]
 			} as DenseLayer,
 			{
 				type: 'dense',
@@ -218,7 +241,7 @@
 
 	let currentEpoch = 0;
 
-	let exampleInput: tf.TensorContainer | null;
+	let currentExample: { xs: number[]; ys: number[] } | null;
 
 	const sampleOutputs = async () => {
 		if (!tfModel) return;
@@ -235,9 +258,9 @@
 		else {
 			$dataset.take(1).forEachAsync(async (e) => {
 				if (!tfModel) return;
-				exampleInput = (e as { xs: number[]; ys: number[] }).xs;
-				if (exampleInput != null)
-					$sampledOutputs = await updateSampledOutputsSingle(tfModel, exampleInput);
+				currentExample = e as { xs: number[]; ys: number[] };
+				if (currentExample != null)
+					$sampledOutputs = await updateSampledOutputsSingle(tfModel, currentExample.xs);
 			});
 		}
 	};
@@ -286,15 +309,14 @@
 						} catch (e) {
 							console.error('Error while sampling outputs: ', e);
 						}
-						console.log(logs);
 						if (logs) {
-							currentloss = Math.round(logs.loss*1000)/1000;
-							prevPoints[prevPoints.length] = logs.loss
+							currentloss = Math.round(logs.loss * 1000) / 1000;
+							prevPoints[prevPoints.length] = logs.loss;
 							if (losschart) {
 								losschart.updateGraph(logs.loss);
 							}
 						}
-						
+
 						// set tfModel.stopTraining = true to stop training
 					}
 				}
@@ -420,15 +442,29 @@
 			} = {};
 			hasLabel = false;
 			$featureCount = 0;
-			for (const column in $csvColumnConfigs) {
-				const isLabel = $csvColumnConfigs[column].isLabel === 'true';
-				config[column] = { isLabel };
-				if (isLabel) {
-					hasLabel = true;
-				} else {
-					$featureCount++;
+
+			if (isImageDataset) {
+				for (const column in $csvColumnConfigs) {
+					if (column === outputColumn) {
+						config[column] = { isLabel: true };
+						hasLabel = true;
+					} else if (!column.includes('x')) {
+						config[column] = { isLabel: false };
+						$featureCount++;
+					}
+				}
+			} else {
+				for (const column in $csvColumnConfigs) {
+					const isLabel = $csvColumnConfigs[column].isLabel === 'true';
+					config[column] = { isLabel };
+					if (isLabel) {
+						hasLabel = true;
+					} else {
+						$featureCount++;
+					}
 				}
 			}
+
 			if (hasLabel) {
 				const result = await loadUploadedCsv(datasetUploadFiles[0], config);
 				$dataset = result.dataset;
@@ -488,8 +524,8 @@
 	const SAMPLE_DENSITY_2D = 10;
 	const SAMPLE_DENSITY_1D = 10;
 	let sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> = writable({
-		x: [-3, 3],
-		y: [-3, 3]
+		x: [domain[0], domain[1]],
+		y: [range[0], range[1]]
 	});
 	setContext('sampleDomain', sampleDomain);
 
@@ -497,14 +533,25 @@
 	$: is2D = isEqual($model.layers[0]?.inputShape, [2]);
 
 	$: {
-		$sampleDomain.x = (is1D ? [-11, 11] : [-3, 3]) as [number, number];
-		$sampleDomain.y = (is1D ? [-10, 120] : [-3, 3]) as [number, number];
+		$sampleDomain.x = (is1D ? [-11, 11] : domain) as [number, number];
+		$sampleDomain.y = (is1D ? [-10, 120] : range) as [number, number];
 	}
 
 	let columnNames: string[] = [];
 
 	const loadSampleDataset = async (url: string, numFeatures: number) => {
 		let blob = await fetch(url).then((r) => r.blob());
+		$csvColumnConfigs = {
+			x: {
+				isLabel: 'false'
+			},
+			y: {
+				isLabel: 'false'
+			},
+			inside_circle: {
+				isLabel: 'true'
+			}
+		};
 		loadUploadedCsv(blob, {
 			inside_circle: { isLabel: true }
 		}).then((d) => {
@@ -532,8 +579,6 @@
 		return accumulator + a.length;
 	}
 	$: updateTFModel($model);
-	let domain = [2, 8];
-	let range = [2, 8];
 </script>
 
 <svelte:head>
@@ -658,27 +703,15 @@
 									Activation Function
 								</Label>
 							</div>
+							<br />
 							<div>
-								<Select.Root bind:selected={selectedActivation}>
-									<Select.Trigger class="w-[180px]">
-										<Select.Value></Select.Value>
-									</Select.Trigger>
-									<Select.Content>
-										<Select.Item value="relu">ReLU</Select.Item>
-										<Select.Item value="sigmoid">Sigmoid</Select.Item>
-									</Select.Content>
-								</Select.Root>
-								<div>
-									Domain:
-									left bound: {domain[0]-5}
-									right bound: {domain[1]-5}
-									<Slider max="10" step="1" bind:value={domain} range slider />
-									Range:
-									bottom bound: {range[0]-5}
-									top bound: {range[1]-5}
-									<Slider max="10" step="1" bind:value={range} range slider />
-									<!-- <Button on:click={heatmap.changeZoom(domain, range)}>Change Axes</Button> -->
-									</div>
+								Domain: left bound: {domain[0] - 5}
+								right bound: {domain[1] - 5}
+								<Slider max="10" step="1" bind:value={domain} range slider />
+								Range: bottom bound: {range[0] - 5}
+								top bound: {range[1] - 5}
+								<Slider max="10" step="1" bind:value={range} range slider />
+								<!-- <Button on:click={heatmap.changeZoom(domain, range)}>Change Axes</Button> -->
 							</div>
 							<!-- <div class="flex flex-col gap-2">
 								<Label class="flex gap-2 text-xs">Input</Label>
@@ -713,41 +746,58 @@
 													/>
 												</div>
 												{#if Object.entries($csvColumnConfigs).length > 0}
-													<Table.Root>
-														<Table.Header>
-															<Table.Row>
-																<Table.Head class="flex-grow">Column Name</Table.Head>
-															</Table.Row>
-														</Table.Header>
-														{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
-															<Table.Row>
-																<Table.Cell class="font-medium">{column}</Table.Cell>
-																<RadioGroup.Root
-																	bind:value={$csvColumnConfigs[column].isLabel}
-																	asChild
-																>
-																	<Table.Cell>
-																		<div class="flex items-center space-x-2">
-																			<RadioGroup.Item value="false" id={`feature-${column}`}
-																			></RadioGroup.Item>
-																			<Label for={`feature-${column}`}>Input</Label>
-																		</div>
-																	</Table.Cell>
-																	<Table.Cell>
-																		<div class="flex items-center space-x-2">
-																			<RadioGroup.Item value="true" id={`label-${column}`}
-																			></RadioGroup.Item>
-																			<Label for={`label-${column}`}>Output</Label>
-																		</div>
-																	</Table.Cell>
-																</RadioGroup.Root>
-															</Table.Row>
-														{/each}
-													</Table.Root>
-													{#if !hasLabel}
-														<p class="font-medium text-foreground">
-															Choose at least one column to use as output.
-														</p>
+													{#if isImageDataset}
+														<div class="flex flex-col gap-2">
+															<Label>Select Output Column</Label>
+															<Command.Root>
+																<Command.Input placeholder="Search output column..." />
+																<Command.List>
+																	<Command.Empty>No results found.</Command.Empty>
+																	{#each Object.keys($csvColumnConfigs).filter((col) => !col.includes('x')) as column}
+																		<Command.Item onSelect={() => (outputColumn = column)}>
+																			{column}
+																		</Command.Item>
+																	{/each}
+																</Command.List>
+															</Command.Root>
+														</div>
+													{:else}
+														<Table.Root>
+															<Table.Header>
+																<Table.Row>
+																	<Table.Head class="flex-grow">Column Name</Table.Head>
+																</Table.Row>
+															</Table.Header>
+															{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
+																<Table.Row>
+																	<Table.Cell class="font-medium">{column}</Table.Cell>
+																	<RadioGroup.Root
+																		bind:value={$csvColumnConfigs[column].isLabel}
+																		asChild
+																	>
+																		<Table.Cell>
+																			<div class="flex items-center space-x-2">
+																				<RadioGroup.Item value="false" id={`feature-${column}`}
+																				></RadioGroup.Item>
+																				<Label for={`feature-${column}`}>Input</Label>
+																			</div>
+																		</Table.Cell>
+																		<Table.Cell>
+																			<div class="flex items-center space-x-2">
+																				<RadioGroup.Item value="true" id={`label-${column}`}
+																				></RadioGroup.Item>
+																				<Label for={`label-${column}`}>Output</Label>
+																			</div>
+																		</Table.Cell>
+																	</RadioGroup.Root>
+																</Table.Row>
+															{/each}
+														</Table.Root>
+														{#if !hasLabel}
+															<p class="font-medium text-foreground">
+																Choose at least one column to use as output.
+															</p>
+														{/if}
 													{/if}
 												{/if}
 											</Dialog.Description>
@@ -780,6 +830,7 @@
 								<Select.Content>
 									<Select.Item value="relu">ReLU</Select.Item>
 									<Select.Item value="sigmoid">Sigmoid</Select.Item>
+									<Select.Item value="tanh">Tanh</Select.Item>
 								</Select.Content>
 							</Select.Root>
 						</div>
@@ -797,7 +848,7 @@
 							<HoverCard.Root>
 								<HoverCard.Trigger>
 									<Button>
-										<TrendingDown class="h-4 w-4 mr-2" /> Loss Graph
+										<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
 									</Button>
 								</HoverCard.Trigger>
 								<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
@@ -888,7 +939,7 @@
 
 						<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
 							{#if tfModel}
-								<Features {columnNames} />
+								<Features {columnNames} {currentExample} />
 								{#if $model.layers[0]?.inputShape}
 									{@const weights = getWeightsBetweenLayers(tfModel, 0)}
 									{#if weights}
@@ -906,8 +957,10 @@
 										{layer}
 										index={i}
 										tfLayer={tfModel.layers[i]}
-										domain = {domain}
-										range = {range}
+										domain={domain}
+										range={range}
+										columnNames={columnNames}
+										currentExample={currentExample}
 										{dataset}
 									></svelte:component>
 									{#if i < $model.layers.length - 1}
@@ -924,6 +977,11 @@
 										{/if}
 									{/if}
 								{/each}
+								<Labels
+									{columnNames}
+									{currentExample}
+									tfLayer={tfModel.layers[tfModel.layers.length - 1]}
+								/>
 							{/if}
 						</div>
 					</div>

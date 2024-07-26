@@ -5,7 +5,7 @@
 	import * as d3 from 'd3';
 	import type { HTMLAttributes } from 'svelte/elements';
 	import * as tf from '@tensorflow/tfjs';
-    import {AppendingLineChart} from './linechart';
+    import {AppendingLineChart} from '../../lib/ui/linechart';
 
 	type $$Props = HTMLAttributes<HTMLCanvasElement> & {
         prevPoints: number[];
@@ -18,9 +18,8 @@
 	let gy: SVGGElement;
 
     onMount(() => {
-        lineChart = new AppendingLineChart(d3.select("#linechart"),
-        ["#777", "black"]);
-        setupAxes();
+    lineChart = new AppendingLineChart(d3.select("#linechart"),
+        ["gray","gray"]);
         prevPoints.forEach(point => {
             updateGraph(point);
         });
@@ -32,22 +31,6 @@
 	export function updateGraph(loss: number) {
 		lineChart?.addDataPoint(loss);
         setupAxes();
-	}
-
-	function setupAxes() {
-		const xScale = d3.scaleLinear().domain([0, prevPoints.length]).range([0, 320]);
-		const yScale = d3.scaleLinear().domain([lineChart.minY, lineChart.maxY]).range([280, 0]);
-
-		d3.select(gx)
-            .call(d3.axisBottom(xScale).ticks(5).tickSize(2))
-			.call((g) => g.select('.domain').remove())
-			.call((g) => g.selectAll('.tick line').attr('stroke', '#888').attr('stroke-width', 0.5))
-			.call((g) => g.selectAll('.tick text').attr('y', 6).attr('dy', '.71em'));
-		d3.select(gy)
-			.call(d3.axisLeft(yScale).ticks(5).tickSize(2))
-			.call((g) => g.select('.domain').remove())
-			.call((g) => g.selectAll('.tick line').attr('stroke', '#888').attr('stroke-width', 0.5))
-			.call((g) => g.selectAll('.tick text').attr('x', -6).attr('dy', '.32em'));
 	}
 </script>
 <div class="relative mb-4 ml-4">
