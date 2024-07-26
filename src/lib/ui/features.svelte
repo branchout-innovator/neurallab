@@ -11,17 +11,14 @@
 
 	$: inputFeatures = columnNames
 		.filter((c) => $csvColumnConfigs[c]?.isLabel === 'false')
-		.map((c, i) => ({ label: c, value: currentExample?.xs[i] }));
+		.map((c, i) => ({ name: c, value: currentExample?.xs[i] }));
 </script>
 
 <div class="flex flex-col items-end gap-2 rounded-lg py-2 text-card-foreground">
 	<h5 class="mb-9 text-sm">&nbsp;</h5>
 	{#each inputFeatures as feature}
 		<div class="flex items-center justify-end rounded bg-muted px-2 py-1 font-medium">
-			<span class="text-xs">{feature.label}</span>
-			{#if feature.value}
-				<span class="text-xs">: {feature.value}</span>
-			{/if}
+			<span class="text-xs">{feature.name + (feature.value ? `: ${feature.value}` : '')}</span>
 		</div>
 	{/each}
 </div>
