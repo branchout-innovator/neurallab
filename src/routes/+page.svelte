@@ -801,7 +801,7 @@
 									</Button>
 								</HoverCard.Trigger>
 								<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
-									<Losschart prevPoints={prevPoints} class="h-56 w-80 rounded-[0.15rem]" bind:this={losschart}/>
+									<Losschart prevPoints={prevPoints} class="h-60 w-80 rounded-[0.15rem]" bind:this={losschart}/>
 								</HoverCard.Content>
 							</HoverCard.Root>
 						</div>
