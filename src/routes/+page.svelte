@@ -90,7 +90,7 @@
 		maxpooling: MaxPoolingVis as typeof SvelteComponent,
 		flatten: FlattenVis as typeof SvelteComponent
 	};
-	
+
 	let selectedActivation = { value: 'relu' as ActivationIdentifier, label: 'ReLU' };
 	let epochs = 1000;
 	let alpha = 0.01;
@@ -100,7 +100,7 @@
 			{
 				type: 'dense',
 				units: 10,
-				inputShape: [1]
+				inputShape: [2]
 			} as DenseLayer,
 			{
 				type: 'dense',
@@ -218,7 +218,7 @@
 
 	let currentEpoch = 0;
 
-	let exampleInput: tf.TensorContainer | null;
+	let currentExample: { xs: number[]; ys: number[] } | null;
 
 	const sampleOutputs = async () => {
 		if (!tfModel) return;
@@ -235,9 +235,9 @@
 		else {
 			$dataset.take(1).forEachAsync(async (e) => {
 				if (!tfModel) return;
-				exampleInput = (e as { xs: number[]; ys: number[] }).xs;
-				if (exampleInput != null)
-					$sampledOutputs = await updateSampledOutputsSingle(tfModel, exampleInput);
+				currentExample = e as { xs: number[]; ys: number[] };
+				if (currentExample != null)
+					$sampledOutputs = await updateSampledOutputsSingle(tfModel, currentExample.xs);
 			});
 		}
 	};
@@ -288,13 +288,13 @@
 						}
 						console.log(logs);
 						if (logs) {
-							currentloss = Math.round(logs.loss*1000)/1000;
-							prevPoints[prevPoints.length] = logs.loss
+							currentloss = Math.round(logs.loss * 1000) / 1000;
+							prevPoints[prevPoints.length] = logs.loss;
 							if (losschart) {
 								losschart.updateGraph(logs.loss);
 							}
 						}
-						
+
 						// set tfModel.stopTraining = true to stop training
 					}
 				}
@@ -505,6 +505,17 @@
 
 	const loadSampleDataset = async (url: string, numFeatures: number) => {
 		let blob = await fetch(url).then((r) => r.blob());
+		$csvColumnConfigs = {
+			x: {
+				isLabel: 'false'
+			},
+			y: {
+				isLabel: 'false'
+			},
+			inside_circle: {
+				isLabel: 'true'
+			}
+		};
 		loadUploadedCsv(blob, {
 			inside_circle: { isLabel: true }
 		}).then((d) => {
@@ -658,17 +669,16 @@
 									Activation Function
 								</Label>
 							</div>
-								<div>
-									Domain:
-									left bound: {domain[0]-5}
-									right bound: {domain[1]-5}
-									<Slider max="10" step="1" bind:value={domain} range slider />
-									Range:
-									bottom bound: {range[0]-5}
-									top bound: {range[1]-5}
-									<Slider max="10" step="1" bind:value={range} range slider />
-									<!-- <Button on:click={heatmap.changeZoom(domain, range)}>Change Axes</Button> -->
-									</div>
+							<br />
+							<div>
+								Domain: left bound: {domain[0] - 5}
+								right bound: {domain[1] - 5}
+								<Slider max="10" step="1" bind:value={domain} range slider />
+								Range: bottom bound: {range[0] - 5}
+								top bound: {range[1] - 5}
+								<Slider max="10" step="1" bind:value={range} range slider />
+								<!-- <Button on:click={heatmap.changeZoom(domain, range)}>Change Axes</Button> -->
+							</div>
 							<!-- <div class="flex flex-col gap-2">
 								<Label class="flex gap-2 text-xs">Input</Label>
 								<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
@@ -787,11 +797,15 @@
 							<HoverCard.Root>
 								<HoverCard.Trigger>
 									<Button>
-										<TrendingDown class="h-4 w-4 mr-2" /> Loss Graph
+										<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
 									</Button>
 								</HoverCard.Trigger>
 								<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
-									<Losschart prevPoints={prevPoints} class="h-56 w-80 rounded-[0.15rem]" bind:this={losschart}/>
+									<Losschart
+										{prevPoints}
+										class="h-56 w-80 rounded-[0.15rem]"
+										bind:this={losschart}
+									/>
 								</HoverCard.Content>
 							</HoverCard.Root>
 						</div>
@@ -878,7 +892,7 @@
 
 						<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
 							{#if tfModel}
-								<Features {columnNames} />
+								<Features {columnNames} {currentExample} />
 								{#if $model.layers[0]?.inputShape}
 									{@const weights = getWeightsBetweenLayers(tfModel, 0)}
 									{#if weights}
@@ -896,8 +910,8 @@
 										{layer}
 										index={i}
 										tfLayer={tfModel.layers[i]}
-										domain = {domain}
-										range = {range}
+										{domain}
+										{range}
 										{dataset}
 									></svelte:component>
 									{#if i < $model.layers.length - 1}
