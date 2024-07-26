@@ -12,7 +12,7 @@
     }
 
     export let prevPoints: number[];
-    
+
     let lineChart: AppendingLineChart;
     onMount(() => {
     lineChart = new AppendingLineChart(d3.select("#linechart"),
@@ -26,7 +26,7 @@
 
 
 	export function updateGraph(loss: number) {
-		lineChart.addDataPoint(loss);
+		lineChart?.addDataPoint(loss);
 	}
 
 	function setupAxes() {

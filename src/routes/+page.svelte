@@ -245,12 +245,13 @@
 	let isTraining = false;
 
 	const refreshModel = () => {
-		isTraining = false;
-		tfModel!.stopTraining = true;
+		if (isTraining) isTraining = false;
+		if (tfModel) tfModel!.stopTraining = true;
 		currentEpoch = 0;
 		tfModel = createTFModel($model);
 		currentloss = 0;
 		prevPoints = [];
+		sampleOutputs();
 	};
 
 	const trainModel = async () => {
@@ -285,17 +286,21 @@
 						} catch (e) {
 							console.error('Error while sampling outputs: ', e);
 						}
+						console.log(logs);
 						if (logs) {
 							currentloss = Math.round(logs.loss*1000)/1000;
-							losschart?.updateGraph(logs.loss);
 							prevPoints[prevPoints.length] = logs.loss
+							if (losschart) {
+								losschart.updateGraph(logs.loss);
+							}
 						}
+						
 						// set tfModel.stopTraining = true to stop training
 					}
 				}
 			});
-			console.log(tfModel);
-			console.log($model);
+			//console.log(tfModel);
+			//console.log($model);
 
 			// // Make predictions and denormalize
 			// const input = tf.tensor2d([Number(testPred)], [1, 1]);
@@ -316,6 +321,7 @@
 	};
 
 	const updateActivations = () => {
+		refreshModel();
 		for (let i = 0; i < $model.layers.length; i++) {
 			const layer = $model.layers[i];
 			if (layer.type === 'dense' && i < $model.layers.length - 1) {
