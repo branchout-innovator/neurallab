@@ -658,6 +658,7 @@
 									Activation Function
 								</Label>
 							</div>
+							<br>
 								<div>
 									Domain:
 									left bound: {domain[0]-5}
