@@ -265,6 +265,8 @@
             <g bind:this={gPoints} overflow="hidden"></g>
         </svg>
     </div>
+	{#if isEqual($model.layers[0].inputShape, [1]) || isEqual($model.layers[0].inputShape, [2])}
     <Button on:click={resetZoom} class="my-2">Reset Zoom</Button>
     <div id="smallbox" class="absolute bg-white text-black border border-gray-400 rounded px-2 py-1 text-xs shadow-lg" style="visibility: hidden;"></div>
+	{/if}
 </div>
