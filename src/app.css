@@ -52,6 +52,10 @@
 		--ring: 240 5% 64.9%;
 	 
 		--radius: 0.5rem;
+
+		--track-bg: #dddddd;
+  		--progress-bg: #a7a5a8;
+  		--thumb-bg: #5e5858;
 	  }
 	 
 	  .dark {
@@ -83,6 +87,10 @@
 		--destructive-foreground: 0 85.7% 97.3%;
 	 
 		--ring: 240 3.7% 15.9%;
+
+		--track-bg: #ffffff;
+  		--progress-bg: #a7a7a7;
+  		--thumb-bg: #b9b9b9;
 	  }
 }
 

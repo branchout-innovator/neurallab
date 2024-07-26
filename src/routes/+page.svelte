@@ -668,6 +668,7 @@
 										<Select.Item value="sigmoid">Sigmoid</Select.Item>
 									</Select.Content>
 								</Select.Root>
+								<br>
 								<div>
 									Domain:
 									left bound: {domain[0]-5}
