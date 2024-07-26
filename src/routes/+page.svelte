@@ -658,17 +658,6 @@
 									Activation Function
 								</Label>
 							</div>
-							<div>
-								<Select.Root bind:selected={selectedActivation}>
-									<Select.Trigger class="w-[180px]">
-										<Select.Value></Select.Value>
-									</Select.Trigger>
-									<Select.Content>
-										<Select.Item value="relu">ReLU</Select.Item>
-										<Select.Item value="sigmoid">Sigmoid</Select.Item>
-									</Select.Content>
-								</Select.Root>
-								<br>
 								<div>
 									Domain:
 									left bound: {domain[0]-5}
@@ -680,7 +669,6 @@
 									<Slider max="10" step="1" bind:value={range} range slider />
 									<!-- <Button on:click={heatmap.changeZoom(domain, range)}>Change Axes</Button> -->
 									</div>
-							</div>
 							<!-- <div class="flex flex-col gap-2">
 								<Label class="flex gap-2 text-xs">Input</Label>
 								<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
@@ -781,6 +769,7 @@
 								<Select.Content>
 									<Select.Item value="relu">ReLU</Select.Item>
 									<Select.Item value="sigmoid">Sigmoid</Select.Item>
+									<Select.Item value="tanh">Tanh</Select.Item>
 								</Select.Content>
 							</Select.Root>
 						</div>
