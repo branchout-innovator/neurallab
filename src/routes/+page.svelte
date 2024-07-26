@@ -72,6 +72,8 @@
 	let losschart: Losschart;
 	let currentloss = 0;
 	let prevPoints: number[] = [];
+	let domain = [2, 8];
+	let range = [2, 8];
 	onMount(() => {
 		const interval = setInterval(
 			() =>
@@ -286,7 +288,6 @@
 						} catch (e) {
 							console.error('Error while sampling outputs: ', e);
 						}
-						console.log(logs);
 						if (logs) {
 							currentloss = Math.round(logs.loss*1000)/1000;
 							prevPoints[prevPoints.length] = logs.loss
@@ -488,8 +489,8 @@
 	const SAMPLE_DENSITY_2D = 10;
 	const SAMPLE_DENSITY_1D = 10;
 	let sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> = writable({
-		x: [-3, 3],
-		y: [-3, 3]
+		x: [domain[0],domain[1]],
+		y: [range[0], range[1]]
 	});
 	setContext('sampleDomain', sampleDomain);
 
@@ -497,8 +498,8 @@
 	$: is2D = isEqual($model.layers[0]?.inputShape, [2]);
 
 	$: {
-		$sampleDomain.x = (is1D ? [-11, 11] : [-3, 3]) as [number, number];
-		$sampleDomain.y = (is1D ? [-10, 120] : [-3, 3]) as [number, number];
+		$sampleDomain.x = (is1D ? [-11, 11] : domain) as [number, number];
+		$sampleDomain.y = (is1D ? [-10, 120] : range) as [number, number];
 	}
 
 	let columnNames: string[] = [];
@@ -532,8 +533,6 @@
 		return accumulator + a.length;
 	}
 	$: updateTFModel($model);
-	let domain = [2, 8];
-	let range = [2, 8];
 </script>
 
 <svelte:head>
