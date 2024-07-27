@@ -19,11 +19,16 @@
 
     onMount(() => {
     lineChart = new AppendingLineChart(d3.select("#linechart"),
-        ["gray","gray"]);
-        prevPoints.forEach(point => {
+        ["#888","#888"]);
+        updatePoints(prevPoints);
+    });
+
+    async function updatePoints(points: number[]) {
+        points.forEach(point => {
             updateGraph(point);
         });
-    });
+    }
+
 	const sampledOutputs: Writable<SampledOutputs<number[][]>> = getContext('sampledOutputs');
 	const getTfModel = getContext('getTfModel') as () => tf.Sequential;
 

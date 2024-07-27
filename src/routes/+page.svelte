@@ -276,6 +276,7 @@
 		currentloss = 0;
 		prevPoints = [];
 		sampleOutputs();
+		losscardVisible = false;
 	};
 
 	const trainModel = async () => {
@@ -584,6 +585,10 @@
 		return accumulator + a.length;
 	}
 	$: updateTFModel($model);
+	let losscardVisible = false;
+	function displayLoss() {
+		losscardVisible = !losscardVisible;
+	}
 </script>
 
 <svelte:head>
@@ -850,16 +855,16 @@
 							<Label class="flex gap-2 text-xs">
 								Current Loss: {currentloss}
 							</Label>
-							<HoverCard.Root>
-								<HoverCard.Trigger>
-									<Button>
-										<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
-									</Button>
-								</HoverCard.Trigger>
-								<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
+							<Button on:click={displayLoss}>
+								<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
+							</Button>
+							{#if losscardVisible}
+							<Card.Root class="h-fit max-h-none w-fit max-w-none absolute translate-y-16 z-50 pt-4 visible">
+								<Card.Content>
 									<Losschart prevPoints={prevPoints} class="h-60 w-80 rounded-[0.15rem]" bind:this={losschart}/>
-								</HoverCard.Content>
-							</HoverCard.Root>
+								</Card.Content>
+							</Card.Root>
+							{/if}
 						</div>
 						<!-- <div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">Input</Label>
