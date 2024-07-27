@@ -248,13 +248,14 @@
 		if (!$model.layers[0]) return;
 		if (isEqual($model.layers[0]?.inputShape, [1]))
 			$sampledOutputs = await updateSampledOutputs1D(tfModel, SAMPLE_DENSITY_1D, $sampleDomain.x);
-		else if (isEqual($model.layers[0]?.inputShape, [2]))
+		else if (isEqual($model.layers[0]?.inputShape, [2])) {
 			$sampledOutputs = await updateSampledOutputs(
 				tfModel,
 				SAMPLE_DENSITY_2D,
 				$sampleDomain.x,
 				$sampleDomain.y
 			);
+		}
 		else {
 			$dataset.take(1).forEachAsync(async (e) => {
 				if (!tfModel) return;
@@ -306,6 +307,10 @@
 						if (epoch % 5 === 0) tfModel = tfModel;
 						try {
 							await sampleOutputs();
+							sampleDomain.set({
+								x: [domain[0] - 5, domain[1] - 5],
+								y: [range[0] - 5, range[1] - 5]
+							});
 						} catch (e) {
 							console.error('Error while sampling outputs: ', e);
 						}

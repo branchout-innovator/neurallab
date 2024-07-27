@@ -50,8 +50,8 @@
 		if (nodeOutputs) {
 			chartWidth = customDensity || nodeOutputs.length;
 			chartHeight = customDensity || nodeOutputs.length;
-			updateHeatmap();
 		}
+		updateHeatmap();
 	}
 
 	onMount(() => {

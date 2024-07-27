@@ -35,7 +35,7 @@
 
 	function setupAxes() {
 		const xScale = d3.scaleLinear().domain([0, prevPoints.length]).range([0, 320]);
-		const yScale = d3.scaleLinear().domain([lineChart.minY, lineChart.maxY]).range([280, 0]);
+		const yScale = d3.scaleLinear().domain([lineChart.minY, lineChart.maxY]).range([230, 0]);
 
 		d3.select(gx)
             .call(d3.axisBottom(xScale).ticks(5).tickSize(2))
