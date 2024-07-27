@@ -4,7 +4,7 @@
 	import { remToPx } from '$lib/utils';
 	import Minus from 'lucide-svelte/icons/minus';
 	import Plus from 'lucide-svelte/icons/plus';
-	import { getContext } from 'svelte';
+	import { getContext, setContext } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import * as tf from '@tensorflow/tfjs';
 	import { browser } from '$app/environment';

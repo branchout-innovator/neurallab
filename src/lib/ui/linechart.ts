@@ -13,7 +13,7 @@ type DataPoint = {
 export class AppendingLineChart {
   
   private numLines: number;
-  private data: DataPoint[] = [];
+  public data: DataPoint[] = [];
   private svg;
   private xScale;
   private yScale;

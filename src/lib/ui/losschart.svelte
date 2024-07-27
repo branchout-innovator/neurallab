@@ -7,11 +7,8 @@
 	import * as tf from '@tensorflow/tfjs';
     import {AppendingLineChart} from '../../lib/ui/linechart';
 
-	type $$Props = HTMLAttributes<HTMLCanvasElement> & {
-        prevPoints: number[];
-    }
+	type $$Props = HTMLAttributes<HTMLCanvasElement>
 
-    export let prevPoints: number[];
     let lineChart: AppendingLineChart;
 
     let gx: SVGGElement;
@@ -20,17 +17,11 @@
     onMount(() => {
     lineChart = new AppendingLineChart(d3.select("#linechart"),
         ["#888","#888"]);
-        updatePoints(prevPoints);
+        setupAxes();
     });
 
-    async function updatePoints(points: number[]) {
-        points.forEach(point => {
-            updateGraph(point);
-        });
-    }
 
 	const sampledOutputs: Writable<SampledOutputs<number[][]>> = getContext('sampledOutputs');
-	const getTfModel = getContext('getTfModel') as () => tf.Sequential;
 
 
 	export function updateGraph(loss: number) {
@@ -38,9 +29,18 @@
         setupAxes();
 	}
 
+    export function clear() {
+        lineChart?.reset();
+        setupAxes();
+    }
+
 	function setupAxes() {
-		const xScale = d3.scaleLinear().domain([0, prevPoints.length]).range([0, 320]);
-		const yScale = d3.scaleLinear().domain([lineChart.minY, lineChart.maxY]).range([230, 0]);
+		const xScale = d3.scaleLinear().domain([0, lineChart.data.length]).range([0, 320]);
+        let yScale;
+        if (lineChart.data.length != 0)
+		    yScale = d3.scaleLinear().domain([lineChart.minY, lineChart.maxY]).range([230, 0]);
+        else
+            yScale = d3.scaleLinear().domain([0, 1]).range([230, 0]);
 
 		d3.select(gx)
             .call(d3.axisBottom(xScale).ticks(5).tickSize(2))

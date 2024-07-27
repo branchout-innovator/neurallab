@@ -19,7 +19,7 @@
 		type FlattenLayer
 	} from '$lib/structures';
 	import * as tf from '@tensorflow/tfjs';
-	import { onMount, setContext, SvelteComponent } from 'svelte';
+	import { onMount, setContext, SvelteComponent, getContext } from 'svelte';
 	import DenseLayerVis from '$lib/ui/dense-layer-vis.svelte';
 	import ConvVis from '$lib/ui/conv-vis.svelte';
 	import MaxPoolingVis from '$lib/ui/max-pooling-vis.svelte';
@@ -92,7 +92,6 @@
 	let value = 0;
 	let losschart: Losschart;
 	let currentloss = 0;
-	let prevPoints: number[] = [];
 	let domain = [2, 8];
 	let range = [2, 8];
 	onMount(() => {
@@ -274,9 +273,8 @@
 		currentEpoch = 0;
 		tfModel = createTFModel($model);
 		currentloss = 0;
-		prevPoints = [];
 		sampleOutputs();
-		losscardVisible = false;
+		losschart?.clear();
 	};
 
 	const trainModel = async () => {
@@ -317,7 +315,6 @@
 						}
 						if (logs) {
 							currentloss = Math.round(logs.loss * 1000) / 1000;
-							prevPoints[prevPoints.length] = logs.loss;
 							if (losschart) {
 								losschart.updateGraph(logs.loss);
 							}
@@ -378,6 +375,7 @@
 
 	const updateTFModel = async (model: SequentialModel) => {
 		if (model.layers.length === 0) return;
+		refreshModel();
 		if (!tfModel) {
 			tfModel = createTFModel(model);
 		} else {
@@ -385,7 +383,6 @@
 			const newModel = createTFModel(model);
 			tfModel = newModel;
 		}
-		refreshModel();
 		if (browser) {
 			try {
 				await sampleOutputs();
@@ -585,9 +582,10 @@
 		return accumulator + a.length;
 	}
 	$: updateTFModel($model);
-	let losscardVisible = false;
+	let losscardVisible = 0;
 	function displayLoss() {
-		losscardVisible = !losscardVisible;
+		losscardVisible = 1-losscardVisible;
+		d3.select("#losscard").style("visibility", ["hidden", "visible"][losscardVisible]);
 	}
 </script>
 
@@ -858,13 +856,13 @@
 							<Button on:click={displayLoss}>
 								<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
 							</Button>
-							{#if losscardVisible}
-							<Card.Root class="h-fit max-h-none w-fit max-w-none absolute translate-y-16 z-50 pt-4 visible">
-								<Card.Content>
-									<Losschart prevPoints={prevPoints} class="h-60 w-80 rounded-[0.15rem]" bind:this={losschart}/>
-								</Card.Content>
-							</Card.Root>
-							{/if}
+							<div id = "losscard" class="h-fit max-h-none w-fit max-w-none absolute translate-y-16 z-50" style="visibility:hidden">
+								<Card.Root class="pt-6">
+									<Card.Content>
+										<Losschart class="h-60 w-80 rounded-[0.15rem]" bind:this={losschart}/>
+									</Card.Content>
+								</Card.Root>
+							</div>
 						</div>
 						<!-- <div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">Input</Label>
