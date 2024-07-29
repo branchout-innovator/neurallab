@@ -69,6 +69,7 @@
 	import Slider from '@bulatdashiev/svelte-slider';
 	import Losschart from '$lib/ui/losschart.svelte';
 	import * as HoverCard from '$lib/components/ui/hover-card';
+	import LLM from '$lib/ui/llm.svelte';
 
 	let isImageDataset = false;
 	let outputColumn = '';
@@ -275,6 +276,9 @@
 		currentloss = 0;
 		sampleOutputs();
 		losschart?.clear();
+		if (losscardVisible == 1) {
+			displayLoss();
+		}
 	};
 
 	const trainModel = async () => {
@@ -658,9 +662,10 @@
 		<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
 			<!-- Controls (header) -->
 			<Tabs.Root value="NL" class="h-auto w-full">
-				<Tabs.List class="grid w-full grid-cols-2">
+				<Tabs.List class="grid w-full grid-cols-3">
 					<Tabs.Trigger value="NL">NeuralLab</Tabs.Trigger>
 					<Tabs.Trigger value="settings">Settings</Tabs.Trigger>
+					<Tabs.Trigger value="LLM">LLM</Tabs.Trigger>
 				</Tabs.List>
 				<Tabs.Content value="settings" class="h-full">
 					<Card.Root class="h-full">
@@ -704,42 +709,12 @@
 									/>
 								</div>
 							</div>
-							<div class="flex flex-row flex-wrap items-end gap-4"></div>
-							<div>
-								<Label class="flex gap-2 text-xs">
-									<Activity class="h-4 w-4"></Activity>
-									Activation Function
-								</Label>
-							</div>
-							<br />
-							<div>
-								Domain: left bound: {domain[0] - 5}
-								right bound: {domain[1] - 5}
-								<Slider max="10" step="1" bind:value={domain} range slider />
-								Range: bottom bound: {range[0] - 5}
-								top bound: {range[1] - 5}
-								<Slider max="10" step="1" bind:value={range} range slider />
-								<!-- <Button on:click={heatmap.changeZoom(domain, range)}>Change Axes</Button> -->
-							</div>
-							<!-- <div class="flex flex-col gap-2">
-								<Label class="flex gap-2 text-xs">Input</Label>
-								<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
-							</div>
-							<div class="flex flex-col gap-2">
-								<Label class="flex gap-2 text-xs">Predicted Value</Label>
-								<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
-							</div> -->
-							<!--<div class="flex flex-col gap-2">
-									<div></div>
-								</div>
-								<div class="flex flex-col gap-2"></div>
-								<div class="flex-1"></div>
-								<div class="flex flex-col gap-2"></div>-->
 							<br />
 							<div class="space-y-1">
+								<Label class="flex gap-2 text-xs">Choose Dataset</Label>
 								<Dialog.Root>
 									<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
-										>Upload Dataset</Dialog.Trigger
+										>Upload CSV</Dialog.Trigger
 									>
 									<Dialog.Content>
 										<Dialog.Header>
@@ -813,14 +788,31 @@
 									</Dialog.Content>
 								</Dialog.Root>
 							</div>
-							<div class="flex flex-1 items-start space-x-2">
-								<br />
-								Choose Mode Here
-								<div>
-									<br />
-								</div>
-								<ThemeToggle></ThemeToggle>
+							<br />
+							<div>
+								Domain: left bound: {domain[0] - 5}
+								right bound: {domain[1] - 5}
+								<Slider max="10" step="1" bind:value={domain} range slider />
+								Range: bottom bound: {range[0] - 5}
+								top bound: {range[1] - 5}
+								<Slider max="10" step="1" bind:value={range} range slider />
+								<!-- <Button on:click={heatmap.changeZoom(domain, range)}>Change Axes</Button> -->
 							</div>
+							<!-- <div class="flex flex-col gap-2">
+								<Label class="flex gap-2 text-xs">Input</Label>
+								<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
+							</div>
+							<div class="flex flex-col gap-2">
+								<Label class="flex gap-2 text-xs">Predicted Value</Label>
+								<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
+							</div> -->
+							<!--<div class="flex flex-col gap-2">
+									<div></div>
+								</div>
+								<div class="flex flex-col gap-2"></div>
+								<div class="flex-1"></div>
+								<div class="flex flex-col gap-2"></div>-->
+							<br />
 						</Card.Content>
 					</Card.Root>
 				</Tabs.Content>
@@ -839,6 +831,7 @@
 									<Select.Item value="relu">ReLU</Select.Item>
 									<Select.Item value="sigmoid">Sigmoid</Select.Item>
 									<Select.Item value="tanh">Tanh</Select.Item>
+									<Select.Item value="softmax">Softmax</Select.Item>
 								</Select.Content>
 							</Select.Root>
 						</div>
@@ -859,7 +852,7 @@
 							<div id = "losscard" class="h-fit max-h-none w-fit max-w-none absolute translate-y-16 z-50" style="visibility:hidden">
 								<Card.Root class="pt-6">
 									<Card.Content>
-										<Losschart class="h-60 w-80 rounded-[0.15rem]" bind:this={losschart}/>
+										<Losschart pageIdx = {1} class="h-60 w-80 rounded-[0.15rem]" bind:this={losschart}/>
 									</Card.Content>
 								</Card.Root>
 							</div>
@@ -872,9 +865,7 @@
 							<Label class="flex gap-2 text-xs">Predicted Value</Label>
 							<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
 						</div> -->
-						<div class="flex flex-col gap-2">
-							<div></div>
-						</div>
+						<div class="flex flex-col gap-2"></div>
 						<div class="flex flex-col gap-2"></div>
 						<div class="flex-1"></div>
 						<div class="flex flex-col gap-2">
@@ -994,7 +985,11 @@
 						</div>
 					</div>
 				</Tabs.Content>
+				<Tabs.Content value="LLM" class="h-full">
+					<LLM />
+				</Tabs.Content>
 			</Tabs.Root>
+			
 		</div>
 	</Resizable.Pane>
 	<!--</div>-->

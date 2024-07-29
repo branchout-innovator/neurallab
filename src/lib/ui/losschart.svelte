@@ -7,7 +7,10 @@
 	import * as tf from '@tensorflow/tfjs';
     import {AppendingLineChart} from '../../lib/ui/linechart';
 
-	type $$Props = HTMLAttributes<HTMLCanvasElement>
+	type $$Props = HTMLAttributes<HTMLCanvasElement> & {
+		pageIdx: number;
+	};
+    export let pageIdx: number;
 
     let lineChart: AppendingLineChart;
 
@@ -15,7 +18,7 @@
 	let gy: SVGGElement;
 
     onMount(() => {
-    lineChart = new AppendingLineChart(d3.select("#linechart"),
+    lineChart = new AppendingLineChart(d3.select("#linechart"+String(pageIdx)),
         ["#888","#888"]);
         setupAxes();
     });
@@ -55,7 +58,7 @@
 	}
 </script>
 <div class="relative mb-4 ml-4">
-    <div id="linechart" {...$$restProps}></div>
+    <div id="linechart{pageIdx}" {...$$restProps}></div>
     <svg class="absolute inset-0 h-full w-full" overflow="visible">
         <g bind:this={gx} class="translate-y-60"></g>
         <g bind:this={gy}></g>
