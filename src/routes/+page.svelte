@@ -724,8 +724,20 @@
 												<div class="flex flex-col">
 													<FileInput
 														id="dataset-upload"
-														class="w-32"
+														class="w-64"
 														bind:files={datasetUploadFiles}
+													/>
+												</div>
+												<div class="flex flex-col">
+													<Input
+														placeholder = "Enter Image Width"
+														class="w-64"
+													/>
+												</div>
+												<div class="flex flex-col">
+													<Input
+														placeholder = "Enter Image Height"
+														class="w-64"
 													/>
 												</div>
 												{#if Object.entries($csvColumnConfigs).length > 0}
