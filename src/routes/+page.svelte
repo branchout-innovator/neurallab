@@ -608,6 +608,39 @@
 		}
 		return [testNum, Math.floor(input / testNum)];
 	}
+  let myData: Array<{ [key: string]: string | number }> | null = null;
+
+  function handleFileSelect(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target && typeof e.target.result === 'string') {
+          const csvData = e.target.result;
+          parseCSV(csvData);
+        }
+      };
+      reader.readAsText(file);
+    }
+  }
+  
+  function parseCSV(csvData: string): void {
+    const parsedData = d3.csvParse(csvData, (d) => {
+      return Object.keys(d).reduce((acc, key) => {
+        acc[key] = isNaN(+d[key]!) ? d[key] : +d[key]!;
+        return acc;
+      }, {} as { [key: string]: string | number });
+    });
+
+    myData = parsedData;
+    myDataIsReady();
+  }
+
+  function myDataIsReady(): void {
+    console.log(myData);
+	console.log("abc");
+  }
 </script>
 
 <svelte:head>
@@ -747,74 +780,70 @@
 								>
 								<Dialog.Content>
 									<Dialog.Header>
-										<Dialog.Title>Upload CSV Dataset</Dialog.Title>
-										<Dialog.Description class="flex flex-col gap-2">
-											<p>Upload a dataset from a .csv file.</p>
-											<div class="flex flex-col">
-												<FileInput
-													id="dataset-upload"
-													class="w-32"
-													bind:files={datasetUploadFiles}
-												/>
+									  <Dialog.Title>Upload CSV Dataset</Dialog.Title>
+									  <Dialog.Description class="flex flex-col gap-2">
+										<p>Upload a dataset from a .csv file.</p>
+										<div class="flex flex-col">
+										  <input type="file" id="dataset-upload" class="w-32" on:change={handleFileSelect} />
+										</div>
+										{#if myData}
+										  <p>Data has been successfully uploaded and parsed.</p>
+										  <!-- You can add more logic here to display or use the parsed data -->
+										{/if}
+										<!-- The rest of your logic for displaying columns and handling CSV configurations -->
+										{#if Object.entries($csvColumnConfigs).length > 0}
+										  {#if isImageDataset}
+											<div class="flex flex-col gap-2">
+											  <Label>Select Output Column</Label>
+											  <Command.Root>
+												<Command.Input placeholder="Search output column..." />
+												<Command.List>
+												  <Command.Empty>No results found.</Command.Empty>
+												  {#each Object.keys($csvColumnConfigs).filter((col) => !col.includes('x')) as column}
+													<Command.Item on:click={() => (outputColumn = column)}>
+													  {column}
+													</Command.Item>
+												  {/each}
+												</Command.List>
+											  </Command.Root>
 											</div>
-											{#if Object.entries($csvColumnConfigs).length > 0}
-												{#if isImageDataset}
-													<div class="flex flex-col gap-2">
-														<Label>Select Output Column</Label>
-														<Command.Root>
-															<Command.Input placeholder="Search output column..." />
-															<Command.List>
-																<Command.Empty>No results found.</Command.Empty>
-																{#each Object.keys($csvColumnConfigs).filter((col) => !col.includes('x')) as column}
-																	<Command.Item onSelect={() => (outputColumn = column)}>
-																		{column}
-																	</Command.Item>
-																{/each}
-															</Command.List>
-														</Command.Root>
-													</div>
-												{:else}
-													<Table.Root>
-														<Table.Header>
-															<Table.Row>
-																<Table.Head class="flex-grow">Column Name</Table.Head>
-															</Table.Row>
-														</Table.Header>
-														{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
-															<Table.Row>
-																<Table.Cell class="font-medium">{column}</Table.Cell>
-																<RadioGroup.Root
-																	bind:value={$csvColumnConfigs[column].isLabel}
-																	asChild
-																>
-																	<Table.Cell>
-																		<div class="flex items-center space-x-2">
-																			<RadioGroup.Item value="false" id={`feature-${column}`}
-																			></RadioGroup.Item>
-																			<Label for={`feature-${column}`}>Input</Label>
-																		</div>
-																	</Table.Cell>
-																	<Table.Cell>
-																		<div class="flex items-center space-x-2">
-																			<RadioGroup.Item value="true" id={`label-${column}`}
-																			></RadioGroup.Item>
-																			<Label for={`label-${column}`}>Output</Label>
-																		</div>
-																	</Table.Cell>
-																</RadioGroup.Root>
-															</Table.Row>
-														{/each}
-													</Table.Root>
-													{#if !hasLabel}
-														<p class="font-medium text-foreground">
-															Choose at least one column to use as output.
-														</p>
-													{/if}
-												{/if}
+										  {:else}
+											<Table.Root>
+											  <Table.Header>
+												<Table.Row>
+												  <Table.Head class="flex-grow">Column Name</Table.Head>
+												</Table.Row>
+											  </Table.Header>
+											  {#each Object.entries($csvColumnConfigs) as [column, config] (column)}
+												<Table.Row>
+												  <Table.Cell class="font-medium">{column}</Table.Cell>
+												  <RadioGroup.Root bind:value={$csvColumnConfigs[column].isLabel} asChild>
+													<Table.Cell>
+													  <div class="flex items-center space-x-2">
+														<RadioGroup.Item value="false" id={`feature-${column}`}></RadioGroup.Item>
+														<Label for={`feature-${column}`}>Input</Label>
+													  </div>
+													</Table.Cell>
+													<Table.Cell>
+													  <div class="flex items-center space-x-2">
+														<RadioGroup.Item value="true" id={`label-${column}`}></RadioGroup.Item>
+														<Label for={`label-${column}`}>Output</Label>
+													  </div>
+													</Table.Cell>
+												  </RadioGroup.Root>
+												</Table.Row>
+											  {/each}
+											</Table.Root>
+											{#if !hasLabel}
+											  <p class="font-medium text-foreground">
+												Choose at least one column to use as output.
+											  </p>
 											{/if}
-										</Dialog.Description>
+										  {/if}
+										{/if}
+									  </Dialog.Description>
 									</Dialog.Header>
-								</Dialog.Content>
+								  </Dialog.Content>
 							</Dialog.Root>
 						</div>
 						<div class="flex flex-col gap-2">
@@ -924,10 +953,6 @@
 										{layer}
 										index={i}
 										tfLayer={tfModel.layers[i]}
-										{domain}
-										{range}
-										{columnNames}
-										{currentExample}
 										{domain}
 										{range}
 										{columnNames}
