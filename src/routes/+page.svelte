@@ -730,7 +730,6 @@
 							<div>
 								<ThemeToggle></ThemeToggle>
 							</div>
-							<br />
 							<div class="grid w-1/3 grid-cols-2 items-center">
 								<div>
 									<Label class="flex gap-2 text-xs">Hardware</Label>
@@ -757,6 +756,7 @@
 										max={5}
 										class="w-24"
 									/>
+									<br>
 								</div>
 							</div>
 							<br />
