@@ -18,7 +18,9 @@
 	<h5 class="mb-9 text-sm">&nbsp;</h5>
 	{#each labels as feature}
 		<div class="flex flex-row items-center">
-			<div class="flex items-center justify-start rounded bg-muted px-2 py-1 font-medium">
+			<div
+				class="flex items-center justify-start text-nowrap rounded bg-muted px-2 py-1 font-medium"
+			>
 				<span class="text-xs">{feature.name + (feature.value ? `: ${feature.value}` : '')}</span>
 			</div>
 		</div>

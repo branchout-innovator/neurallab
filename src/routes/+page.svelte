@@ -189,7 +189,11 @@
 		}
 		$model.layers = [...$model.layers, layer];
 		if ($model.layers.length === 1) {
-			$model.layers[0].inputShape = [$featureCount];
+			if ($model.layers[0].type === 'dense') {
+				$model.layers[0].inputShape = [$featureCount];
+			} else if (['conv2d', 'maxpooling', 'flatten'].includes($model.layers[0].type)) {
+				$model.layers[0].inputShape = [imageWidth, imageHeight, imageChannels]
+			}
 		}
 		console.log($model.layers);
 		refreshModel();
@@ -255,8 +259,7 @@
 				$sampleDomain.x,
 				$sampleDomain.y
 			);
-		}
-		else {
+		} else {
 			$dataset.take(1).forEachAsync(async (e) => {
 				if (!tfModel) return;
 				currentExample = e as { xs: number[]; ys: number[] };
@@ -455,7 +458,7 @@
 					if (column === outputColumn) {
 						config[column] = { isLabel: true };
 						hasLabel = true;
-					} else if (!column.includes('x')) {
+					} else {
 						config[column] = { isLabel: false };
 						$featureCount++;
 					}
@@ -471,6 +474,8 @@
 					}
 				}
 			}
+
+			[imageWidth, imageHeight] = getClosestFactors($featureCount);
 
 			if (hasLabel) {
 				const result = await loadUploadedCsv(datasetUploadFiles[0], config);
@@ -588,8 +593,20 @@
 	$: updateTFModel($model);
 	let losscardVisible = 0;
 	function displayLoss() {
-		losscardVisible = 1-losscardVisible;
-		d3.select("#losscard").style("visibility", ["hidden", "visible"][losscardVisible]);
+		losscardVisible = 1 - losscardVisible;
+		d3.select('#losscard').style('visibility', ['hidden', 'visible'][losscardVisible]);
+	}
+
+	let imageWidth = 0;
+	let imageHeight = 0;
+	let imageChannels = 1
+
+	function getClosestFactors(input: number): [number, number] {
+		let testNum = Math.floor(Math.sqrt(input));
+		while (Math.abs(input % testNum) < 0.000001) {
+			testNum--;
+		}
+		return [testNum, Math.floor(input / testNum)];
 	}
 </script>
 
@@ -728,18 +745,24 @@
 														bind:files={datasetUploadFiles}
 													/>
 												</div>
-												<div class="flex flex-col">
 													<Input
-														placeholder = "Enter Image Width"
+														placeholder="Enter Image Width"
 														class="w-64"
+														type="number"
+														bind:value={imageWidth}
 													/>
-												</div>
-												<div class="flex flex-col">
 													<Input
-														placeholder = "Enter Image Height"
+														placeholder="Enter Image Height"
 														class="w-64"
+														type="number"
+														bind:value={imageHeight}
 													/>
-												</div>
+													<Input
+														placeholder="Enter Image Channels"
+														class="w-64"
+														type="number"
+														bind:value={imageChannels}
+													/>
 												{#if Object.entries($csvColumnConfigs).length > 0}
 													{#if isImageDataset}
 														<div class="flex flex-col gap-2">
@@ -861,10 +884,18 @@
 							<Button on:click={displayLoss}>
 								<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
 							</Button>
-							<div id = "losscard" class="h-fit max-h-none w-fit max-w-none absolute translate-y-16 z-50" style="visibility:hidden">
+							<div
+								id="losscard"
+								class="absolute z-50 h-fit max-h-none w-fit max-w-none translate-y-16"
+								style="visibility:hidden"
+							>
 								<Card.Root class="pt-6">
 									<Card.Content>
-										<Losschart pageIdx = {1} class="h-60 w-80 rounded-[0.15rem]" bind:this={losschart}/>
+										<Losschart
+											pageIdx={1}
+											class="h-60 w-80 rounded-[0.15rem]"
+											bind:this={losschart}
+										/>
 									</Card.Content>
 								</Card.Root>
 							</div>
@@ -968,10 +999,10 @@
 										{layer}
 										index={i}
 										tfLayer={tfModel.layers[i]}
-										domain={domain}
-										range={range}
-										columnNames={columnNames}
-										currentExample={currentExample}
+										{domain}
+										{range}
+										{columnNames}
+										{currentExample}
 										{dataset}
 									></svelte:component>
 									{#if i < $model.layers.length - 1}
@@ -1001,7 +1032,6 @@
 					<LLM />
 				</Tabs.Content>
 			</Tabs.Root>
-			
 		</div>
 	</Resizable.Pane>
 	<!--</div>-->
