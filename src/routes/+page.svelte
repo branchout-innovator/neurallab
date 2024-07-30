@@ -760,14 +760,50 @@
 								</div>
 							</div>
 							<br />
-							<div class="flex flex-1 items-start space-x-2">
-								<br />
-								Choose Mode Here
-								<div>
-									<br />
+							<div class="space-y-1">
+								<div class="flex flex-col gap-2">
+									<Label class="flex gap-2 text-xs">
+										<Activity class="h-4 w-4"></Activity>
+										Activation Function
+									</Label>
+									<Select.Root bind:selected={selectedActivation}>
+										<Select.Trigger class="w-[180px]">
+											<Select.Value></Select.Value>
+										</Select.Trigger>
+										<Select.Content>
+											<Select.Item value="relu">ReLU</Select.Item>
+											<Select.Item value="sigmoid">Sigmoid</Select.Item>
+											<Select.Item value="tanh">Tanh</Select.Item>
+											<Select.Item value="softmax">Softmax</Select.Item>
+										</Select.Content>
+									</Select.Root>
 								</div>
-								<ThemeToggle></ThemeToggle>
 							</div>
+							<br />
+							<div>
+								Domain: left bound: {domain[0] - 5}
+								right bound: {domain[1] - 5}
+								<Slider max="10" step="1" bind:value={domain} range slider />
+								Range: bottom bound: {range[0] - 5}
+								top bound: {range[1] - 5}
+								<Slider max="10" step="1" bind:value={range} range slider />
+								<!-- <Button on:click={heatmap.changeZoom(domain, range)}>Change Axes</Button> -->
+							</div>
+							<!-- <div class="flex flex-col gap-2">
+								<Label class="flex gap-2 text-xs">Input</Label>
+								<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
+							</div>
+							<div class="flex flex-col gap-2">
+								<Label class="flex gap-2 text-xs">Predicted Value</Label>
+								<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
+							</div> -->
+							<!--<div class="flex flex-col gap-2">
+									<div></div>
+								</div>
+								<div class="flex flex-col gap-2"></div>
+								<div class="flex-1"></div>
+								<div class="flex flex-col gap-2"></div>-->
+							<br />
 						</Card.Content>
 					</Card.Root>
 				</Tabs.Content>
@@ -776,8 +812,7 @@
 						<div class="space-y-1">
 							<Dialog.Root>
 								<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
-									>Upload Dataset</Dialog.Trigger
-								>
+									>Upload Dataset</Dialog.Trigger>
 								<Dialog.Content>
 									<Dialog.Header>
 									  <Dialog.Title>Upload CSV Dataset</Dialog.Title>
