@@ -730,7 +730,6 @@
 							<div>
 								<ThemeToggle></ThemeToggle>
 							</div>
-							<br />
 							<div class="grid w-1/3 grid-cols-2 items-center">
 								<div>
 									<Label class="flex gap-2 text-xs">Hardware</Label>
@@ -757,17 +756,26 @@
 										max={5}
 										class="w-24"
 									/>
+									<br>
+								</div>
+								<div class="flex flex-col gap-2">
+									<Label class="flex gap-2 text-xs">
+										<Activity class="h-4 w-4"></Activity>
+										Activation Function
+									</Label>
+									<Select.Root bind:selected={selectedActivation}>
+										<Select.Trigger class="w-[180px]">
+											<Select.Value></Select.Value>
+										</Select.Trigger>
+										<Select.Content>
+											<Select.Item value="relu">ReLU</Select.Item>
+											<Select.Item value="sigmoid">Sigmoid</Select.Item>
+											<Select.Item value="tanh">Tanh</Select.Item>
+										</Select.Content>
+									</Select.Root>
 								</div>
 							</div>
 							<br />
-							<div class="flex flex-1 items-start space-x-2">
-								<br />
-								Choose Mode Here
-								<div>
-									<br />
-								</div>
-								<ThemeToggle></ThemeToggle>
-							</div>
 						</Card.Content>
 					</Card.Root>
 				</Tabs.Content>
