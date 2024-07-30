@@ -13,15 +13,15 @@ type DataPoint = {
 export class AppendingLineChart {
   
   private numLines: number;
-  private data: DataPoint[] = [];
+  public data: DataPoint[] = [];
   private svg;
   private xScale;
   private yScale;
   private paths;
   private lineColors: string[];
 
-  private minY = Number.MAX_VALUE;
-  private maxY = Number.MIN_VALUE;
+  public minY = Number.MAX_VALUE;
+  public maxY = Number.MIN_VALUE;
 
   constructor(container: d3.Selection<HTMLElement, unknown, HTMLElement, any>, lineColors: string[]) {
     this.lineColors = lineColors;

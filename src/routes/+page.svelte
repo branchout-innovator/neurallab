@@ -19,7 +19,7 @@
 		type FlattenLayer
 	} from '$lib/structures';
 	import * as tf from '@tensorflow/tfjs';
-	import { onMount, setContext, SvelteComponent } from 'svelte';
+	import { onMount, setContext, SvelteComponent, getContext } from 'svelte';
 	import DenseLayerVis from '$lib/ui/dense-layer-vis.svelte';
 	import ConvVis from '$lib/ui/conv-vis.svelte';
 	import MaxPoolingVis from '$lib/ui/max-pooling-vis.svelte';
@@ -69,6 +69,7 @@
 	import Slider from '@bulatdashiev/svelte-slider';
 	import Losschart from '$lib/ui/losschart.svelte';
 	import * as HoverCard from '$lib/components/ui/hover-card';
+	import LLM from '$lib/ui/llm.svelte';
 
 	let isImageDataset = false;
 	let outputColumn = '';
@@ -92,7 +93,6 @@
 	let value = 0;
 	let losschart: Losschart;
 	let currentloss = 0;
-	let prevPoints: number[] = [];
 	let domain = [2, 8];
 	let range = [2, 8];
 	onMount(() => {
@@ -189,7 +189,11 @@
 		}
 		$model.layers = [...$model.layers, layer];
 		if ($model.layers.length === 1) {
-			$model.layers[0].inputShape = [$featureCount];
+			if ($model.layers[0].type === 'dense') {
+				$model.layers[0].inputShape = [$featureCount];
+			} else if (['conv2d', 'maxpooling', 'flatten'].includes($model.layers[0].type)) {
+				$model.layers[0].inputShape = [imageWidth, imageHeight, imageChannels]
+			}
 		}
 		console.log($model.layers);
 		refreshModel();
@@ -248,14 +252,14 @@
 		if (!$model.layers[0]) return;
 		if (isEqual($model.layers[0]?.inputShape, [1]))
 			$sampledOutputs = await updateSampledOutputs1D(tfModel, SAMPLE_DENSITY_1D, $sampleDomain.x);
-		else if (isEqual($model.layers[0]?.inputShape, [2]))
+		else if (isEqual($model.layers[0]?.inputShape, [2])) {
 			$sampledOutputs = await updateSampledOutputs(
 				tfModel,
 				SAMPLE_DENSITY_2D,
 				$sampleDomain.x,
 				$sampleDomain.y
 			);
-		else {
+		} else {
 			$dataset.take(1).forEachAsync(async (e) => {
 				if (!tfModel) return;
 				currentExample = e as { xs: number[]; ys: number[] };
@@ -273,8 +277,11 @@
 		currentEpoch = 0;
 		tfModel = createTFModel($model);
 		currentloss = 0;
-		prevPoints = [];
 		sampleOutputs();
+		losschart?.clear();
+		if (losscardVisible == 1) {
+			displayLoss();
+		}
 	};
 
 	const trainModel = async () => {
@@ -306,12 +313,15 @@
 						if (epoch % 5 === 0) tfModel = tfModel;
 						try {
 							await sampleOutputs();
+							sampleDomain.set({
+								x: [domain[0] - 5, domain[1] - 5],
+								y: [range[0] - 5, range[1] - 5]
+							});
 						} catch (e) {
 							console.error('Error while sampling outputs: ', e);
 						}
 						if (logs) {
 							currentloss = Math.round(logs.loss * 1000) / 1000;
-							prevPoints[prevPoints.length] = logs.loss;
 							if (losschart) {
 								losschart.updateGraph(logs.loss);
 							}
@@ -372,6 +382,7 @@
 
 	const updateTFModel = async (model: SequentialModel) => {
 		if (model.layers.length === 0) return;
+		refreshModel();
 		if (!tfModel) {
 			tfModel = createTFModel(model);
 		} else {
@@ -379,7 +390,6 @@
 			const newModel = createTFModel(model);
 			tfModel = newModel;
 		}
-		refreshModel();
 		if (browser) {
 			try {
 				await sampleOutputs();
@@ -448,7 +458,7 @@
 					if (column === outputColumn) {
 						config[column] = { isLabel: true };
 						hasLabel = true;
-					} else if (!column.includes('x')) {
+					} else {
 						config[column] = { isLabel: false };
 						$featureCount++;
 					}
@@ -464,6 +474,8 @@
 					}
 				}
 			}
+
+			[imageWidth, imageHeight] = getClosestFactors($featureCount);
 
 			if (hasLabel) {
 				const result = await loadUploadedCsv(datasetUploadFiles[0], config);
@@ -579,6 +591,23 @@
 		return accumulator + a.length;
 	}
 	$: updateTFModel($model);
+	let losscardVisible = 0;
+	function displayLoss() {
+		losscardVisible = 1 - losscardVisible;
+		d3.select('#losscard').style('visibility', ['hidden', 'visible'][losscardVisible]);
+	}
+
+	let imageWidth = 0;
+	let imageHeight = 0;
+	let imageChannels = 1
+
+	function getClosestFactors(input: number): [number, number] {
+		let testNum = Math.floor(Math.sqrt(input));
+		while (Math.abs(input % testNum) < 0.000001) {
+			testNum--;
+		}
+		return [testNum, Math.floor(input / testNum)];
+	}
 </script>
 
 <svelte:head>
@@ -650,9 +679,10 @@
 		<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
 			<!-- Controls (header) -->
 			<Tabs.Root value="NL" class="h-auto w-full">
-				<Tabs.List class="grid w-full grid-cols-2">
+				<Tabs.List class="grid w-full grid-cols-3">
 					<Tabs.Trigger value="NL">NeuralLab</Tabs.Trigger>
 					<Tabs.Trigger value="settings">Settings</Tabs.Trigger>
+					<Tabs.Trigger value="LLM">LLM</Tabs.Trigger>
 				</Tabs.List>
 				<Tabs.Content value="settings" class="h-full">
 					<Card.Root class="h-full">
@@ -696,37 +726,6 @@
 									/>
 								</div>
 							</div>
-							<div class="flex flex-row flex-wrap items-end gap-4"></div>
-							<div>
-								<Label class="flex gap-2 text-xs">
-									<Activity class="h-4 w-4"></Activity>
-									Activation Function
-								</Label>
-							</div>
-							<br />
-							<div>
-								Domain: left bound: {domain[0] - 5}
-								right bound: {domain[1] - 5}
-								<Slider max="10" step="1" bind:value={domain} range slider />
-								Range: bottom bound: {range[0] - 5}
-								top bound: {range[1] - 5}
-								<Slider max="10" step="1" bind:value={range} range slider />
-								<!-- <Button on:click={heatmap.changeZoom(domain, range)}>Change Axes</Button> -->
-							</div>
-							<!-- <div class="flex flex-col gap-2">
-								<Label class="flex gap-2 text-xs">Input</Label>
-								<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
-							</div>
-							<div class="flex flex-col gap-2">
-								<Label class="flex gap-2 text-xs">Predicted Value</Label>
-								<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
-							</div> -->
-							<!--<div class="flex flex-col gap-2">
-									<div></div>
-								</div>
-								<div class="flex flex-col gap-2"></div>
-								<div class="flex-1"></div>
-								<div class="flex flex-col gap-2"></div>-->
 							<br />
 							<div class="flex flex-1 items-start space-x-2">
 								<br />
@@ -822,20 +821,24 @@
 							<Label class="flex gap-2 text-xs">
 								Current Loss: {currentloss}
 							</Label>
-							<HoverCard.Root>
-								<HoverCard.Trigger>
-									<Button>
-										<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
-									</Button>
-								</HoverCard.Trigger>
-								<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
-									<Losschart
-										{prevPoints}
-										class="h-56 w-80 rounded-[0.15rem]"
-										bind:this={losschart}
-									/>
-								</HoverCard.Content>
-							</HoverCard.Root>
+							<Button on:click={displayLoss}>
+								<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
+							</Button>
+							<div
+								id="losscard"
+								class="absolute z-50 h-fit max-h-none w-fit max-w-none translate-y-16"
+								style="visibility:hidden"
+							>
+								<Card.Root class="pt-6">
+									<Card.Content>
+										<Losschart
+											pageIdx={1}
+											class="h-60 w-80 rounded-[0.15rem]"
+											bind:this={losschart}
+										/>
+									</Card.Content>
+								</Card.Root>
+							</div>
 						</div>
 						<!-- <div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">Input</Label>
@@ -845,9 +848,7 @@
 							<Label class="flex gap-2 text-xs">Predicted Value</Label>
 							<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
 						</div> -->
-						<div class="flex flex-col gap-2">
-							<div></div>
-						</div>
+						<div class="flex flex-col gap-2"></div>
 						<div class="flex flex-col gap-2"></div>
 						<div class="flex-1"></div>
 						<div class="flex flex-col gap-2">
@@ -927,6 +928,10 @@
 										{range}
 										{columnNames}
 										{currentExample}
+										{domain}
+										{range}
+										{columnNames}
+										{currentExample}
 										{dataset}
 									></svelte:component>
 									{#if i < $model.layers.length - 1}
@@ -951,6 +956,9 @@
 							{/if}
 						</div>
 					</div>
+				</Tabs.Content>
+				<Tabs.Content value="LLM" class="h-full">
+					<LLM />
 				</Tabs.Content>
 			</Tabs.Root>
 		</div>

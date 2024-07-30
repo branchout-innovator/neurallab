@@ -120,6 +120,21 @@ export const createTFModel = (model: SequentialModel): tf.Sequential => {
 	return tfModel;
 };
 
+export const createRNNModel = (indim: number, batch: number, slen: number): tf.Sequential => {
+	const tfModel = tf.sequential();
+	tfModel.add(tf.layers.dropout({rate: 0.2, inputShape: [slen, indim], batchSize: batch, dtype: 'float32'}))
+	tfModel.add(tf.layers.lstm({units: 64, returnSequences: true}))
+	tfModel.add(tf.layers.dropout({rate: 0.2}))
+	tfModel.add(tf.layers.flatten());
+	tfModel.add(tf.layers.dense({units: indim, activation: "softmax"}));
+	tfModel.compile({
+		loss: "categoricalCrossentropy",
+		optimizer: tf.train.adam()
+	});
+
+	return tfModel;
+};
+
 export const loadUploadedCsv = async (
 	csvFile: Blob | MediaSource,
 	columnConfigs: {
