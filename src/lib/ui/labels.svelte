@@ -31,14 +31,18 @@
 			$sampledOutputs[tfLayer.name] && $sampledOutputs[tfLayer.name].values[nodeIndex]}
 		<div class="flex flex-row items-center">
 			<div class="w-6 border-b border-muted-foreground"></div>
-			<div class="flex flex-row items-start justify-center rounded bg-muted px-2 py-1 font-medium">
+			<div
+				class="flex flex-row items-start justify-center text-nowrap rounded bg-muted px-2 py-1 font-medium"
+			>
 				{#if feature.value && predictionVal}
-					<span class="text-xs">Predicted {feature.name}: {predictionVal.toFixed(countDecimals(feature.value))}</span>
+					<span class="text-xs"
+						>Predicted {feature.name}: {predictionVal.toFixed(countDecimals(feature.value))}</span
+					>
 				{:else}
 					<span class="text-xs">{feature.name}</span>
 				{/if}
 			</div>
-			<div class="ml-2">
+			<div class="ml-2 text-nowrap">
 				{#if feature.value}
 					<span class="text-xs">Actual {feature.name}: {feature.value}</span>
 				{/if}

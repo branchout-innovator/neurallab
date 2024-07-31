@@ -21,7 +21,7 @@ export const getNodeYPositions = (layer: Layer): number[] => {
 		}
 		// Add more cases for other layer types as needed
 		default:
-			throw new Error(`Unsupported layer type: ${layer.type}`);
+			throw new Error(`TODO: implement layer type: ${layer.type} in connections-vis.ts`);
 	}
 };
 

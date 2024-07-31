@@ -260,8 +260,7 @@
 				$sampleDomain.x,
 				$sampleDomain.y
 			);
-		}
-		else {
+		} else {
 			$dataset.take(1).forEachAsync(async (e) => {
 				if (!tfModel) return;
 				currentExample = e as { xs: number[]; ys: number[] };
@@ -459,7 +458,7 @@
 					if (column === outputColumn) {
 						config[column] = { isLabel: true };
 						hasLabel = true;
-					} else if (!column.includes('x')) {
+					} else {
 						config[column] = { isLabel: false };
 						$featureCount++;
 					}
@@ -475,6 +474,8 @@
 					}
 				}
 			}
+
+			[imageWidth, imageHeight] = getClosestFactors($featureCount);
 
 			if (hasLabel) {
 				const result = await loadUploadedCsv(datasetUploadFiles[0], config);
@@ -592,9 +593,54 @@
 	$: updateTFModel($model);
 	let losscardVisible = 0;
 	function displayLoss() {
-		losscardVisible = 1-losscardVisible;
-		d3.select("#losscard").style("visibility", ["hidden", "visible"][losscardVisible]);
+		losscardVisible = 1 - losscardVisible;
+		d3.select('#losscard').style('visibility', ['hidden', 'visible'][losscardVisible]);
 	}
+
+	let imageWidth = 0;
+	let imageHeight = 0;
+	let imageChannels = 1
+
+	function getClosestFactors(input: number): [number, number] {
+		let testNum = Math.floor(Math.sqrt(input));
+		while (Math.abs(input % testNum) < 0.000001) {
+			testNum--;
+		}
+		return [testNum, Math.floor(input / testNum)];
+	}
+  let myData: Array<{ [key: string]: string | number }> | null = null;
+
+  function handleFileSelect(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target && typeof e.target.result === 'string') {
+          const csvData = e.target.result;
+          parseCSV(csvData);
+        }
+      };
+      reader.readAsText(file);
+    }
+  }
+  
+  function parseCSV(csvData: string): void {
+    const parsedData = d3.csvParse(csvData, (d) => {
+      return Object.keys(d).reduce((acc, key) => {
+        acc[key] = isNaN(+d[key]!) ? d[key] : +d[key]!;
+        return acc;
+      }, {} as { [key: string]: string | number });
+    });
+
+    myData = parsedData;
+    myDataIsReady();
+  }
+
+  function myDataIsReady(): void {
+    console.log(myData);
+	console.log("abc");
+  }
 </script>
 
 <svelte:head>
@@ -684,7 +730,6 @@
 							<div>
 								<ThemeToggle></ThemeToggle>
 							</div>
-							<br />
 							<div class="grid w-1/3 grid-cols-2 items-center">
 								<div>
 									<Label class="flex gap-2 text-xs">Hardware</Label>
@@ -711,86 +756,28 @@
 										max={5}
 										class="w-24"
 									/>
+									<br>
 								</div>
 							</div>
 							<br />
 							<div class="space-y-1">
-								<Label class="flex gap-2 text-xs">Choose Dataset</Label>
-								<Dialog.Root>
-									<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
-										>Upload CSV</Dialog.Trigger
-									>
-									<Dialog.Content>
-										<Dialog.Header>
-											<Dialog.Title>Upload CSV Dataset</Dialog.Title>
-											<Dialog.Description class="flex flex-col gap-2">
-												<p>Upload a dataset from a .csv file.</p>
-												<div class="flex flex-col">
-													<FileInput
-														id="dataset-upload"
-														class="w-32"
-														bind:files={datasetUploadFiles}
-													/>
-												</div>
-												{#if Object.entries($csvColumnConfigs).length > 0}
-													{#if isImageDataset}
-														<div class="flex flex-col gap-2">
-															<Label>Select Output Column</Label>
-															<Command.Root>
-																<Command.Input placeholder="Search output column..." />
-																<Command.List>
-																	<Command.Empty>No results found.</Command.Empty>
-																	{#each Object.keys($csvColumnConfigs).filter((col) => !col.includes('x')) as column}
-																		<Command.Item onSelect={() => (outputColumn = column)}>
-																			{column}
-																		</Command.Item>
-																	{/each}
-																</Command.List>
-															</Command.Root>
-														</div>
-													{:else}
-														<Table.Root>
-															<Table.Header>
-																<Table.Row>
-																	<Table.Head class="flex-grow">Column Name</Table.Head>
-																</Table.Row>
-															</Table.Header>
-															{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
-																<Table.Row>
-																	<Table.Cell class="font-medium">{column}</Table.Cell>
-																	<RadioGroup.Root
-																		bind:value={$csvColumnConfigs[column].isLabel}
-																		asChild
-																	>
-																		<Table.Cell>
-																			<div class="flex items-center space-x-2">
-																				<RadioGroup.Item value="false" id={`feature-${column}`}
-																				></RadioGroup.Item>
-																				<Label for={`feature-${column}`}>Input</Label>
-																			</div>
-																		</Table.Cell>
-																		<Table.Cell>
-																			<div class="flex items-center space-x-2">
-																				<RadioGroup.Item value="true" id={`label-${column}`}
-																				></RadioGroup.Item>
-																				<Label for={`label-${column}`}>Output</Label>
-																			</div>
-																		</Table.Cell>
-																	</RadioGroup.Root>
-																</Table.Row>
-															{/each}
-														</Table.Root>
-														{#if !hasLabel}
-															<p class="font-medium text-foreground">
-																Choose at least one column to use as output.
-															</p>
-														{/if}
-													{/if}
-												{/if}
-											</Dialog.Description>
-										</Dialog.Header>
-									</Dialog.Content>
-								</Dialog.Root>
+								<div class="flex flex-col gap-2">
+									<Label class="flex gap-2 text-xs">
+										<Activity class="h-4 w-4"></Activity>
+										Activation Function
+									</Label>
+									<Select.Root bind:selected={selectedActivation}>
+										<Select.Trigger class="w-[180px]">
+											<Select.Value></Select.Value>
+										</Select.Trigger>
+										<Select.Content>
+											<Select.Item value="relu">ReLU</Select.Item>
+											<Select.Item value="sigmoid">Sigmoid</Select.Item>
+											<Select.Item value="tanh">Tanh</Select.Item>
+											<Select.Item value="softmax">Softmax</Select.Item>
+										</Select.Content>
+									</Select.Root>
+								</div>
 							</div>
 							<br />
 							<div>
@@ -822,29 +809,77 @@
 				</Tabs.Content>
 				<Tabs.Content value="NL" class="h-full">
 					<div class="mb-3 flex flex-row flex-wrap items-end gap-4">
-						<div class="flex flex-col gap-2">
-							<Label class="flex gap-2 text-xs">
-								<Activity class="h-4 w-4"></Activity>
-								Activation Function
-							</Label>
-							<Select.Root bind:selected={selectedActivation}>
-								<Select.Trigger class="w-[180px]">
-									<Select.Value></Select.Value>
-								</Select.Trigger>
-								<Select.Content>
-									<Select.Item value="relu">ReLU</Select.Item>
-									<Select.Item value="sigmoid">Sigmoid</Select.Item>
-									<Select.Item value="tanh">Tanh</Select.Item>
-									<Select.Item value="softmax">Softmax</Select.Item>
-								</Select.Content>
-							</Select.Root>
-						</div>
-						<div class="flex flex-col gap-2">
-							<Label class="flex gap-2 text-xs">
-								<RefreshCw class="h-4 w-4"></RefreshCw>
-								Epochs
-							</Label>
-							<Input type="number" bind:value={epochs} placeholder="1000" min={1} class="w-24" />
+						<div class="space-y-1">
+							<Dialog.Root>
+								<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
+									>Upload Dataset</Dialog.Trigger>
+								<Dialog.Content>
+									<Dialog.Header>
+									  <Dialog.Title>Upload CSV Dataset</Dialog.Title>
+									  <Dialog.Description class="flex flex-col gap-2">
+										<p>Upload a dataset from a .csv file.</p>
+										<div class="flex flex-col">
+										  <input type="file" id="dataset-upload" class="w-32" on:change={handleFileSelect} />
+										</div>
+										{#if myData}
+										  <p>Data has been successfully uploaded and parsed.</p>
+										  <!-- You can add more logic here to display or use the parsed data -->
+										{/if}
+										<!-- The rest of your logic for displaying columns and handling CSV configurations -->
+										{#if Object.entries($csvColumnConfigs).length > 0}
+										  {#if isImageDataset}
+											<div class="flex flex-col gap-2">
+											  <Label>Select Output Column</Label>
+											  <Command.Root>
+												<Command.Input placeholder="Search output column..." />
+												<Command.List>
+												  <Command.Empty>No results found.</Command.Empty>
+												  {#each Object.keys($csvColumnConfigs).filter((col) => !col.includes('x')) as column}
+													<Command.Item on:click={() => (outputColumn = column)}>
+													  {column}
+													</Command.Item>
+												  {/each}
+												</Command.List>
+											  </Command.Root>
+											</div>
+										  {:else}
+											<Table.Root>
+											  <Table.Header>
+												<Table.Row>
+												  <Table.Head class="flex-grow">Column Name</Table.Head>
+												</Table.Row>
+											  </Table.Header>
+											  {#each Object.entries($csvColumnConfigs) as [column, config] (column)}
+												<Table.Row>
+												  <Table.Cell class="font-medium">{column}</Table.Cell>
+												  <RadioGroup.Root bind:value={$csvColumnConfigs[column].isLabel} asChild>
+													<Table.Cell>
+													  <div class="flex items-center space-x-2">
+														<RadioGroup.Item value="false" id={`feature-${column}`}></RadioGroup.Item>
+														<Label for={`feature-${column}`}>Input</Label>
+													  </div>
+													</Table.Cell>
+													<Table.Cell>
+													  <div class="flex items-center space-x-2">
+														<RadioGroup.Item value="true" id={`label-${column}`}></RadioGroup.Item>
+														<Label for={`label-${column}`}>Output</Label>
+													  </div>
+													</Table.Cell>
+												  </RadioGroup.Root>
+												</Table.Row>
+											  {/each}
+											</Table.Root>
+											{#if !hasLabel}
+											  <p class="font-medium text-foreground">
+												Choose at least one column to use as output.
+											  </p>
+											{/if}
+										  {/if}
+										{/if}
+									  </Dialog.Description>
+									</Dialog.Header>
+								  </Dialog.Content>
+							</Dialog.Root>
 						</div>
 						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">
@@ -853,10 +888,18 @@
 							<Button on:click={displayLoss}>
 								<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
 							</Button>
-							<div id = "losscard" class="h-fit max-h-none w-fit max-w-none absolute translate-y-16 z-50" style="visibility:hidden">
+							<div
+								id="losscard"
+								class="absolute z-50 h-fit max-h-none w-fit max-w-none translate-y-16"
+								style="visibility:hidden"
+							>
 								<Card.Root class="pt-6">
 									<Card.Content>
-										<Losschart pageIdx = {1} class="h-60 w-80 rounded-[0.15rem]" bind:this={losschart}/>
+										<Losschart
+											pageIdx={1}
+											class="h-60 w-80 rounded-[0.15rem]"
+											bind:this={losschart}
+										/>
 									</Card.Content>
 								</Card.Root>
 							</div>
@@ -872,21 +915,6 @@
 						<div class="flex flex-col gap-2"></div>
 						<div class="flex flex-col gap-2"></div>
 						<div class="flex-1"></div>
-						<div class="flex flex-col gap-2">
-							<Label class="flex gap-2 text-xs">Hardware</Label>
-							<Tooltip.Root>
-								<Tooltip.Trigger asChild>
-									<div class="flex h-9 flex-row flex-nowrap items-center space-x-2">
-										<Label for="hardware-backend">CPU</Label>
-										<Switch id="hardware-backend" bind:checked={useGPU} />
-										<Label for="hardware-backend">GPU</Label>
-									</div>
-								</Tooltip.Trigger>
-								<Tooltip.Content class="max-w-52">
-									GPU is recommended for large models but slower for small models.
-								</Tooltip.Content>
-							</Tooltip.Root>
-						</div>
 						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">Refresh</Label>
 							<Button on:click={refreshModel}>
@@ -962,10 +990,10 @@
 										model={tfModel}
 										layerName={tfModel.layers[i].name}
 										tfLayer={tfModel.layers[i]}
-										domain={domain}
-										range={range}
-										columnNames={columnNames}
-										currentExample={currentExample}
+										{domain}
+										{range}
+										{columnNames}
+										{currentExample}
 										{dataset}
 									></svelte:component>
 									{#if i < $model.layers.length - 1}
@@ -995,7 +1023,6 @@
 					<LLM />
 				</Tabs.Content>
 			</Tabs.Root>
-			
 		</div>
 	</Resizable.Pane>
 	<!--</div>-->
