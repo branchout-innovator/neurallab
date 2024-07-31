@@ -122,13 +122,15 @@ export const createTFModel = (model: SequentialModel): tf.Sequential => {
 
 export const createRNNModel = (indim: number, batch: number, slen: number): tf.Sequential => {
 	const tfModel = tf.sequential();
-	tfModel.add(tf.layers.dropout({rate: 0.2, inputShape: [slen, indim], batchSize: batch, dtype: 'float32'}))
-	tfModel.add(tf.layers.lstm({units: 64, returnSequences: true}))
-	tfModel.add(tf.layers.dropout({rate: 0.2}))
+	tfModel.add(
+		tf.layers.dropout({ rate: 0.2, inputShape: [slen, indim], batchSize: batch, dtype: 'float32' })
+	);
+	tfModel.add(tf.layers.lstm({ units: 64, returnSequences: true }));
+	tfModel.add(tf.layers.dropout({ rate: 0.2 }));
 	tfModel.add(tf.layers.flatten());
-	tfModel.add(tf.layers.dense({units: indim, activation: "softmax"}));
+	tfModel.add(tf.layers.dense({ units: indim, activation: 'softmax' }));
 	tfModel.compile({
-		loss: "categoricalCrossentropy",
+		loss: 'categoricalCrossentropy',
 		optimizer: tf.train.adam()
 	});
 
@@ -139,18 +141,24 @@ export const loadUploadedCsv = async (
 	csvFile: Blob | MediaSource,
 	columnConfigs: {
 		[key: string]: tf.data.ColumnConfig;
-	}
+	},
+	imageWidth?: number,
+	imageHeight?: number,
+	imageChannels?: number
 ) => {
 	const url = URL.createObjectURL(csvFile);
 
-	return await loadCsvDataset(url, columnConfigs);
+	return await loadCsvDataset(url, columnConfigs, imageWidth, imageHeight, imageChannels);
 };
 
 export async function loadCsvDataset(
 	url: string,
 	columnConfigs: {
 		[key: string]: tf.data.ColumnConfig;
-	}
+	},
+	imageWidth?: number,
+	imageHeight?: number,
+	imageChannels?: number
 ) {
 	const csvDataset = tf.data.csv(url, {
 		columnConfigs
@@ -163,7 +171,12 @@ export async function loadCsvDataset(
 		.map(({ xs, ys }) => {
 			// Convert xs(features) and ys(labels) from object form (keyed by
 			// column name) to array form.
-			return { xs: Object.values(xs), ys: Object.values(ys) };
+			let arrayXs: NestedArray = Object.values(xs) as number[];
+			const arrayYs = Object.values(ys) as number[];
+			if (imageWidth && imageHeight && imageChannels) {
+				arrayXs = tf.reshape(arrayXs, [imageWidth, imageHeight, imageChannels]).arraySync();
+			}
+			return { xs: arrayXs, ys: arrayYs };
 		});
 	// .batch(64);
 

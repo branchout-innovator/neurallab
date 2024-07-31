@@ -74,22 +74,6 @@
 	let isImageDataset = false;
 	let outputColumn = '';
 
-	$: {
-		if (datasetUploadFiles && datasetUploadFiles.length > 0) {
-			(async () => {
-				$csvColumnConfigs = {};
-				const { columns } = d3.csvParse(await datasetUploadFiles[0].text());
-				isImageDataset = columns.length > 50;
-				console.log('image? ' + isImageDataset);
-				for (const column of columns) {
-					$csvColumnConfigs[column] = {
-						isLabel: 'false'
-					};
-				}
-			})();
-		}
-	}
-
 	let value = 0;
 	let losschart: Losschart;
 	let currentloss = 0;
@@ -192,7 +176,8 @@
 			if ($model.layers[0].type === 'dense') {
 				$model.layers[0].inputShape = [$featureCount];
 			} else if (['conv2d', 'maxpooling', 'flatten'].includes($model.layers[0].type)) {
-				$model.layers[0].inputShape = [imageWidth, imageHeight, imageChannels]
+				$model.layers[0].inputShape = [imageWidth, imageHeight, imageChannels];
+				console.log([imageWidth, imageHeight, imageChannels]);
 			}
 		}
 		console.log($model.layers);
@@ -263,6 +248,7 @@
 			$dataset.take(1).forEachAsync(async (e) => {
 				if (!tfModel) return;
 				currentExample = e as { xs: number[]; ys: number[] };
+				console.log('current example: ', currentExample);
 				if (currentExample != null)
 					$sampledOutputs = await updateSampledOutputsSingle(tfModel, currentExample.xs);
 			});
@@ -444,7 +430,10 @@
 		datasetUploadFiles: FileList,
 		csvColumnConfigs: {
 			[key: string]: { isLabel: 'true' | 'false' };
-		}
+		},
+		imageWidth?: number,
+		imageHeight?: number,
+		imageChannels?: number
 	) => {
 		if (datasetUploadFiles && datasetUploadFiles.length) {
 			const config: {
@@ -452,6 +441,9 @@
 			} = {};
 			hasLabel = false;
 			$featureCount = 0;
+
+			isImageDataset = Object.entries($csvColumnConfigs).length > 50;
+			console.log('image? ' + isImageDataset);
 
 			if (isImageDataset) {
 				for (const column in $csvColumnConfigs) {
@@ -478,7 +470,13 @@
 			[imageWidth, imageHeight] = getClosestFactors($featureCount);
 
 			if (hasLabel) {
-				const result = await loadUploadedCsv(datasetUploadFiles[0], config);
+				const result = await loadUploadedCsv(
+					datasetUploadFiles[0],
+					config,
+					imageWidth,
+					imageHeight,
+					imageChannels
+				);
 				$dataset = result.dataset;
 				columnNames = result.columnNames;
 				if ($model.layers[0]) {
@@ -491,7 +489,10 @@
 		}
 	};
 
-	$: updateDataset(datasetUploadFiles, $csvColumnConfigs);
+	$: {
+		outputColumn;
+		updateDataset(datasetUploadFiles, $csvColumnConfigs, imageWidth, imageHeight, imageChannels);
+	}
 
 	function pageLeft() {
 		changePage(-1);
@@ -599,14 +600,18 @@
 
 	let imageWidth = 0;
 	let imageHeight = 0;
-	let imageChannels = 1
+	let imageChannels = 1;
 
-	function getClosestFactors(input: number): [number, number] {
-		let testNum = Math.floor(Math.sqrt(input));
-		while (Math.abs(input % testNum) < 0.000001) {
-			testNum--;
+	function getClosestFactors(n: number): [number, number] {
+		let val: number = Math.ceil(Math.sqrt(n));
+		let val2: number = Math.floor(n / val);
+
+		while (val2 * val !== n) {
+			val -= 1;
+			val2 = Math.floor(n / val);
 		}
-		return [testNum, Math.floor(input / testNum)];
+
+		return [val, val2];
 	}
 </script>
 
@@ -745,24 +750,24 @@
 														bind:files={datasetUploadFiles}
 													/>
 												</div>
-													<Input
-														placeholder="Enter Image Width"
-														class="w-64"
-														type="number"
-														bind:value={imageWidth}
-													/>
-													<Input
-														placeholder="Enter Image Height"
-														class="w-64"
-														type="number"
-														bind:value={imageHeight}
-													/>
-													<Input
-														placeholder="Enter Image Channels"
-														class="w-64"
-														type="number"
-														bind:value={imageChannels}
-													/>
+												<Input
+													placeholder="Enter Image Width"
+													class="w-64"
+													type="number"
+													bind:value={imageWidth}
+												/>
+												<Input
+													placeholder="Enter Image Height"
+													class="w-64"
+													type="number"
+													bind:value={imageHeight}
+												/>
+												<Input
+													placeholder="Enter Image Channels"
+													class="w-64"
+													type="number"
+													bind:value={imageChannels}
+												/>
 												{#if Object.entries($csvColumnConfigs).length > 0}
 													{#if isImageDataset}
 														<div class="flex flex-col gap-2">
