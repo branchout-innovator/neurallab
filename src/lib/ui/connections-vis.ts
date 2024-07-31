@@ -3,8 +3,6 @@ import { remToPx } from '$lib/utils';
 
 export const getNodeYPositions = (layer: Layer): number[] => {
 	switch (layer.type) {
-		case 'conv2d':
-		case 'maxpooling':
 		case 'dense': {
 			const denseLayer = layer as DenseLayer;
 			const nodeSpacing = remToPx(2);
@@ -16,6 +14,7 @@ export const getNodeYPositions = (layer: Layer): number[] => {
 		case 'maxpooling': {
 			return [];
 		}
+		case 'maxpooling':
 		case 'conv2d': {
 			const denseLayer = layer as DenseLayer;
 			const nodeSpacing = remToPx(2);
