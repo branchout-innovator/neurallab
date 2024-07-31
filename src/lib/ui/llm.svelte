@@ -22,8 +22,15 @@
     import {
         type ActivationIdentifier,
         createRNNModel,
+		type DenseLayer,
+		type DropoutLayer,
+		type FlattenLayer,
+		type Layer,
+		type LSTMLayer,
+		type SequentialModel,
     } from '$lib/structures';
 	import DenseLayerVis from './dense-layer-vis.svelte';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	
     let textfiles: FileList;
 	let text = "";
@@ -44,7 +51,8 @@
     let isGenerating = false;
     let sentences: string[][] = [];
     let labels: string[][] = []
-
+    let model: SequentialModel;
+    let lastlstm = 3;
     
     const MIN_WORD_FREQUENCY = 0;
     const SEQUENCE_LEN = 7;
@@ -56,6 +64,9 @@
 			}
 		})();
 	}
+    
+    $: {numUnits=Math.min(Math.max(10, numUnits), 999)}
+
     function encodeText(unsplit: string) {
         if (!unsplit)
             return undefined
@@ -106,6 +117,38 @@
                 sentences.push(filteredwords.slice(i, i+SEQUENCE_LEN));
                 labels.push([filteredwords[i+SEQUENCE_LEN]]);
             }
+        }
+
+        model = {
+            layers: [
+            {
+                type: 'dropout',
+                rate: 0.2,
+                batchSize: BATCH_SIZE,
+                inputShape: [SEQUENCE_LEN, wordcount]
+            } as DropoutLayer,
+			{
+				type: 'lstm',
+				units: numUnits,
+                activation: selectedActivation.value,
+                recurrentActivation: recSelectedActivation.value
+			} as LSTMLayer,
+            {
+                type: 'dropout',
+                rate: 0.2
+            } as DropoutLayer,
+			{
+				type: 'flatten',
+			} as FlattenLayer,
+			{
+				type: 'dense',
+				units: wordcount,
+                activation: 'softmax'
+			} as DenseLayer
+		],
+		loss: "categoricalCrossentropy",
+		optimizer: 'adam',
+		learningRate: 0.001
         }
         //currentText = sentences[0].join(" ");
         return "done";
@@ -250,6 +293,35 @@
     function delay(ms: number) {
         return new Promise( resolve => setTimeout(resolve, ms) );
     }
+    function addLayer(iden: string) {
+        switch (iden) {
+            case "lstm": {
+                let layer = {
+                    type: "lstm",
+                    units: numUnits,
+                } as LSTMLayer;
+                let dropoutlyr = {
+                    type: "dropout",
+                    rate: 0.2
+                } as DropoutLayer;
+                model.layers = [...model.layers.slice(0, lastlstm), layer, dropoutlyr, ...model.layers.slice(lastlstm)];
+                lastlstm += 2;
+                break;
+            }
+            case 'dense': {
+				let layer = {
+					type: 'dense',
+					units: 1
+				} as DenseLayer;
+                model.layers = [...model.layers, layer];
+				break;
+			}
+        }
+        
+    }
+    function removeLayer(iden: string) {
+
+    }
 
 </script>
 <div class="mb-3 flex flex-row flex-wrap items-end gap-4">
@@ -344,6 +416,47 @@
 <div
 class="flex w-full flex-col gap-6 overflow-x-auto overflow-y-hidden rounded-lg border p-1 text-sm"
 >
+<div class="ml-auto mr-auto flex flex-row items-center">
+    <DropdownMenu.Root>
+        <DropdownMenu.Trigger>
+            <Button variant="ghost" size="icon" class="h-8 w-8">
+                <Plus class="h-4 w-4"></Plus>
+            </Button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content>
+            <DropdownMenu.Group>
+                <DropdownMenu.Item on:click={() => addLayer('lstm')}>LSTM</DropdownMenu.Item>
+                <DropdownMenu.Item
+                    on:click={() => {
+                        addLayer('dense');
+                    }}>Dense</DropdownMenu.Item
+                >
+            </DropdownMenu.Group>
+        </DropdownMenu.Content>
+    </DropdownMenu.Root>
+    <DropdownMenu.Root>
+        <DropdownMenu.Trigger>
+            <Button variant="ghost" size="icon" class="h-8 w-8">
+                <Minus class="h-4 w-4"></Minus>
+            </Button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content>
+            <DropdownMenu.Group>
+                <DropdownMenu.Item on:click={() => removeLayer('lstm')}>LSTM</DropdownMenu.Item>
+                <DropdownMenu.Item
+                    on:click={() => {
+                        addLayer('dense');
+                    }}>Dense</DropdownMenu.Item
+                >
+            </DropdownMenu.Group>
+        </DropdownMenu.Content>
+    </DropdownMenu.Root>
+
+    <span class="ml-2 leading-none text-muted-foreground"
+        >Layers</span
+    >
+</div>
+
     <div class="ml-auto mr-auto w-fit flex flex-row items-start">
         <LSTMLayerVis timeSteps= {SEQUENCE_LEN} units={numUnits} />
         <div class="flex flex-col items-center gap-2 rounded-lg border bg-card p-2 text-card-foreground h-fit">

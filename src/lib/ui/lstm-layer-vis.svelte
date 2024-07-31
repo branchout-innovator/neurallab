@@ -16,6 +16,7 @@
 	import isEqual from 'lodash.isequal';
 	import ActivationColor from './activation-color.svelte';
     import LstmUnitVis from './lstm-unit-vis.svelte';
+	import ConnectionsVis from './connections-vis.svelte';
 
 	//export let index: number;
     export let timeSteps: number;
@@ -28,9 +29,18 @@
 
     }
 
+    function getXPosEnd() {
+        const nodeSpacing = remToPx(2);
+        return [(Math.min(units, 10)-1)*nodeSpacing+nodeSpacing/2]
+    }
+    function getXPosStart() {
+        const nodeSpacing = remToPx(2);
+        return [nodeSpacing/2]
+    }
+
 </script>
 <div
-    class="flex w-fit flex-col gap-6 overflow-x-auto overflow-y-hidden rounded-lg border p-1 text-sm  mx-20"
+    class="flex w-fit flex-col overflow-x-auto overflow-y-hidden rounded-lg border p-1 text-sm  mx-20"
 >
     <div class="ml-auto mr-auto flex flex-row items-center">
         <Button variant="ghost" size="icon" class="h-8 w-8" on:click={addUnit}>
@@ -46,6 +56,13 @@
     </div>
 	{#each { length: Math.min(10, timeSteps) } as _, nodeIndex (nodeIndex)}
 		<LstmUnitVis units={units} />
+        {#if nodeIndex != Math.min(10, timeSteps)-1}
+        <ConnectionsVis 
+        leftLayerHeights={getXPosEnd()}
+        rightLayerHeights={getXPosStart()}
+        canvasWidth={20}/>
+        {/if}
 	{/each}
+    
 </div>
 

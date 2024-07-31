@@ -189,10 +189,15 @@
 		}
 		$model.layers = [...$model.layers, layer];
 		if ($model.layers.length === 1) {
+			if (isImageDataset) {
+				$model.layers[0].inputShape = [28, 28, 1];
+			}
+			else {
 			$model.layers[0].inputShape = [$featureCount];
+			}
 		}
 		console.log($model.layers);
-		refreshModel();
+		//refreshModel();
 		updateTFModel($model);
 	};
 
@@ -449,7 +454,6 @@
 			} = {};
 			hasLabel = false;
 			$featureCount = 0;
-
 			if (isImageDataset) {
 				for (const column in $csvColumnConfigs) {
 					if (column === outputColumn) {
@@ -955,6 +959,8 @@
 										this={layerComponents[layer.type]}
 										{layer}
 										index={i}
+										model={tfModel}
+										layerName={tfModel.layers[i].name}
 										tfLayer={tfModel.layers[i]}
 										domain={domain}
 										range={range}

@@ -9,7 +9,7 @@
 	export let leftLayerHeights: number[];
 	export let rightLayerHeights: number[];
 	export let canvasWidth: number;
-	export let weights: tf.Tensor;
+	export let weights: tf.Tensor|undefined = undefined;
 
 	let svgElement: SVGSVGElement;
 	let paths: {
@@ -73,8 +73,44 @@
 		}
 	};
 
+	const updateSvgNoWeights = async () => {
+		if (!browser) return;
+		const endHeight = remToPx(1.1);
+
+		paths = [];
+		// if (leftLayerHeights.length * rightLayerHeights.length > 500) return;
+
+		for (let i = 0; i < leftLayerHeights.length; i++) {
+			for (let j = 0; j < rightLayerHeights.length; j++) {
+
+				const rightConnectionSpacing = endHeight / leftLayerHeights.length;
+				const startX = 0;
+				const startY = leftLayerHeights[i];
+				const endX = canvasWidth;
+				const endY =
+					rightLayerHeights[j] + (i - (leftLayerHeights.length - 1) / 2) * rightConnectionSpacing;
+
+				const controlPoint1X = startX + canvasWidth / 3;
+				const controlPoint1Y = startY;
+				const controlPoint2X = endX - canvasWidth / 3;
+				const controlPoint2Y = endY;
+
+				const d = `M ${startY} ${startX} C ${controlPoint1Y} ${controlPoint1X}, ${controlPoint2Y} ${controlPoint2X}, ${endY} ${endX}`;
+
+				const color = "gray";
+				const strokeWidth = 2.5;
+
+				paths.push({ d, color, strokeWidth, weight: 1, normalizedWeight: 1 });
+			}
+		}
+	};
+
 	$: {
-		updateSvg(weights);
+		if (weights)
+			updateSvg(weights);
+		else
+			updateSvgNoWeights();
+		
 	}
 
 	function getColor(normalizedWeight: number): string {
@@ -83,7 +119,7 @@
 
 	$: canvasHeight = Math.max(...leftLayerHeights, ...rightLayerHeights) + 20;
 </script>
-
+{#if weights}
 <svg bind:this={svgElement} width={canvasWidth} height={canvasHeight} class="mt-[4.25rem]">
 	{#each paths as path}
 		<path
@@ -103,3 +139,24 @@
 		<circle cx={canvasWidth - 2.5} cy={height} r="5" fill="#333" />
 	{/each} -->
 </svg>
+{:else}
+<svg bind:this={svgElement} width={canvasHeight} height={canvasWidth} class="ml-[4.5rem]">
+	{#each paths as path}
+		<path
+			d={path.d}
+			stroke={path.color}
+			fill="none"
+			stroke-width={path.strokeWidth}
+			opacity={Math.abs(path.normalizedWeight)}
+		/>
+	{/each}
+
+	<!-- {#each leftLayerHeights as height, i}
+		<circle cx="0" cy={height} r="5" fill="#333" />
+	{/each}
+
+	{#each rightLayerHeights as height, i}
+		<circle cx={canvasWidth - 2.5} cy={height} r="5" fill="#333" />
+	{/each} -->
+</svg>
+{/if}
