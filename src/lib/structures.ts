@@ -23,6 +23,7 @@ export type LayerType = 'dense' | 'conv2d' | 'maxpooling' | 'flatten';
 export interface Layer {
 	type: string;
 	inputShape?: number[];
+	batchSize?: number;
 }
 
 export type DenseLayer = Layer & {
@@ -43,12 +44,28 @@ export type Conv2DLayer = Layer & {
 	activation?: ActivationIdentifier;
 };
 
+export type LSTMLayer = Layer & {
+	type: 'lstm';
+	/** Kernel size in each dimension */
+	units: number;
+	activation?: ActivationIdentifier;
+	recurrentActivation?: ActivationIdentifier;
+};
+
 export type MaxPoolingLayer = Layer & {
 	type: 'maxpooling';
 	/** Pooling size in each dimension */
 	poolSize: [number, number];
 	/** Stride in each dimension */
 	strides: [number, number];
+};
+
+export type DropoutLayer = Layer & {
+	type: 'dropout';
+	/** Pooling size in each dimension */
+	rate: number;
+	/** Stride in each dimension */
+
 };
 
 export type FlattenLayer = Layer & {
@@ -70,6 +87,7 @@ export const layerToTF = (layer: Layer): tf.layers.Layer => {
 				units: denseLayer.units,
 				inputShape: denseLayer.inputShape,
 				activation: denseLayer.activation,
+
 				kernelInitializer: 'glorotUniform'
 			});
 		}
@@ -81,6 +99,7 @@ export const layerToTF = (layer: Layer): tf.layers.Layer => {
 				strides: conv2dLayer.strides,
 				inputShape: conv2dLayer.inputShape,
 				activation: conv2dLayer.activation,
+				batchSize: conv2dLayer.batchSize,
 				kernelInitializer: 'glorotUniform'
 			});
 		}
@@ -89,13 +108,32 @@ export const layerToTF = (layer: Layer): tf.layers.Layer => {
 			return tf.layers.maxPooling2d({
 				poolSize: maxPoolingLayer.poolSize,
 				strides: maxPoolingLayer.strides,
-				inputShape: maxPoolingLayer.inputShape
+				inputShape: maxPoolingLayer.inputShape,
+				batchSize: maxPoolingLayer.batchSize
 			});
 		}
 		case 'flatten': {
 			const flattenLayer = layer as FlattenLayer;
 			return tf.layers.flatten({
-				inputShape: flattenLayer.inputShape
+				inputShape: flattenLayer.inputShape,
+				batchSize: flattenLayer.batchSize
+			});
+		}
+		case 'lstm': {
+			const lstmLayer = layer as LSTMLayer;
+			return tf.layers.lstm({
+				units: lstmLayer.units, 
+				returnSequences: true, 
+				activation: lstmLayer.activation, 
+				recurrentActivation: lstmLayer.recurrentActivation,
+				inputShape: lstmLayer.inputShape,
+				batchSize: lstmLayer.batchSize
+			});
+		}
+		case 'dropout': {
+			const dropoutLayer = layer as DropoutLayer;
+			return tf.layers.dropout({
+				rate: dropoutLayer.rate
 			});
 		}
 		default:

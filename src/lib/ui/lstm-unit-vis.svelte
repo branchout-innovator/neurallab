@@ -28,6 +28,7 @@
     export function zoom() {
         mapComponent.setZoom();
     }
+    
 </script>
 
 <div class="flex flex-row items-center gap-2 rounded-lg border bg-card p-2 text-card-foreground">
