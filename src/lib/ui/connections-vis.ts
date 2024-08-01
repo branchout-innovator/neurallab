@@ -11,6 +11,15 @@ export const getNodeYPositions = (layer: Layer): number[] => {
 		case 'flatten': {
 			return [];
 		}
+		case 'maxpooling': {
+			return [];
+		}
+		case 'maxpooling':
+		case 'conv2d': {
+			const denseLayer = layer as DenseLayer;
+			const nodeSpacing = remToPx(2);
+			return Array.from({ length: denseLayer.units }, (_, i) => i * nodeSpacing + nodeSpacing / 2);
+		}
 		// Add more cases for other layer types as needed
 		default:
 			throw new Error(`TODO: implement layer type: ${layer.type} in connections-vis.ts`);

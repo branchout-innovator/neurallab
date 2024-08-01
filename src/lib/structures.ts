@@ -23,6 +23,7 @@ export type LayerType = 'dense' | 'conv2d' | 'maxpooling' | 'flatten';
 export interface Layer {
 	type: string;
 	inputShape?: number[];
+	batchSize?: number;
 }
 
 export type DenseLayer = Layer & {
@@ -43,12 +44,28 @@ export type Conv2DLayer = Layer & {
 	activation?: ActivationIdentifier;
 };
 
+export type LSTMLayer = Layer & {
+	type: 'lstm';
+	/** Kernel size in each dimension */
+	units: number;
+	activation?: ActivationIdentifier;
+	recurrentActivation?: ActivationIdentifier;
+};
+
 export type MaxPoolingLayer = Layer & {
 	type: 'maxpooling';
 	/** Pooling size in each dimension */
 	poolSize: [number, number];
 	/** Stride in each dimension */
 	strides: [number, number];
+};
+
+export type DropoutLayer = Layer & {
+	type: 'dropout';
+	/** Pooling size in each dimension */
+	rate: number;
+	/** Stride in each dimension */
+
 };
 
 export type FlattenLayer = Layer & {
@@ -70,6 +87,7 @@ export const layerToTF = (layer: Layer): tf.layers.Layer => {
 				units: denseLayer.units,
 				inputShape: denseLayer.inputShape,
 				activation: denseLayer.activation,
+
 				kernelInitializer: 'glorotUniform'
 			});
 		}
@@ -81,6 +99,7 @@ export const layerToTF = (layer: Layer): tf.layers.Layer => {
 				strides: conv2dLayer.strides,
 				inputShape: conv2dLayer.inputShape,
 				activation: conv2dLayer.activation,
+				batchSize: conv2dLayer.batchSize,
 				kernelInitializer: 'glorotUniform'
 			});
 		}
@@ -89,13 +108,32 @@ export const layerToTF = (layer: Layer): tf.layers.Layer => {
 			return tf.layers.maxPooling2d({
 				poolSize: maxPoolingLayer.poolSize,
 				strides: maxPoolingLayer.strides,
-				inputShape: maxPoolingLayer.inputShape
+				inputShape: maxPoolingLayer.inputShape,
+				batchSize: maxPoolingLayer.batchSize
 			});
 		}
 		case 'flatten': {
 			const flattenLayer = layer as FlattenLayer;
 			return tf.layers.flatten({
-				inputShape: flattenLayer.inputShape
+				inputShape: flattenLayer.inputShape,
+				batchSize: flattenLayer.batchSize
+			});
+		}
+		case 'lstm': {
+			const lstmLayer = layer as LSTMLayer;
+			return tf.layers.lstm({
+				units: lstmLayer.units, 
+				returnSequences: true, 
+				activation: lstmLayer.activation, 
+				recurrentActivation: lstmLayer.recurrentActivation,
+				inputShape: lstmLayer.inputShape,
+				batchSize: lstmLayer.batchSize
+			});
+		}
+		case 'dropout': {
+			const dropoutLayer = layer as DropoutLayer;
+			return tf.layers.dropout({
+				rate: dropoutLayer.rate
 			});
 		}
 		default:
@@ -122,13 +160,15 @@ export const createTFModel = (model: SequentialModel): tf.Sequential => {
 
 export const createRNNModel = (indim: number, batch: number, slen: number): tf.Sequential => {
 	const tfModel = tf.sequential();
-	tfModel.add(tf.layers.dropout({rate: 0.2, inputShape: [slen, indim], batchSize: batch, dtype: 'float32'}))
-	tfModel.add(tf.layers.lstm({units: 64, returnSequences: true}))
-	tfModel.add(tf.layers.dropout({rate: 0.2}))
+	tfModel.add(
+		tf.layers.dropout({ rate: 0.2, inputShape: [slen, indim], batchSize: batch, dtype: 'float32' })
+	);
+	tfModel.add(tf.layers.lstm({ units: 64, returnSequences: true }));
+	tfModel.add(tf.layers.dropout({ rate: 0.2 }));
 	tfModel.add(tf.layers.flatten());
-	tfModel.add(tf.layers.dense({units: indim, activation: "softmax"}));
+	tfModel.add(tf.layers.dense({ units: indim, activation: 'softmax' }));
 	tfModel.compile({
-		loss: "categoricalCrossentropy",
+		loss: 'categoricalCrossentropy',
 		optimizer: tf.train.adam()
 	});
 
@@ -139,18 +179,24 @@ export const loadUploadedCsv = async (
 	csvFile: Blob | MediaSource,
 	columnConfigs: {
 		[key: string]: tf.data.ColumnConfig;
-	}
+	},
+	imageWidth?: number,
+	imageHeight?: number,
+	imageChannels?: number
 ) => {
 	const url = URL.createObjectURL(csvFile);
 
-	return await loadCsvDataset(url, columnConfigs);
+	return await loadCsvDataset(url, columnConfigs, imageWidth, imageHeight, imageChannels);
 };
 
 export async function loadCsvDataset(
 	url: string,
 	columnConfigs: {
 		[key: string]: tf.data.ColumnConfig;
-	}
+	},
+	imageWidth?: number,
+	imageHeight?: number,
+	imageChannels?: number
 ) {
 	const csvDataset = tf.data.csv(url, {
 		columnConfigs
@@ -163,7 +209,12 @@ export async function loadCsvDataset(
 		.map(({ xs, ys }) => {
 			// Convert xs(features) and ys(labels) from object form (keyed by
 			// column name) to array form.
-			return { xs: Object.values(xs), ys: Object.values(ys) };
+			let arrayXs: NestedArray = Object.values(xs) as number[];
+			const arrayYs = Object.values(ys) as number[];
+			if (imageWidth && imageHeight && imageChannels) {
+				arrayXs = tf.reshape(arrayXs, [imageWidth, imageHeight, imageChannels]).arraySync();
+			}
+			return { xs: arrayXs, ys: arrayYs };
 		});
 	// .batch(64);
 

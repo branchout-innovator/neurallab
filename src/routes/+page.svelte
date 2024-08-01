@@ -76,22 +76,6 @@
 	let isImageDataset = false;
 	let outputColumn = '';
 
-	$: {
-		if (datasetUploadFiles && datasetUploadFiles.length > 0) {
-			(async () => {
-				$csvColumnConfigs = {};
-				const { columns } = d3.csvParse(await datasetUploadFiles[0].text());
-				isImageDataset = columns.length > 50;
-				console.log('image? ' + isImageDataset);
-				for (const column of columns) {
-					$csvColumnConfigs[column] = {
-						isLabel: 'false'
-					};
-				}
-			})();
-		}
-	}
-
 	let value = 0;
 	let losschart: Losschart;
 	let currentloss = 0;
@@ -194,11 +178,12 @@
 			if ($model.layers[0].type === 'dense') {
 				$model.layers[0].inputShape = [$featureCount];
 			} else if (['conv2d', 'maxpooling', 'flatten'].includes($model.layers[0].type)) {
-				$model.layers[0].inputShape = [imageWidth, imageHeight, imageChannels]
+				$model.layers[0].inputShape = [imageWidth, imageHeight, imageChannels];
+				console.log([imageWidth, imageHeight, imageChannels]);
 			}
 		}
 		console.log($model.layers);
-		refreshModel();
+		//refreshModel();
 		updateTFModel($model);
 	};
 
@@ -265,6 +250,7 @@
 			$dataset.take(1).forEachAsync(async (e) => {
 				if (!tfModel) return;
 				currentExample = e as { xs: number[]; ys: number[] };
+				console.log('current example: ', currentExample);
 				if (currentExample != null)
 					$sampledOutputs = await updateSampledOutputsSingle(tfModel, currentExample.xs);
 			});
@@ -446,7 +432,10 @@
 		datasetUploadFiles: FileList,
 		csvColumnConfigs: {
 			[key: string]: { isLabel: 'true' | 'false' };
-		}
+		},
+		imageWidth?: number,
+		imageHeight?: number,
+		imageChannels?: number
 	) => {
 		if (datasetUploadFiles && datasetUploadFiles.length) {
 			const config: {
@@ -454,6 +443,9 @@
 			} = {};
 			hasLabel = false;
 			$featureCount = 0;
+
+			isImageDataset = Object.entries($csvColumnConfigs).length > 50;
+			console.log('image? ' + isImageDataset);
 
 			if (isImageDataset) {
 				for (const column in $csvColumnConfigs) {
@@ -480,7 +472,13 @@
 			[imageWidth, imageHeight] = getClosestFactors($featureCount);
 
 			if (hasLabel) {
-				const result = await loadUploadedCsv(datasetUploadFiles[0], config);
+				const result = await loadUploadedCsv(
+					datasetUploadFiles[0],
+					config,
+					imageWidth,
+					imageHeight,
+					imageChannels
+				);
 				$dataset = result.dataset;
 				columnNames = result.columnNames;
 				if ($model.layers[0]) {
@@ -493,7 +491,10 @@
 		}
 	};
 
-	$: updateDataset(datasetUploadFiles, $csvColumnConfigs);
+	$: {
+		outputColumn;
+		updateDataset(datasetUploadFiles, $csvColumnConfigs, imageWidth, imageHeight, imageChannels);
+	}
 
 	function pageLeft() {
 		changePage(-1);
@@ -601,14 +602,18 @@
 
 	let imageWidth = 0;
 	let imageHeight = 0;
-	let imageChannels = 1
+	let imageChannels = 1;
 
-	function getClosestFactors(input: number): [number, number] {
-		let testNum = Math.floor(Math.sqrt(input));
-		while (Math.abs(input % testNum) < 0.000001) {
-			testNum--;
+	function getClosestFactors(n: number): [number, number] {
+		let val: number = Math.ceil(Math.sqrt(n));
+		let val2: number = Math.floor(n / val);
+
+		while (val2 * val !== n) {
+			val -= 1;
+			val2 = Math.floor(n / val);
 		}
-		return [testNum, Math.floor(input / testNum)];
+
+		return [val, val2];
 	}
   let myData: Array<{ [key: string]: string | number }> | null = null;
 
@@ -760,6 +765,103 @@
 									/>
 									<br>
 								</div>
+							</div>
+							<br />
+							<div class="space-y-1">
+								<Label class="flex gap-2 text-xs">Choose Dataset</Label>
+								<Dialog.Root>
+									<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
+										>Upload CSV</Dialog.Trigger
+									>
+									<Dialog.Content>
+										<Dialog.Header>
+											<Dialog.Title>Upload CSV Dataset</Dialog.Title>
+											<Dialog.Description class="flex flex-col gap-2">
+												<p>Upload a dataset from a .csv file.</p>
+												<div class="flex flex-col">
+													<FileInput
+														id="dataset-upload"
+														class="w-64"
+														bind:files={datasetUploadFiles}
+													/>
+												</div>
+												<Input
+													placeholder="Enter Image Width"
+													class="w-64"
+													type="number"
+													bind:value={imageWidth}
+												/>
+												<Input
+													placeholder="Enter Image Height"
+													class="w-64"
+													type="number"
+													bind:value={imageHeight}
+												/>
+												<Input
+													placeholder="Enter Image Channels"
+													class="w-64"
+													type="number"
+													bind:value={imageChannels}
+												/>
+												{#if Object.entries($csvColumnConfigs).length > 0}
+													{#if isImageDataset}
+														<div class="flex flex-col gap-2">
+															<Label>Select Output Column</Label>
+															<Command.Root>
+																<Command.Input placeholder="Search output column..." />
+																<Command.List>
+																	<Command.Empty>No results found.</Command.Empty>
+																	{#each Object.keys($csvColumnConfigs).filter((col) => !col.includes('x')) as column}
+																		<Command.Item onSelect={() => (outputColumn = column)}>
+																			{column}
+																		</Command.Item>
+																	{/each}
+																</Command.List>
+															</Command.Root>
+														</div>
+													{:else}
+														<Table.Root>
+															<Table.Header>
+																<Table.Row>
+																	<Table.Head class="flex-grow">Column Name</Table.Head>
+																</Table.Row>
+															</Table.Header>
+															{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
+																<Table.Row>
+																	<Table.Cell class="font-medium">{column}</Table.Cell>
+																	<RadioGroup.Root
+																		bind:value={$csvColumnConfigs[column].isLabel}
+																		asChild
+																	>
+																		<Table.Cell>
+																			<div class="flex items-center space-x-2">
+																				<RadioGroup.Item value="false" id={`feature-${column}`}
+																				></RadioGroup.Item>
+																				<Label for={`feature-${column}`}>Input</Label>
+																			</div>
+																		</Table.Cell>
+																		<Table.Cell>
+																			<div class="flex items-center space-x-2">
+																				<RadioGroup.Item value="true" id={`label-${column}`}
+																				></RadioGroup.Item>
+																				<Label for={`label-${column}`}>Output</Label>
+																			</div>
+																		</Table.Cell>
+																	</RadioGroup.Root>
+																</Table.Row>
+															{/each}
+														</Table.Root>
+														{#if !hasLabel}
+															<p class="font-medium text-foreground">
+																Choose at least one column to use as output.
+															</p>
+														{/if}
+													{/if}
+												{/if}
+											</Dialog.Description>
+										</Dialog.Header>
+									</Dialog.Content>
+								</Dialog.Root>
 								<div class="flex flex-col gap-2">
 									<Label class="flex gap-2 text-xs">
 										<Activity class="h-4 w-4"></Activity>
@@ -773,10 +875,35 @@
 											<Select.Item value="relu">ReLU</Select.Item>
 											<Select.Item value="sigmoid">Sigmoid</Select.Item>
 											<Select.Item value="tanh">Tanh</Select.Item>
+											<Select.Item value="softmax">Softmax</Select.Item>
 										</Select.Content>
 									</Select.Root>
 								</div>
 							</div>
+							<br />
+							<div>
+								Domain: left bound: {domain[0] - 5}
+								right bound: {domain[1] - 5}
+								<Slider max="10" step="1" bind:value={domain} range slider />
+								Range: bottom bound: {range[0] - 5}
+								top bound: {range[1] - 5}
+								<Slider max="10" step="1" bind:value={range} range slider />
+								<!-- <Button on:click={heatmap.changeZoom(domain, range)}>Change Axes</Button> -->
+							</div>
+							<!-- <div class="flex flex-col gap-2">
+								<Label class="flex gap-2 text-xs">Input</Label>
+								<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
+							</div>
+							<div class="flex flex-col gap-2">
+								<Label class="flex gap-2 text-xs">Predicted Value</Label>
+								<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
+							</div> -->
+							<!--<div class="flex flex-col gap-2">
+									<div></div>
+								</div>
+								<div class="flex flex-col gap-2"></div>
+								<div class="flex-1"></div>
+								<div class="flex flex-col gap-2"></div>-->
 							<br />
 						</Card.Content>
 					</Card.Root>
@@ -786,8 +913,7 @@
 						<div class="space-y-1">
 							<Dialog.Root>
 								<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
-									>Upload Dataset</Dialog.Trigger
-								>
+									>Upload Dataset</Dialog.Trigger>
 								<Dialog.Content>
 									<Dialog.Header>
 									  <Dialog.Title>Upload CSV Dataset</Dialog.Title>
@@ -963,6 +1089,8 @@
 										this={layerComponents[layer.type]}
 										{layer}
 										index={i}
+										model={tfModel}
+										layerName={tfModel.layers[i].name}
 										tfLayer={tfModel.layers[i]}
 										{domain}
 										{range}
