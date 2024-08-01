@@ -31,6 +31,7 @@ export type DenseLayer = Layer & {
 	/** How many neurons there will be in this layer */
 	units: number;
 	activation?: ActivationIdentifier;
+	lstm?: boolean;
 };
 
 export type Conv2DLayer = Layer & {
@@ -48,6 +49,7 @@ export type LSTMLayer = Layer & {
 	type: 'lstm';
 	/** Kernel size in each dimension */
 	units: number;
+	timestep: number;
 	activation?: ActivationIdentifier;
 	recurrentActivation?: ActivationIdentifier;
 };

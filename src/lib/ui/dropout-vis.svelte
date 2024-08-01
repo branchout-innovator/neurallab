@@ -17,34 +17,18 @@
 	import ActivationColor from './activation-color.svelte';
 
 	//export let index: number;
-    export let units: number;
-
-
-
-	const sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> =
-		getContext('sampleDomain');
-	
-	let mapComponent: EnlargedHeatmap;
-    export function zoom() {
-        mapComponent.setZoom();
-    }
+    export let rate: number;
     
 </script>
 
-<div class="flex flex-row items-center gap-2 rounded-lg border bg-card p-2 text-card-foreground">
-	<span class="min-w-20">{units} Units</span>
-	{#each { length: Math.min(10, units) } as _, nodeIndex (nodeIndex)}
-		<div class="relative flex h-6 w-6 items-center justify-center">
-			<HoverCard.Root>
-				<HoverCard.Trigger>
-					<div
-                        style={`background-color: blue;`}
-                        class="h-5 w-5 rounded-[0.15rem]"
-                    ></div>
-				</HoverCard.Trigger>
-				<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
-				</HoverCard.Content>
-			</HoverCard.Root>
+<div class="flex flex-col items-center gap-2 rounded-lg border p-2 bg-card text-card-foreground">
+    <div class="relative flex h-20 w-6 items-center justify-center"> <span class="rotate-90">DROPOUT</span> </div>
+	
+    <div class="relative flex h-6 w-6 items-center justify-center">
+        <div
+            class="h-5 w-5 rounded-[0.15rem] justify-center"
+        >
+        <span>{rate}</span>
+    </div>
 		</div>
-	{/each}
 </div>
