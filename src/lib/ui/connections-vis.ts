@@ -47,7 +47,6 @@ export const handler = (pos: number[], times: number): number[] => {
 	for (let i = 0; i < times; i++) {
 		newarr.push(pos[0]);
 	}
-	console.log(newarr);
 	return newarr;
 }
 

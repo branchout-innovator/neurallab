@@ -55,7 +55,7 @@
     let sentences: string[][] = [];
     let labels: string[][] = []
     let model: Writable<SequentialModel>;
-    setContext('lstmmodel', $model);
+    
     let lastlstm = 3;
     
     const MIN_WORD_FREQUENCY = 0;
@@ -157,6 +157,7 @@
 		optimizer: 'adam',
 		learningRate: 0.001
         });
+        setContext('lstmmodel', model);
         //currentText = sentences[0].join(" ");
         return "done";
     }
