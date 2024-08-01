@@ -70,6 +70,8 @@
 	import Losschart from '$lib/ui/losschart.svelte';
 	import * as HoverCard from '$lib/components/ui/hover-card';
 	import LLM from '$lib/ui/llm.svelte';
+	import BackBone from '$lib/ui/bone.svelte';
+	
 
 	let isImageDataset = false;
 	let outputColumn = '';
@@ -856,11 +858,12 @@
 						</div>
 						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">
-								Current Loss: {currentloss}
+								Current Loss: {currentloss} 
 							</Label>
 							<Button on:click={displayLoss}>
 								<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
 							</Button>
+							<BackBone></BackBone>
 							<div
 								id="losscard"
 								class="absolute z-50 h-fit max-h-none w-fit max-w-none translate-y-16"
