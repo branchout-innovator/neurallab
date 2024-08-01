@@ -10,7 +10,9 @@
 	export let rightLayerHeights: number[];
 	export let canvasWidth: number;
 	export let weights: tf.Tensor|undefined = undefined;
-
+	export let lstm: boolean = false;
+	console.log(leftLayerHeights);
+	console.log(rightLayerHeights);
 	let svgElement: SVGSVGElement;
 	let paths: {
 		d: string;
@@ -98,7 +100,39 @@
 				const d = `M ${startY} ${startX} C ${controlPoint1Y} ${controlPoint1X}, ${controlPoint2Y} ${controlPoint2X}, ${endY} ${endX}`;
 
 				const color = "gray";
-				const strokeWidth = 2.5;
+				const strokeWidth = 1;
+
+				paths.push({ d, color, strokeWidth, weight: 1, normalizedWeight: 1 });
+			}
+		}
+	};
+
+	const updateSvgNoWeightsY = async () => {
+		if (!browser) return;
+		const endHeight = remToPx(1.1);
+
+		paths = [];
+		// if (leftLayerHeights.length * rightLayerHeights.length > 500) return;
+
+		for (let i = 0; i < leftLayerHeights.length; i++) {
+			for (let j = 0; j < rightLayerHeights.length; j++) {
+
+				const rightConnectionSpacing = endHeight / leftLayerHeights.length;
+				const startX = 0;
+				const startY = leftLayerHeights[i];
+				const endX = canvasWidth;
+				const endY =
+					rightLayerHeights[j] + (i - (leftLayerHeights.length - 1) / 2) * rightConnectionSpacing;
+
+				const controlPoint1X = startX + canvasWidth / 3;
+				const controlPoint1Y = startY;
+				const controlPoint2X = endX - canvasWidth / 3;
+				const controlPoint2Y = endY;
+
+				const d = `M ${startX} ${startY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${endX} ${endY}`;
+
+				const color = "gray";
+				const strokeWidth = 1;
 
 				paths.push({ d, color, strokeWidth, weight: 1, normalizedWeight: 1 });
 			}
@@ -108,8 +142,10 @@
 	$: {
 		if (weights)
 			updateSvg(weights);
-		else
+		else if (lstm)
 			updateSvgNoWeights();
+		else
+			updateSvgNoWeightsY();
 		
 	}
 
@@ -119,7 +155,7 @@
 
 	$: canvasHeight = Math.max(...leftLayerHeights, ...rightLayerHeights) + 20;
 </script>
-{#if weights}
+{#if weights || !lstm}
 <svg bind:this={svgElement} width={canvasWidth} height={canvasHeight} class="mt-[4.25rem]">
 	{#each paths as path}
 		<path

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte';
-	import type { DenseLayer, SequentialModel } from '$lib/structures';
+	import type { DenseLayer, LSTMLayer, SequentialModel } from '$lib/structures';
 	import { remToPx } from '$lib/utils';
 	import Minus from 'lucide-svelte/icons/minus';
 	import Plus from 'lucide-svelte/icons/plus';
@@ -19,14 +19,19 @@
 	import ConnectionsVis from './connections-vis.svelte';
 
 	//export let index: number;
+    export let index: number;
     export let timeSteps: number;
     export let units: number;
+    const model: Writable<SequentialModel> = getContext('lstmmodel');
 
     function addUnit() {
-        
+        timeSteps += 1;
+        ($model.layers[index] as LSTMLayer).timestep = timeSteps;
     }
     function removeUnit() {
-
+        if (timeSteps == 1) return;
+        timeSteps -= 1;
+        ($model.layers[index] as LSTMLayer).timestep = timeSteps;
     }
 
     function getXPosEnd() {
@@ -40,7 +45,7 @@
 
 </script>
 <div
-    class="flex w-fit flex-col overflow-x-auto overflow-y-hidden rounded-lg border p-1 text-sm  mx-20"
+    class="flex w-fit flex-col overflow-x-auto overflow-y-hidden rounded-lg border p-1 text-sm"
 >
     <div class="ml-auto mr-auto flex flex-row items-center">
         <Button variant="ghost" size="icon" class="h-8 w-8" on:click={addUnit}>
@@ -60,7 +65,8 @@
         <ConnectionsVis 
         leftLayerHeights={getXPosEnd()}
         rightLayerHeights={getXPosStart()}
-        canvasWidth={20}/>
+        canvasWidth={20}
+        lstm={true}/>
         {/if}
 	{/each}
     

@@ -19,6 +19,8 @@
     import LSTMLayerVis from '$lib/ui/lstm-layer-vis.svelte'
     import Minus from 'lucide-svelte/icons/minus';
 	import Plus from 'lucide-svelte/icons/plus';
+    import { getNodeYPositions, getNodeYPositionsInput, handler } from '$lib/ui/connections-vis';
+    import DropoutVis from './dropout-vis.svelte';
     import {
         type ActivationIdentifier,
         createRNNModel,
@@ -31,6 +33,7 @@
     } from '$lib/structures';
 	import DenseLayerVis from './dense-layer-vis.svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+	import ConnectionsVis from './connections-vis.svelte';
 	
     let textfiles: FileList;
 	let text = "";
@@ -51,7 +54,8 @@
     let isGenerating = false;
     let sentences: string[][] = [];
     let labels: string[][] = []
-    let model: SequentialModel;
+    let model: Writable<SequentialModel>;
+    setContext('lstmmodel', $model);
     let lastlstm = 3;
     
     const MIN_WORD_FREQUENCY = 0;
@@ -95,13 +99,14 @@
         let setwords = new Set(filteredwords);
         arrsetwords = Array.from(setwords.difference(ignored_words));
         arrsetwords.sort((n1, n2) => {
-            let val1 = word_freq.get(n1);
-            let val2 = word_freq.get(n2);
-            if (!val1) {return 0;}
-            if (!val2) {return 0;}
-            if (val1 > val2) {return -1;}
-            if (val1 < val2) {return 1;}
-            return 0;
+            let val1 = n1.length;
+            let val2 = n2.length;
+            let val = 0;
+            if (!val1) {val= 0;}
+            if (!val2) {val= 0;}
+            if (val1 > val2) {val= -.1;}
+            if (val1 < val2) {val= .1;}
+            return val + Math.random()-.5;
         });
         for (let i = 0; i < arrsetwords.length; i++) {
             word_indices.set(arrsetwords[i], i);
@@ -119,7 +124,7 @@
             }
         }
 
-        model = {
+        model = writable<SequentialModel>({
             layers: [
             {
                 type: 'dropout',
@@ -130,6 +135,7 @@
 			{
 				type: 'lstm',
 				units: numUnits,
+                timestep: SEQUENCE_LEN,
                 activation: selectedActivation.value,
                 recurrentActivation: recSelectedActivation.value
 			} as LSTMLayer,
@@ -137,19 +143,20 @@
                 type: 'dropout',
                 rate: 0.2
             } as DropoutLayer,
-			{
+			/*{
 				type: 'flatten',
-			} as FlattenLayer,
+			} as FlattenLayer, */
 			{
 				type: 'dense',
 				units: wordcount,
-                activation: 'softmax'
+                activation: 'softmax',
+                lstm: true
 			} as DenseLayer
 		],
 		loss: "categoricalCrossentropy",
 		optimizer: 'adam',
 		learningRate: 0.001
-        }
+        });
         //currentText = sentences[0].join(" ");
         return "done";
     }
@@ -299,12 +306,14 @@
                 let layer = {
                     type: "lstm",
                     units: numUnits,
+                    timestep: SEQUENCE_LEN
                 } as LSTMLayer;
                 let dropoutlyr = {
                     type: "dropout",
-                    rate: 0.2
+                    rate: 0.2,
+                    
                 } as DropoutLayer;
-                model.layers = [...model.layers.slice(0, lastlstm), layer, dropoutlyr, ...model.layers.slice(lastlstm)];
+                $model.layers = [...$model.layers.slice(0, lastlstm), layer, dropoutlyr, ...$model.layers.slice(lastlstm)];
                 lastlstm += 2;
                 break;
             }
@@ -313,10 +322,11 @@
 					type: 'dense',
 					units: 1
 				} as DenseLayer;
-                model.layers = [...model.layers, layer];
+                $model.layers = [...$model.layers, layer];
 				break;
 			}
         }
+        console.log($model.layers);
         
     }
     function removeLayer(iden: string) {
@@ -458,7 +468,25 @@ class="flex w-full flex-col gap-6 overflow-x-auto overflow-y-hidden rounded-lg b
 </div>
 
     <div class="ml-auto mr-auto w-fit flex flex-row items-start">
-        <LSTMLayerVis timeSteps= {SEQUENCE_LEN} units={numUnits} />
+        {#each $model.layers as layer, i (i)}
+            {#if layer.type == "lstm"}
+                <LSTMLayerVis index = {i} timeSteps= {SEQUENCE_LEN} units={numUnits} />
+            {/if}
+            {#if layer.type == "dropout"}
+                <DropoutVis rate={0.2} />
+            {/if}
+            {#if i != $model.layers.length-1}
+                {@const leftLayerHeights = getNodeYPositions(layer)}
+				{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
+                <ConnectionsVis 
+                leftLayerHeights = {leftLayerHeights}
+                rightLayerHeights = {rightLayerHeights}
+                canvasWidth={150}
+                />
+            {/if}
+        {/each}
+       
+        
         <div class="flex flex-col items-center gap-2 rounded-lg border bg-card p-2 text-card-foreground h-fit">
             <Button variant="ghost" size="icon" class="h-6 w-6">
                 <Plus class="h-4 w-4"></Plus>
