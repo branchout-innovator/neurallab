@@ -50,7 +50,7 @@
 		"@types/d3-selection": "^3.0.10",
 		"@unovis/svelte": "^1.4.3",
 		"@unovis/ts": "^1.4.3",
-		"bits-ui": "^0.21.12",
+		"bits-ui": "^0.21.13",
 		"clsx": "^2.1.1",
 		"cmdk-sv": "^0.0.18",
 		"d3-transition": "^3.0.1",
