@@ -650,17 +650,17 @@
     console.log(myData);
   }
   let sampleImage: number[][] = [[]];
-  function getImage(index: number): number[][] {
-	if (!myData) return [[]];
+  function getImage(index: number): number[][][] {
+	if (!myData) return [[[]]];
 	let temp = Array.from(Object.entries(myData[0]).values()).map((k) => {return k[1]}).slice(0, -1).filter((x) => {return typeof x == "number"});
 	if (temp.length == imageHeight * imageWidth)
-		return reshape(temp, [imageWidth, imageHeight]) as unknown as number[][];
+		return reshape(temp, [imageWidth, imageHeight, imageChannels]) as unknown as number[][][];
 	return [[]];
   }
 
   $: {
 	if (myData && imageHeight != 0 && imageWidth != 0) {
-		sampleImage = getImage(0);
+		// sampleImage = getImage(0);
 	}
   }
 </script>
@@ -1111,7 +1111,7 @@
 								{#each $model.layers as layer, i (i)}
 									<svelte:component
 										this={layerComponents[layer.type]}
-										{layer}
+										layer = {layer}
 										index={i}
 										model={tfModel}
 										layerName={tfModel.layers[i].name}
@@ -1121,6 +1121,7 @@
 										{columnNames}
 										{currentExample}
 										{dataset}
+										inputImage = {getImage(0)}
 									></svelte:component>
 									{#if i < $model.layers.length - 1}
 										{@const leftLayerHeights = getNodeYPositions(layer)}
