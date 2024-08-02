@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Popover from '$lib/components/ui/popover/index.js';
+	import logo from '$lib/images/image0.png';
 	import { getSampledOutputForNode, type SampledOutputs } from '$lib/structures';
 	import { getContext, onMount } from 'svelte';
 	import type { Writable } from 'svelte/store';
@@ -6,14 +9,15 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import * as tf from '@tensorflow/tfjs';
 	type $$Props = HTMLAttributes<HTMLCanvasElement> & {
-		nodeIndex: number;
-		layerName: string;
-		customDensity?: number;
+		/*nodeIndex: number;
+		layerName: string;*/
+		image: number[][];
 	};
 
-	export let nodeIndex: number;
-	export let layerName: string;
-	export let customDensity: $$Props['customDensity'] = undefined;
+	/*export let nodeIndex: number;
+	export let layerName: string;*/
+	export let image;
+	console.log($$restProps);
 
 	const sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> =
 		getContext('sampleDomain');
@@ -30,7 +34,7 @@
 	let chartHeight: number | undefined;
 	let nodeOutputs: number[][] | undefined;
 	$: {
-		(async () => {
+		/*(async () => {
 			nodeOutputs = customDensity
 				? await getSampledOutputForNode(
 						tfModel,
@@ -43,13 +47,14 @@
 				: $sampledOutputs &&
 					$sampledOutputs[layerName] &&
 					$sampledOutputs[layerName].values[nodeIndex];
-		})();
+		})();*/
+		nodeOutputs = image;
 	}
 
 	$: {
 		if (nodeOutputs) {
-			chartWidth = customDensity || nodeOutputs.length;
-			chartHeight = customDensity || nodeOutputs.length;
+			chartWidth = nodeOutputs.length;
+			chartHeight = nodeOutputs.length;
 		}
 		updateHeatmap();
 	}
@@ -74,7 +79,7 @@
 		canvas.width = chartWidth;
 		canvas.height = chartHeight;
 
-		const numSamples = customDensity || nodeOutputs.length;
+		const numSamples = nodeOutputs.length;
 
 		const colorScale = d3
 			.scaleSequential(d3.interpolateRdBu)
@@ -89,9 +94,9 @@
 				const value = nodeOutputs[y][x];
 				const color = d3.rgb(colorScale(value));
 				const index = (y * numSamples + x) * 4;
-				imageData.data[index] = color.r;
-				imageData.data[index + 1] = color.g;
-				imageData.data[index + 2] = color.b;
+				imageData.data[index] = value;
+				imageData.data[index + 1] = value;
+				imageData.data[index + 2] = value;
 				imageData.data[index + 3] = 255; // Alpha
 			}
 		}
@@ -148,4 +153,6 @@
 	}
 </script>
 
+
 <canvas bind:this={canvas} {...$$restProps}></canvas>
+

@@ -11,8 +11,6 @@
 	export let canvasWidth: number;
 	export let weights: tf.Tensor|undefined = undefined;
 	export let lstm: boolean = false;
-	console.log(leftLayerHeights);
-	console.log(rightLayerHeights);
 	let svgElement: SVGSVGElement;
 	let paths: {
 		d: string;
@@ -75,22 +73,22 @@
 		}
 	};
 
-	const updateSvgNoWeights = async () => {
+	const updateSvgNoWeights = async (llh: number[], rlh: number[]) => {
 		if (!browser) return;
 		const endHeight = remToPx(1.1);
 
 		paths = [];
 		// if (leftLayerHeights.length * rightLayerHeights.length > 500) return;
 
-		for (let i = 0; i < leftLayerHeights.length; i++) {
-			for (let j = 0; j < rightLayerHeights.length; j++) {
+		for (let i = 0; i < llh.length; i++) {
+			for (let j = 0; j < rlh.length; j++) {
 
-				const rightConnectionSpacing = endHeight / leftLayerHeights.length;
+				const rightConnectionSpacing = endHeight / llh.length;
 				const startX = 0;
-				const startY = leftLayerHeights[i];
+				const startY = llh[i];
 				const endX = canvasWidth;
 				const endY =
-					rightLayerHeights[j] + (i - (leftLayerHeights.length - 1) / 2) * rightConnectionSpacing;
+					rlh[j] + (i - (llh.length - 1) / 2) * rightConnectionSpacing;
 
 				const controlPoint1X = startX + canvasWidth / 3;
 				const controlPoint1Y = startY;
@@ -100,29 +98,29 @@
 				const d = `M ${startY} ${startX} C ${controlPoint1Y} ${controlPoint1X}, ${controlPoint2Y} ${controlPoint2X}, ${endY} ${endX}`;
 
 				const color = "gray";
-				const strokeWidth = 1;
+				const strokeWidth = 1.5;
 
 				paths.push({ d, color, strokeWidth, weight: 1, normalizedWeight: 1 });
 			}
 		}
 	};
 
-	const updateSvgNoWeightsY = async () => {
+	const updateSvgNoWeightsY = async (llh: number[], rlh: number[]) => {
 		if (!browser) return;
 		const endHeight = remToPx(1.1);
 
 		paths = [];
 		// if (leftLayerHeights.length * rightLayerHeights.length > 500) return;
 
-		for (let i = 0; i < leftLayerHeights.length; i++) {
-			for (let j = 0; j < rightLayerHeights.length; j++) {
+		for (let i = 0; i < llh.length; i++) {
+			for (let j = 0; j < rlh.length; j++) {
 
-				const rightConnectionSpacing = endHeight / leftLayerHeights.length;
+				const rightConnectionSpacing = endHeight / llh.length;
 				const startX = 0;
-				const startY = leftLayerHeights[i];
+				const startY = llh[i];
 				const endX = canvasWidth;
 				const endY =
-					rightLayerHeights[j] + (i - (leftLayerHeights.length - 1) / 2) * rightConnectionSpacing;
+					rlh[j];
 
 				const controlPoint1X = startX + canvasWidth / 3;
 				const controlPoint1Y = startY;
@@ -143,9 +141,9 @@
 		if (weights)
 			updateSvg(weights);
 		else if (lstm)
-			updateSvgNoWeights();
+			updateSvgNoWeights(leftLayerHeights, rightLayerHeights);
 		else
-			updateSvgNoWeightsY();
+			updateSvgNoWeightsY(leftLayerHeights, rightLayerHeights);
 		
 	}
 
@@ -176,7 +174,7 @@
 	{/each} -->
 </svg>
 {:else}
-<svg bind:this={svgElement} width={canvasHeight} height={canvasWidth} class="ml-[4.5rem]">
+<svg bind:this={svgElement} width={canvasHeight} height={canvasWidth} class="ml-[6rem]">
 	{#each paths as path}
 		<path
 			d={path.d}

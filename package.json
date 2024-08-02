@@ -57,6 +57,7 @@
 		"d3-transition": "^3.0.1",
 		"flowbite-svelte": "^0.46.15",
 		"isEqual": "^1.0.3",
+		"mathjs": "^13.0.3",
 		"mode-watcher": "^0.3.1",
 		"paneforge": "^0.0.5",
 		"svelte-markdown": "^0.4.1",

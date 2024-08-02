@@ -20,6 +20,7 @@
 	} from '$lib/structures';
 	import * as tf from '@tensorflow/tfjs';
 	import { onMount, setContext, SvelteComponent, getContext } from 'svelte';
+	import * as Popover from '$lib/components/ui/popover/index.js';
 	import DenseLayerVis from '$lib/ui/dense-layer-vis.svelte';
 	import ConvVis from '$lib/ui/conv-vis.svelte';
 	import MaxPoolingVis from '$lib/ui/max-pooling-vis.svelte';
@@ -70,6 +71,7 @@
 	import Losschart from '$lib/ui/losschart.svelte';
 	import * as HoverCard from '$lib/components/ui/hover-card';
 	import LLM from '$lib/ui/llm.svelte';
+	import { create, all, reshape } from 'mathjs'
 	import BackBone from '$lib/ui/bone.svelte';
 		import * as Popover from '$lib/components/ui/popover/index.js';
 	import logo from '$lib/images/image0.png';
@@ -648,7 +650,20 @@
 
   function myDataIsReady(): void {
     console.log(myData);
-	console.log("abc");
+  }
+  let sampleImage: number[][] = [[]];
+  function getImage(index: number): number[][][] {
+	if (!myData) return [[[]]];
+	let temp = Array.from(Object.entries(myData[0]).values()).map((k) => {return k[1]}).slice(0, -1).filter((x) => {return typeof x == "number"});
+	if (temp.length == imageHeight * imageWidth)
+		return reshape(temp, [imageWidth, imageHeight, imageChannels]) as unknown as number[][][];
+	return [[]];
+  }
+
+  $: {
+	if (myData && imageHeight != 0 && imageWidth != 0) {
+		// sampleImage = getImage(0);
+	}
   }
 </script>
 
@@ -785,6 +800,7 @@
 														id="dataset-upload"
 														class="w-64"
 														bind:files={datasetUploadFiles}
+														on:change={handleFileSelect}
 													/>
 												</div>
 												<Input
@@ -919,6 +935,15 @@
 							<Button on:click={displayLoss}>
 								<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
 							</Button>
+							<Popover.Root portal={null}>
+								<Popover.Trigger asChild let:builder>
+									<Button builders={[builder]} variant="outline">Open</Button>
+								</Popover.Trigger>
+								<Popover.Content>
+									<BackBone class="w-[250px] h-[250px]" image={sampleImage}/>
+								</Popover.Content>
+							</Popover.Root>
+							
 							<div
 								id="losscard"
 								class="absolute z-50 h-fit max-h-none w-fit max-w-none translate-y-16"
@@ -1016,7 +1041,7 @@
 								{#each $model.layers as layer, i (i)}
 									<svelte:component
 										this={layerComponents[layer.type]}
-										{layer}
+										layer = {layer}
 										index={i}
 										model={tfModel}
 										layerName={tfModel.layers[i].name}
@@ -1026,6 +1051,7 @@
 										{columnNames}
 										{currentExample}
 										{dataset}
+										inputImage = {getImage(0)}
 									></svelte:component>
 									{#if i < $model.layers.length - 1}
 										{@const leftLayerHeights = getNodeYPositions(layer)}
