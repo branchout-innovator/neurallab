@@ -34,6 +34,7 @@
 	import DenseLayerVis from './dense-layer-vis.svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import ConnectionsVis from './connections-vis.svelte';
+	import LstmDenseVis from './lstm-dense-vis.svelte';
 	
     let textfiles: FileList;
 	let text = "";
@@ -323,7 +324,7 @@
 					type: 'dense',
 					units: 1
 				} as DenseLayer;
-                $model.layers = [...$model.layers, layer];
+                $model.layers = [...$model.layers.slice(0, -1), layer, ...$model.layers.slice(-1)];
 				break;
 			}
         }
@@ -476,6 +477,9 @@ class="flex w-full flex-col gap-6 overflow-x-auto overflow-y-hidden rounded-lg b
             {#if layer.type == "dropout"}
                 <DropoutVis rate={0.2} />
             {/if}
+            {#if layer.type == "dense"} 
+                <LstmDenseVis index={i} />
+            {/if}
             {#if i != $model.layers.length-1}
                 {@const leftLayerHeights = getNodeYPositions(layer)}
 				{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
@@ -486,28 +490,7 @@ class="flex w-full flex-col gap-6 overflow-x-auto overflow-y-hidden rounded-lg b
                 />
             {/if}
         {/each}
-       
-        
-        <div class="flex flex-col items-center gap-2 rounded-lg border bg-card p-2 text-card-foreground h-fit">
-            <Button variant="ghost" size="icon" class="h-6 w-6">
-                <Plus class="h-4 w-4"></Plus>
-            </Button>
-            <Button
-                variant="ghost"
-                size="icon"
-                class="h-6 w-6"
-            >
-                <Minus class="h-4 w-4"></Minus>
-            </Button>
-            {#each { length: 10 } as _, nodeIndex (nodeIndex)}
-                <div class="relative flex h-6 w-6 items-center justify-center">
-                    <div
-                style={`background-color: blue;`}
-                class="h-5 w-5 rounded-[0.15rem]"
-                    ></div>
-                </div>
-            {/each}
-        </div>
+
         <div class="flex flex-col items-start gap-2 rounded-lg py-2 text-card-foreground">
             <h5 class="mb-9 text-sm">&nbsp;</h5>
             {#each { length: 10 } as _, idx (idx)}
@@ -519,6 +502,9 @@ class="flex w-full flex-col gap-6 overflow-x-auto overflow-y-hidden rounded-lg b
                 </div>
             {/each}
         </div>
+       
+        
+        
     </div>
 </div>
 {/if}

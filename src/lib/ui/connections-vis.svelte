@@ -98,7 +98,7 @@
 				const d = `M ${startY} ${startX} C ${controlPoint1Y} ${controlPoint1X}, ${controlPoint2Y} ${controlPoint2X}, ${endY} ${endX}`;
 
 				const color = "gray";
-				const strokeWidth = 1;
+				const strokeWidth = 1.5;
 
 				paths.push({ d, color, strokeWidth, weight: 1, normalizedWeight: 1 });
 			}
@@ -174,7 +174,7 @@
 	{/each} -->
 </svg>
 {:else}
-<svg bind:this={svgElement} width={canvasHeight} height={canvasWidth} class="ml-[4.5rem]">
+<svg bind:this={svgElement} width={canvasHeight} height={canvasWidth} class="ml-[6rem]">
 	{#each paths as path}
 		<path
 			d={path.d}
