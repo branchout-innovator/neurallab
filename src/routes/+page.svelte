@@ -71,6 +71,8 @@
 	import * as HoverCard from '$lib/components/ui/hover-card';
 	import LLM from '$lib/ui/llm.svelte';
 	import BackBone from '$lib/ui/bone.svelte';
+		import * as Popover from '$lib/components/ui/popover/index.js';
+	import logo from '$lib/images/image0.png';
 	
 
 	let isImageDataset = false;
@@ -910,78 +912,6 @@
 				</Tabs.Content>
 				<Tabs.Content value="NL" class="h-full">
 					<div class="mb-3 flex flex-row flex-wrap items-end gap-4">
-						<div class="space-y-1">
-							<Dialog.Root>
-								<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
-									>Upload Dataset</Dialog.Trigger>
-								<Dialog.Content>
-									<Dialog.Header>
-									  <Dialog.Title>Upload CSV Dataset</Dialog.Title>
-									  <Dialog.Description class="flex flex-col gap-2">
-										<p>Upload a dataset from a .csv file.</p>
-										<div class="flex flex-col">
-										  <input type="file" id="dataset-upload" class="w-32" on:change={handleFileSelect} />
-										</div>
-										{#if myData}
-										  <p>Data has been successfully uploaded and parsed.</p>
-										  <!-- You can add more logic here to display or use the parsed data -->
-										{/if}
-										<!-- The rest of your logic for displaying columns and handling CSV configurations -->
-										{#if Object.entries($csvColumnConfigs).length > 0}
-										  {#if isImageDataset}
-											<div class="flex flex-col gap-2">
-											  <Label>Select Output Column</Label>
-											  <Command.Root>
-												<Command.Input placeholder="Search output column..." />
-												<Command.List>
-												  <Command.Empty>No results found.</Command.Empty>
-												  {#each Object.keys($csvColumnConfigs).filter((col) => !col.includes('x')) as column}
-													<Command.Item on:click={() => (outputColumn = column)}>
-													  {column}
-													</Command.Item>
-												  {/each}
-												</Command.List>
-											  </Command.Root>
-											</div>
-										  {:else}
-											<Table.Root>
-											  <Table.Header>
-												<Table.Row>
-												  <Table.Head class="flex-grow">Column Name</Table.Head>
-												</Table.Row>
-											  </Table.Header>
-											  {#each Object.entries($csvColumnConfigs) as [column, config] (column)}
-												<Table.Row>
-												  <Table.Cell class="font-medium">{column}</Table.Cell>
-												  <RadioGroup.Root bind:value={$csvColumnConfigs[column].isLabel} asChild>
-													<Table.Cell>
-													  <div class="flex items-center space-x-2">
-														<RadioGroup.Item value="false" id={`feature-${column}`}></RadioGroup.Item>
-														<Label for={`feature-${column}`}>Input</Label>
-													  </div>
-													</Table.Cell>
-													<Table.Cell>
-													  <div class="flex items-center space-x-2">
-														<RadioGroup.Item value="true" id={`label-${column}`}></RadioGroup.Item>
-														<Label for={`label-${column}`}>Output</Label>
-													  </div>
-													</Table.Cell>
-												  </RadioGroup.Root>
-												</Table.Row>
-											  {/each}
-											</Table.Root>
-											{#if !hasLabel}
-											  <p class="font-medium text-foreground">
-												Choose at least one column to use as output.
-											  </p>
-											{/if}
-										  {/if}
-										{/if}
-									  </Dialog.Description>
-									</Dialog.Header>
-								  </Dialog.Content>
-							</Dialog.Root>
-						</div>
 						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">
 								Current Loss: {currentloss} 
@@ -989,7 +919,6 @@
 							<Button on:click={displayLoss}>
 								<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
 							</Button>
-							<BackBone></BackBone>
 							<div
 								id="losscard"
 								class="absolute z-50 h-fit max-h-none w-fit max-w-none translate-y-16"
@@ -1072,7 +1001,7 @@
 
 						<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
 							{#if tfModel}
-								<Features {columnNames} {currentExample} />
+								<Features {columnNames} {currentExample} {isImageDataset} numchannels = {imageChannels} />
 								{#if $model.layers[0]?.inputShape}
 									{@const weights = getWeightsBetweenLayers(tfModel, 0)}
 									{#if weights}
