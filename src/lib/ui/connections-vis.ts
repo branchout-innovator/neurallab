@@ -1,4 +1,4 @@
-import type { DenseLayer, Layer, LSTMLayer } from '$lib/structures';
+import type { Conv2DLayer, DenseLayer, Layer, LSTMLayer, MaxPoolingLayer } from '$lib/structures';
 import { remToPx } from '$lib/utils';
 
 export const getNodeYPositions = (layer: Layer): number[] => {
@@ -16,15 +16,17 @@ export const getNodeYPositions = (layer: Layer): number[] => {
 			return Array.from({ length: units }, (_, i) => i * nodeSpacing + nodeSpacing / 2);
 		}
 		case 'flatten': {
-			return [];
+			return [10];
 		}
 		case 'maxpooling': {
-			return [];
+			const denseLayer = layer as MaxPoolingLayer;
+			const nodeSpacing = remToPx(2);
+			return Array.from({ length: denseLayer.convlyr.filters }, (_, i) => i * nodeSpacing + nodeSpacing / 2);
 		}
 		case 'conv2d': {
-			const denseLayer = layer as DenseLayer;
+			const denseLayer = layer as Conv2DLayer;
 			const nodeSpacing = remToPx(2);
-			return Array.from({ length: denseLayer.units }, (_, i) => i * nodeSpacing + nodeSpacing / 2);
+			return Array.from({ length: denseLayer.filters }, (_, i) => i * nodeSpacing + nodeSpacing / 2);
 		}
 		case 'dropout': {
 			return [10];

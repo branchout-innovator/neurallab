@@ -14,22 +14,22 @@
 		.filter((c) => $csvColumnConfigs[c]?.isLabel === 'false')
 		.map((c, i) => ({ name: c, value: currentExample?.xs[i] }));
 
-	const splitChannels = (image) => {
-		const red = image.clone();
-		const green = image.clone();
-		const blue = image.clone();
+	// const splitChannels = (image) => {
+	// 	const red = image.clone();
+	// 	const green = image.clone();
+	// 	const blue = image.clone();
 
-		red.setChannel(1, 0); //gb, rb, rg
-		red.setChannel(2, 0);
+	// 	red.setChannel(1, 0); //gb, rb, rg
+	// 	red.setChannel(2, 0);
 
-		green.setChannel(0, 0);
-		green.setChannel(2, 0);
+	// 	green.setChannel(0, 0);
+	// 	green.setChannel(2, 0);
 
-		blue.setChannel(0, 0);
-		blue.setChannel(1, 0);
+	// 	blue.setChannel(0, 0);
+	// 	blue.setChannel(1, 0);
 
-		return { red, green, blue };
-	};
+	// 	return { red, green, blue };
+	// };
 
 	let channelnames: string[];
 

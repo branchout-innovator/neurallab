@@ -20,7 +20,6 @@
 	} from '$lib/structures';
 	import * as tf from '@tensorflow/tfjs';
 	import { onMount, setContext, SvelteComponent, getContext } from 'svelte';
-	import * as Popover from '$lib/components/ui/popover/index.js';
 	import DenseLayerVis from '$lib/ui/dense-layer-vis.svelte';
 	import ConvVis from '$lib/ui/conv-vis.svelte';
 	import MaxPoolingVis from '$lib/ui/max-pooling-vis.svelte';
@@ -141,7 +140,6 @@
 	setContext('model', model);
 
 	const addLayer = (type: LayerType) => {
-		const lastLayer = $model.layers[$model.layers.length - 1] as DenseLayer;
 		// if (lastLayer.type === 'dense')
 		// 	($model.layers[$model.layers.length - 1] as DenseLayer).activation =
 		// 		selectedActivation.value as ActivationIdentifier;
@@ -164,10 +162,14 @@
 				break;
 			}
 			case 'maxpooling': {
+				if ($model.layers[$model.layers.length - 1].type != "conv2d") {
+					throw new Error(`max pooling initialized without conv layer`);
+				}
 				layer = {
 					type: 'maxpooling',
 					poolSize: [2, 2],
-					strides: [2, 2]
+					strides: [2, 2],
+					convlyr: $model.layers[$model.layers.length - 1] as Conv2DLayer
 				} as MaxPoolingLayer;
 				break;
 			}
@@ -654,7 +656,7 @@
   let sampleImage: number[][] = [[]];
   function getImage(index: number): number[][][] {
 	if (!myData) return [[[]]];
-	let temp = Array.from(Object.entries(myData[0]).values()).map((k) => {return k[1]}).slice(0, -1).filter((x) => {return typeof x == "number"});
+	let temp = Array.from(Object.entries(myData[index]).values()).map((k) => {return k[1]}).slice(0, -1).filter((x) => {return typeof x == "number"}).map((x) => {return x/256});
 	if (temp.length == imageHeight * imageWidth)
 		return reshape(temp, [imageWidth, imageHeight, imageChannels]) as unknown as number[][][];
 	return [[]];
@@ -940,7 +942,7 @@
 									<Button builders={[builder]} variant="outline">Open</Button>
 								</Popover.Trigger>
 								<Popover.Content>
-									<BackBone class="w-[250px] h-[250px]" image={sampleImage}/>
+									<!-- <BackBone class="w-[250px] h-[250px]" image={sampleImage} rgb = {false}/> -->
 								</Popover.Content>
 							</Popover.Root>
 							
@@ -1030,12 +1032,21 @@
 								{#if $model.layers[0]?.inputShape}
 									{@const weights = getWeightsBetweenLayers(tfModel, 0)}
 									{#if weights}
+										{#if ['conv2d', 'maxpooling', 'flatten'].includes($model.layers[0].type)}
+										<ConnectionsVis
+											leftLayerHeights={getNodeYPositionsInput(imageChannels)}
+											rightLayerHeights={getNodeYPositions($model.layers[0])}
+											{canvasWidth}
+											{weights}
+										/>
+										{:else}
 										<ConnectionsVis
 											leftLayerHeights={getNodeYPositionsInput($model.layers[0].inputShape[0])}
 											rightLayerHeights={getNodeYPositions($model.layers[0])}
 											{canvasWidth}
 											{weights}
 										/>
+										{/if}
 									{/if}
 								{/if}
 								{#each $model.layers as layer, i (i)}
@@ -1063,6 +1074,13 @@
 												{rightLayerHeights}
 												{canvasWidth}
 												{weights}
+											/>
+										{:else}
+										<ConnectionsVis
+												{leftLayerHeights}
+												{rightLayerHeights}
+												canvasWidth= {($model.layers[i+1].type!="maxpooling")?canvasWidth:canvasWidth/3}
+												maxpool={$model.layers[i+1].type=="maxpooling"}
 											/>
 										{/if}
 									{/if}

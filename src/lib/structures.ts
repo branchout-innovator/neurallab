@@ -60,6 +60,7 @@ export type MaxPoolingLayer = Layer & {
 	poolSize: [number, number];
 	/** Stride in each dimension */
 	strides: [number, number];
+	convlyr: Conv2DLayer;
 };
 
 export type DropoutLayer = Layer & {
@@ -214,6 +215,7 @@ export async function loadCsvDataset(
 			let arrayXs: NestedArray = Object.values(xs) as number[];
 			const arrayYs = Object.values(ys) as number[];
 			if (imageWidth && imageHeight && imageChannels) {
+				arrayXs = arrayXs.map((x) => {return (x as unknown as number>1)?(x as unknown as number)/256: x})
 				arrayXs = tf.reshape(arrayXs, [imageWidth, imageHeight, imageChannels]).arraySync();
 			}
 			return { xs: arrayXs, ys: arrayYs };

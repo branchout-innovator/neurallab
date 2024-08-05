@@ -11,6 +11,7 @@
 	export let canvasWidth: number;
 	export let weights: tf.Tensor|undefined = undefined;
 	export let lstm: boolean = false;
+	export let maxpool: boolean = false;
 	let svgElement: SVGSVGElement;
 	let paths: {
 		d: string;
@@ -48,27 +49,29 @@
 
 		for (let i = 0; i < leftLayerHeights.length; i++) {
 			for (let j = 0; j < rightLayerHeights.length; j++) {
-				const weight = weightsArray[i][j];
-				const normalizedWeight = weight / maxWeight;
+				if (!maxpool || i==j) {
+					const weight = weightsArray[i][j];
+					const normalizedWeight = weight / maxWeight;
 
-				const rightConnectionSpacing = endHeight / leftLayerHeights.length;
-				const startX = 0;
-				const startY = leftLayerHeights[i];
-				const endX = canvasWidth;
-				const endY =
-					rightLayerHeights[j] + (i - (leftLayerHeights.length - 1) / 2) * rightConnectionSpacing;
+					const rightConnectionSpacing = endHeight / leftLayerHeights.length;
+					const startX = 0;
+					const startY = leftLayerHeights[i];
+					const endX = canvasWidth;
+					const endY =
+						rightLayerHeights[j] + (i - (leftLayerHeights.length - 1) / 2) * rightConnectionSpacing;
 
-				const controlPoint1X = startX + canvasWidth / 3;
-				const controlPoint1Y = startY;
-				const controlPoint2X = endX - canvasWidth / 3;
-				const controlPoint2Y = endY;
+					const controlPoint1X = startX + canvasWidth / 3;
+					const controlPoint1Y = startY;
+					const controlPoint2X = endX - canvasWidth / 3;
+					const controlPoint2Y = endY;
 
-				const d = `M ${startX} ${startY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${endX} ${endY}`;
+					const d = `M ${startX} ${startY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${endX} ${endY}`;
 
-				const color = getColor(normalizedWeight);
-				const strokeWidth = Math.abs(normalizedWeight) * 2 + 0.5;
+					const color = getColor(normalizedWeight);
+					const strokeWidth = Math.abs(normalizedWeight) * 2 + 0.5;
 
-				paths.push({ d, color, strokeWidth, weight, normalizedWeight });
+					paths.push({ d, color, strokeWidth, weight, normalizedWeight });
+				}
 			}
 		}
 	};
@@ -114,25 +117,26 @@
 
 		for (let i = 0; i < llh.length; i++) {
 			for (let j = 0; j < rlh.length; j++) {
+					if (!maxpool || i==j) {
+					const rightConnectionSpacing = endHeight / llh.length;
+					const startX = 0;
+					const startY = llh[i];
+					const endX = canvasWidth;
+					const endY =
+						rlh[j];
 
-				const rightConnectionSpacing = endHeight / llh.length;
-				const startX = 0;
-				const startY = llh[i];
-				const endX = canvasWidth;
-				const endY =
-					rlh[j];
+					const controlPoint1X = startX + canvasWidth / 3;
+					const controlPoint1Y = startY;
+					const controlPoint2X = endX - canvasWidth / 3;
+					const controlPoint2Y = endY;
 
-				const controlPoint1X = startX + canvasWidth / 3;
-				const controlPoint1Y = startY;
-				const controlPoint2X = endX - canvasWidth / 3;
-				const controlPoint2Y = endY;
+					const d = `M ${startX} ${startY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${endX} ${endY}`;
 
-				const d = `M ${startX} ${startY} C ${controlPoint1X} ${controlPoint1Y}, ${controlPoint2X} ${controlPoint2Y}, ${endX} ${endY}`;
+					const color = "gray";
+					const strokeWidth = 1;
 
-				const color = "gray";
-				const strokeWidth = 1;
-
-				paths.push({ d, color, strokeWidth, weight: 1, normalizedWeight: 1 });
+					paths.push({ d, color, strokeWidth, weight: 1, normalizedWeight: 1 });
+				}
 			}
 		}
 	};

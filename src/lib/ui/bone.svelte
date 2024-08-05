@@ -11,13 +11,17 @@
 	type $$Props = HTMLAttributes<HTMLCanvasElement> & {
 		/*nodeIndex: number;
 		layerName: string;*/
-		image: number[][];
+		rgb: boolean;
+		nodeIndex: number;
+		layerName: string;
 	};
 
 	/*export let nodeIndex: number;
 	export let layerName: string;*/
-	export let image;
-	console.log($$restProps);
+	export let nodeIndex: number;
+	export let layerName: string;
+	export let rgb: boolean;
+	let image: number[][] = [[]];	
 
 	const sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> =
 		getContext('sampleDomain');
@@ -25,6 +29,15 @@
 	const sampledOutputs: Writable<SampledOutputs<number[][]>> = getContext('sampledOutputs');
 	const getTfModel = getContext('getTfModel') as () => tf.Sequential;
 	let tfModel = getTfModel();
+
+	$: {
+		let sampled = $sampledOutputs &&
+		$sampledOutputs[layerName];
+		if (sampled) {
+			image = selectImages(sampled.values)[nodeIndex];
+		}
+				
+	}
 
 	let canvas: HTMLCanvasElement;
 	let svg: SVGSVGElement;
@@ -53,13 +66,14 @@
 
 	$: {
 		if (nodeOutputs) {
-			chartWidth = nodeOutputs.length;
+			chartWidth = nodeOutputs[0].length;
 			chartHeight = nodeOutputs.length;
 		}
 		updateHeatmap();
 	}
 
 	onMount(() => {
+		console.log(image);
 		if (ctx == null) ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 		if (ctx == null) {
 			console.error('Canvas unsupported by browser');
@@ -72,6 +86,23 @@
 		}
 	});
 
+	function selectImages(output: number[][][]): number[][][] {
+		let images: number[][][] = [];
+		for (let i = 0; i < output[0][0].length; i++) {
+			let image: number[][] = [];
+			for (let j = 0; j < output.length; j++) {
+				let row: number[] = [];
+				for (let k = 0; k < output[0].length; k++) {
+					row.push(output[j][k][i]);
+				}
+				image.push(row);
+			}
+			images.push(image);
+		}
+		return images;
+	}
+
+
 	function updateHeatmap() {
 		if (!ctx || !nodeOutputs || !chartWidth || !chartHeight) {
 			return;
@@ -80,27 +111,41 @@
 		canvas.height = chartHeight;
 
 		const numSamples = nodeOutputs.length;
-
-		const colorScale = d3
-			.scaleSequential(d3.interpolateRdBu)
-			.domain([
-				d3.max(nodeOutputs, (row) => d3.max(row)) || 1,
-				d3.min(nodeOutputs, (row) => d3.min(row)) || -1
-			]);
-
+		const scale = getScale(nodeOutputs);
 		const imageData = ctx.createImageData(numSamples, numSamples);
 		for (let y = 0; y < numSamples; y++) {
 			for (let x = 0; x < numSamples; x++) {
 				const value = nodeOutputs[y][x];
-				const color = d3.rgb(colorScale(value));
 				const index = (y * numSamples + x) * 4;
-				imageData.data[index] = value;
-				imageData.data[index + 1] = value;
-				imageData.data[index + 2] = value;
-				imageData.data[index + 3] = 255; // Alpha
+				if (rgb) {
+					if (value < 0) {
+						imageData.data[index] = 255;
+						imageData.data[index + 1] = 255-(Math.abs(value))/(Math.abs(scale[0]))*255;
+						imageData.data[index + 2] = 255-(Math.abs(value))/(Math.abs(scale[0]))*255;;
+						imageData.data[index + 3] = 255; // Alpha
+					}
+					else {
+						imageData.data[index] = 255-(Math.abs(value))/(Math.abs(scale[1]))*255;
+						imageData.data[index + 1] = 255-(Math.abs(value))/(Math.abs(scale[1]))*255;
+						imageData.data[index + 2] = 255;
+						imageData.data[index + 3] = 255; // Alpha
+					}
+				}
+				else {
+					imageData.data[index] = value;
+					imageData.data[index + 1] = value;
+					imageData.data[index + 2] = value;
+					imageData.data[index + 3] = 255;
+				}
 			}
 		}
 		ctx.putImageData(imageData, 0, 0);
+	}
+
+	function getScale(image: number[][]) {
+		let maxim = Math.max(...image.map((x) => {return Math.max(...x)}))
+		let minim = Math.min(...image.map((x) => {return Math.min(...x)}))
+		return [minim, maxim];
 	}
 
 	function setupAxes() {

@@ -24,6 +24,8 @@
     export let layerName: string;
     export let inputImage: number[][][];
 
+	let imageList: number[][][];
+
     let svg: SVGSVGElement;
     let width = 600;
     let height = 400;
@@ -45,7 +47,7 @@
 	}
 	
 	const setUnits = (units: number) => {
-		($model2.layers[index] as DenseLayer).units = units;
+		($model2.layers[index] as Conv2DLayer).filters = units;
 		// const nextLayer = $model.layers[index + 1] as DenseLayer;
 		// if (nextLayer) {
 		// 	nextLayer.inputShape = [layer.units];
@@ -91,21 +93,16 @@
 		updateNodes(biases);
 	}
 
-	function getColor(normalizedWeight: number): string {
-		return normalizedWeight > 0 ? '#EF4444' : '#3B82F6';
-	}
 
 	const sampleDomain: Writable<{ x: [number, number]; y: [number, number] }> =
 		getContext('sampleDomain');
 	
-	let mapComponent: EnlargedHeatmap;
-    export function zoom() {
-        mapComponent.setZoom();
-    }
     onMount(async () => {
         // if (!svg) return;
         const layerOutput = await getLayerOutput(model, layerName, tf.tensor3d(inputImage));
-        renderVisualization(layerOutput);
+        //renderVisualization(layerOutput);
+		imageList = selectImages(layerOutput);
+
     });
 
     async function getLayerOutput(model: tf.LayersModel, layerName: string, input: tf.Tensor3D): Promise<number[][][]> {
@@ -116,47 +113,67 @@
         });
         const output = await intermediateTensor.array() as number[][][];
         intermediateTensor.dispose();
-        console.log(output);
         return output;
     }
 
-    function renderVisualization(activations: number[][][]) {
-        const numChannels = activations[0][0].length;
-        const featureMapSize = activations.length;
+	function selectImages(output: number[][][]): number[][][] {
+		let images: number[][][] = [];
+		for (let i = 0; i < output[0][0].length; i++) {
+			let image: number[][] = [];
+			for (let j = 0; j < output.length; j++) {
+				let row: number[] = [];
+				for (let k = 0; k < output[0].length; k++) {
+					row.push(output[j][k][i]);
+				}
+				image.push(row);
+			}
+			images.push(image);
+		}
+		return images;
+	}
 
-        const svgSelection = d3.select(svg);
-        svgSelection.selectAll("*").remove();
+	function getImage(index: number): number[][] {
+		if (!imageList) return [[]];
+		return imageList[index];
+	}
 
-        const colorScale = d3.scaleSequential(d3.interpolateViridis)
-            .domain([d3.min(activations.flat(2)), d3.max(activations.flat(2))]);
+    // function renderVisualization(activations: number[][][]) {
+    //     const numChannels = activations[0][0].length;
+    //     const featureMapSize = activations.length;
 
-        const boxSize = Math.min((width - padding * 2) / numChannels, (height - padding * 2) / featureMapSize);
+    //     const svgSelection = d3.select(svg);
+    //     svgSelection.selectAll("*").remove();
 
-        for (let c = 0; c < numChannels; c++) {
-            const group = svgSelection.append("g")
-                .attr("transform", `translate(${padding + c * (boxSize + 5)}, ${padding})`);
+    //     const colorScale = d3.scaleSequential(d3.interpolateViridis)
+    //         .domain([d3.min(activations.flat(2)), d3.max(activations.flat(2))]);
 
-            for (let y = 0; y < featureMapSize; y++) {
-                for (let x = 0; x < featureMapSize; x++) {
-                    const value = activations[y][x][c];
-                    group.append("rect")
-                        .attr("x", x * boxSize)
-                        .attr("y", y * boxSize)
-                        .attr("width", boxSize)
-                        .attr("height", boxSize)
-                        .attr("fill", colorScale(value))
-                        .attr("stroke", "white")
-                        .attr("stroke-width", 0.5);
-                }
-            }
+    //     const boxSize = Math.min((width - padding * 2) / numChannels, (height - padding * 2) / featureMapSize);
 
-            group.append("text")
-                .attr("x", featureMapSize * boxSize / 2)
-                .attr("y", featureMapSize * boxSize + 20)
-                .attr("text-anchor", "middle")
-                .text(`Channel ${c + 1}`);
-        }
-    }
+    //     for (let c = 0; c < numChannels; c++) {
+    //         const group = svgSelection.append("g")
+    //             .attr("transform", `translate(${padding + c * (boxSize + 5)}, ${padding})`);
+
+    //         for (let y = 0; y < featureMapSize; y++) {
+    //             for (let x = 0; x < featureMapSize; x++) {
+    //                 const value = activations[y][x][c];
+    //                 group.append("rect")
+    //                     .attr("x", x * boxSize)
+    //                     .attr("y", y * boxSize)
+    //                     .attr("width", boxSize)
+    //                     .attr("height", boxSize)
+    //                     .attr("fill", colorScale(value))
+    //                     .attr("stroke", "white")
+    //                     .attr("stroke-width", 0.5);
+    //             }
+    //         }
+
+    //         group.append("text")
+    //             .attr("x", featureMapSize * boxSize / 2)
+    //             .attr("y", featureMapSize * boxSize + 20)
+    //             .attr("text-anchor", "middle")
+    //             .text(`Channel ${c + 1}`);
+    //     }
+    // }
 </script>
 
 <!-- <svg bind:this={svg} {width} {height}></svg> -->
@@ -193,30 +210,13 @@
 							class="h-5 w-5 rounded-[0.15rem]"
 						/>
 					{/if} -->
-                    <Bone class = "h-5 w-5 rounded-[0.15rem]"/>
+                    <Bone class = "h-5 w-5 rounded-[0.15rem]" layerName={layerName} nodeIndex={nodeIndex}  rgb={true}/>
 				</HoverCard.Trigger>
 				<HoverCard.Content class="h-fit max-h-none w-fit max-w-none">
-					<EnlargedHeatmap {nodeIndex} layerName={tfLayer.name} domain = {domain} range = {range} columnNames={columnNames} currentExample={currentExample}/>
+					<Bone class = "h-96 w-96 rounded-[0.15rem]" layerName={layerName} nodeIndex={nodeIndex} rgb={true}/>
 					<!--<Losschart class="h-56 w-56 rounded-[0.15rem]" />-->
 				</HoverCard.Content>
 			</HoverCard.Root>
-
-			<Tooltip.Root>
-				<Tooltip.Trigger
-					class="absolute left-[-0.3rem] h-1 w-1 rounded-full"
-					style={`background-color: ${getColor(nodes[nodeIndex]?.normalizedBias)}; opacity: ${Math.abs(nodes[nodeIndex]?.normalizedBias)};`}
-					aria-label={`Bias: ${nodes[nodeIndex]?.bias}`}
-				></Tooltip.Trigger>
-				<Tooltip.Content>
-					Bias: {nodes[nodeIndex]?.bias}
-				</Tooltip.Content>
-			</Tooltip.Root>
 		</div>
 	{/each}
 </div>
-
-<style>
-    svg {
-        border: 1px solid #ccc;
-    }
-</style>
