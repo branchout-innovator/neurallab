@@ -393,6 +393,21 @@
 		}
 	};
 
+	function findingDimensions(fulldimensions:number){
+			
+			imageWidth = Math.floor(Math.sqrt(fulldimensions));
+
+			while(imageWidth > 1){
+			if (fulldimensions%imageWidth == 0){
+				imageHeight = fulldimensions / imageWidth
+				return
+			}
+			else{
+			imageWidth = imageWidth - 1
+			}
+		}
+		}
+
 	$: {
 		// updateTFModel($model);
 	}
@@ -451,6 +466,9 @@
 			$featureCount = 0;
 
 			isImageDataset = Object.entries($csvColumnConfigs).length > 50;
+			if(isImageDataset){
+				findingDimensions(Object.entries($csvColumnConfigs).length-1)
+			}
 			console.log('image? ' + isImageDataset);
 
 			if (isImageDataset) {
@@ -494,7 +512,7 @@
 				}
 				await sampleOutputs();
 			}
-		}
+		}	
 	};
 
 	$: {
@@ -782,7 +800,7 @@
 										max={5}
 										class="w-24"
 									/>
-									<br>
+									<br />
 								</div>
 							</div>
 							<br />
@@ -932,7 +950,7 @@
 					<div class="mb-3 flex flex-row flex-wrap items-end gap-4">
 						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">
-								Current Loss: {currentloss} 
+								Current Loss: {currentloss}
 							</Label>
 							<Button on:click={displayLoss}>
 								<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
@@ -945,7 +963,7 @@
 									<!-- <BackBone class="w-[250px] h-[250px]" image={sampleImage} rgb = {false}/> -->
 								</Popover.Content>
 							</Popover.Root>
-							
+
 							<div
 								id="losscard"
 								class="absolute z-50 h-fit max-h-none w-fit max-w-none translate-y-16"
@@ -1028,31 +1046,36 @@
 
 						<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
 							{#if tfModel}
-								<Features {columnNames} {currentExample} {isImageDataset} numchannels = {imageChannels} />
+								<Features
+									{columnNames}
+									{currentExample}
+									{isImageDataset}
+									numchannels={imageChannels}
+								/>
 								{#if $model.layers[0]?.inputShape}
 									{@const weights = getWeightsBetweenLayers(tfModel, 0)}
 									{#if weights}
 										{#if ['conv2d', 'maxpooling', 'flatten'].includes($model.layers[0].type)}
-										<ConnectionsVis
-											leftLayerHeights={getNodeYPositionsInput(imageChannels)}
-											rightLayerHeights={getNodeYPositions($model.layers[0])}
-											{canvasWidth}
-											{weights}
-										/>
+											<ConnectionsVis
+												leftLayerHeights={getNodeYPositionsInput(imageChannels)}
+												rightLayerHeights={getNodeYPositions($model.layers[0])}
+												{canvasWidth}
+												{weights}
+											/>
 										{:else}
-										<ConnectionsVis
-											leftLayerHeights={getNodeYPositionsInput($model.layers[0].inputShape[0])}
-											rightLayerHeights={getNodeYPositions($model.layers[0])}
-											{canvasWidth}
-											{weights}
-										/>
+											<ConnectionsVis
+												leftLayerHeights={getNodeYPositionsInput($model.layers[0].inputShape[0])}
+												rightLayerHeights={getNodeYPositions($model.layers[0])}
+												{canvasWidth}
+												{weights}
+											/>
 										{/if}
 									{/if}
 								{/if}
 								{#each $model.layers as layer, i (i)}
 									<svelte:component
 										this={layerComponents[layer.type]}
-										layer = {layer}
+										{layer}
 										index={i}
 										model={tfModel}
 										layerName={tfModel.layers[i].name}
@@ -1062,7 +1085,7 @@
 										{columnNames}
 										{currentExample}
 										{dataset}
-										inputImage = {getImage(0)}
+										inputImage={getImage(0)}
 									></svelte:component>
 									{#if i < $model.layers.length - 1}
 										{@const leftLayerHeights = getNodeYPositions(layer)}
@@ -1076,11 +1099,13 @@
 												{weights}
 											/>
 										{:else}
-										<ConnectionsVis
+											<ConnectionsVis
 												{leftLayerHeights}
 												{rightLayerHeights}
-												canvasWidth= {($model.layers[i+1].type!="maxpooling")?canvasWidth:canvasWidth/3}
-												maxpool={$model.layers[i+1].type=="maxpooling"}
+												canvasWidth={$model.layers[i + 1].type != 'maxpooling'
+													? canvasWidth
+													: canvasWidth / 3}
+												maxpool={$model.layers[i + 1].type == 'maxpooling'}
 											/>
 										{/if}
 									{/if}
