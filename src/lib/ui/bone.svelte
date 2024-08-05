@@ -73,7 +73,6 @@
 	}
 
 	onMount(() => {
-		console.log(image);
 		if (ctx == null) ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 		if (ctx == null) {
 			console.error('Canvas unsupported by browser');

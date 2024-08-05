@@ -511,6 +511,15 @@
 					await updateTFModel($model);
 				}
 				await sampleOutputs();
+				if (isImageDataset) {
+					while ($model.layers.length > 0) {
+						removeLayer();
+					}
+					addLayer('conv2d');
+					addLayer('maxpooling');
+					addLayer('flatten');
+					addLayer('dense');
+				}
 			}
 		}	
 	};
@@ -1056,12 +1065,11 @@
 									{@const weights = getWeightsBetweenLayers(tfModel, 0)}
 									{#if weights}
 										{#if ['conv2d', 'maxpooling', 'flatten'].includes($model.layers[0].type)}
-											<ConnectionsVis
-												leftLayerHeights={getNodeYPositionsInput(imageChannels)}
-												rightLayerHeights={getNodeYPositions($model.layers[0])}
-												{canvasWidth}
-												{weights}
-											/>
+										<ConnectionsVis
+											leftLayerHeights={getNodeYPositionsInput(imageChannels)}
+											rightLayerHeights={getNodeYPositions($model.layers[0])}
+											{canvasWidth}
+										/>
 										{:else}
 											<ConnectionsVis
 												leftLayerHeights={getNodeYPositionsInput($model.layers[0].inputShape[0])}
@@ -1091,7 +1099,14 @@
 										{@const leftLayerHeights = getNodeYPositions(layer)}
 										{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
 										{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
-										{#if weights}
+										{#if ['conv2d', 'maxpooling'].includes($model.layers[i].type)}
+											<ConnectionsVis
+													{leftLayerHeights}
+													{rightLayerHeights}
+													canvasWidth= {($model.layers[i+1].type!="maxpooling")?canvasWidth:canvasWidth/3}
+													maxpool={$model.layers[i+1].type=="maxpooling"}
+												/>
+										{:else if weights}
 											<ConnectionsVis
 												{leftLayerHeights}
 												{rightLayerHeights}
