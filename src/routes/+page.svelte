@@ -494,9 +494,9 @@
 				}
 				await sampleOutputs();
 				if (isImageDataset) {
-					removeLayer();
-					removeLayer();
-					removeLayer();
+					while ($model.layers.length > 0) {
+						removeLayer();
+					}
 					addLayer('conv2d');
 					addLayer('maxpooling');
 					addLayer('flatten');
