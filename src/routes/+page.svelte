@@ -1037,7 +1037,6 @@
 											leftLayerHeights={getNodeYPositionsInput(imageChannels)}
 											rightLayerHeights={getNodeYPositions($model.layers[0])}
 											{canvasWidth}
-											{weights}
 										/>
 										{:else}
 										<ConnectionsVis
@@ -1068,7 +1067,14 @@
 										{@const leftLayerHeights = getNodeYPositions(layer)}
 										{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
 										{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
-										{#if weights}
+										{#if ['conv2d', 'maxpooling'].includes($model.layers[i].type)}
+											<ConnectionsVis
+													{leftLayerHeights}
+													{rightLayerHeights}
+													canvasWidth= {($model.layers[i+1].type!="maxpooling")?canvasWidth:canvasWidth/3}
+													maxpool={$model.layers[i+1].type=="maxpooling"}
+												/>
+										{:else if weights}
 											<ConnectionsVis
 												{leftLayerHeights}
 												{rightLayerHeights}

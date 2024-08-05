@@ -99,9 +99,9 @@
 	
     onMount(async () => {
         // if (!svg) return;
-        const layerOutput = await getLayerOutput(model, layerName, tf.tensor3d(inputImage));
-        //renderVisualization(layerOutput);
-		imageList = selectImages(layerOutput);
+        // const layerOutput = await getLayerOutput(model, layerName, tf.tensor3d(inputImage));
+        // //renderVisualization(layerOutput);
+		// imageList = selectImages(layerOutput);
 
     });
 
