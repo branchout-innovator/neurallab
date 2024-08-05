@@ -493,6 +493,15 @@
 					await updateTFModel($model);
 				}
 				await sampleOutputs();
+				if (isImageDataset) {
+					removeLayer();
+					removeLayer();
+					removeLayer();
+					addLayer('conv2d');
+					addLayer('maxpooling');
+					addLayer('flatten');
+					addLayer('dense');
+				}
 			}
 		}
 	};
