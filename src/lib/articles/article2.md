@@ -32,7 +32,7 @@ To overcome the issue of a restricted domain when modeling with ReLU, Leaky ReLU
 <br>
 
 #### **Tanh:** 
-Tanh functions are similar to sigmoid but with a range of [-1, 1]. Tanh can be more effective at training the network because of a larger gradient:  tanh(x) = ex-e-x/ex+e-x. The range of tanh is (-1,1) instead of sigmoid (0,1). Tanh is differeitnable and monotonic. 
+Tanh functions are similar to sigmoid but with a range of [-1, 1]. Tanh can be more effective at training the network because of a larger gradient:  tanh(x) = ex-e-x/ex+e-x. The range of tanh is (-1,1) instead of sigmoid (0,1). Tanh is differentiable and monotonic. 
 
 <br>
 

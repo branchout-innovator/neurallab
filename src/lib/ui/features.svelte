@@ -5,6 +5,7 @@
 	export let currentExample: { xs: number[]; ys: number[] } | null;
 	export let isImageDataset: boolean;
 	export let numchannels: number;
+	export let sampleImage: number[][][] = [[]];
 
 	const csvColumnConfigs: Writable<{
 		[key: string]: { isLabel: 'true' | 'false' };
