@@ -408,6 +408,7 @@
 	}
 
 	let datasetUploadFiles: FileList;
+	let labelFiles: FileList;
 
 	let dataset: Writable<tf.data.Dataset<tf.TensorContainer>> = writable();
 	setContext('dataset', dataset);
@@ -795,8 +796,11 @@
 								</div>
 							</div>
 							<br />
-							<div class="space-y-1">
-								<Label class="flex gap-2 text-xs">Choose Dataset</Label>
+							<div class="flex flex-row flex-wrap items-end gap-8">
+								<Label class="flex flex-col gap-2 text-xs">Choose Dataset</Label>
+								<Label class="flex flex-col gap-2 text-xs">Choose Labels</Label>
+							</div>
+							<div class="flex flex-row flex wrap items-end gap-2">
 								<Dialog.Root>
 									<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
 										>Upload CSV</Dialog.Trigger
@@ -891,23 +895,39 @@
 										</Dialog.Header>
 									</Dialog.Content>
 								</Dialog.Root>
-								<div class="flex flex-col gap-2">
-									<Label class="flex gap-2 text-xs">
-										<Activity class="h-4 w-4"></Activity>
-										Activation Function
-									</Label>
-									<Select.Root bind:selected={selectedActivation}>
-										<Select.Trigger class="w-[180px]">
-											<Select.Value></Select.Value>
-										</Select.Trigger>
-										<Select.Content>
-											<Select.Item value="relu">ReLU</Select.Item>
-											<Select.Item value="sigmoid">Sigmoid</Select.Item>
-											<Select.Item value="tanh">Tanh</Select.Item>
-											<Select.Item value="softmax">Softmax</Select.Item>
-										</Select.Content>
-									</Select.Root>
-								</div>
+								<Dialog.Root>
+									<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}>
+										Upload Labels
+									</Dialog.Trigger>
+									<Dialog.Content>
+										<Dialog.Header>
+											<Dialog.Title>Upload Text File</Dialog.Title>
+											<Dialog.Description class="flex flex-col gap-2">
+												<p>Upload a text file to be parsed</p>
+												<div class="flex flex-col">
+													<FileInput bind:files={labelFiles} />
+												</div>
+											</Dialog.Description>
+										</Dialog.Header>
+									</Dialog.Content>
+								</Dialog.Root>
+							</div>
+							<div class="flex flex-col gap-2">
+								<Label class="flex gap-2 text-xs">
+									<Activity class="h-4 w-4"></Activity>
+									Activation Function
+								</Label>
+								<Select.Root bind:selected={selectedActivation}>
+									<Select.Trigger class="w-[180px]">
+										<Select.Value></Select.Value>
+									</Select.Trigger>
+									<Select.Content>
+										<Select.Item value="relu">ReLU</Select.Item>
+										<Select.Item value="sigmoid">Sigmoid</Select.Item>
+										<Select.Item value="tanh">Tanh</Select.Item>
+										<Select.Item value="softmax">Softmax</Select.Item>
+									</Select.Content>
+								</Select.Root>
 							</div>
 							<br />
 							<div>
