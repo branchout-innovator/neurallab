@@ -714,7 +714,7 @@
 				<div class="w-1/3">
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger asChild let:builder>
-							<Button variant="outline" class="w-full" builders={[builder]}>Article Sections</Button
+							<Button variant="outline" class="w-full" builders={[builder]}>Articles</Button
 							>
 						</DropdownMenu.Trigger>
 						<DropdownMenu.Content>
