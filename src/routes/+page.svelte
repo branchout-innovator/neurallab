@@ -424,6 +424,7 @@
 
 	let datasetUploadFiles: FileList;
 	let labelFiles: FileList;
+	
 
 	let dataset: Writable<tf.data.Dataset<tf.TensorContainer>> = writable();
 	setContext('dataset', dataset);
@@ -449,6 +450,17 @@
 
 	let hasLabel = false;
 	let featureCount: Writable<number> = writable(-1);
+	let hasImageLabel = false;
+	let imageLabels: string[];
+
+	$: {
+		(async () => {
+			if (labelFiles && labelFiles.length > 0) {
+				hasImageLabel = true;
+				labelFiles.item(0)?.text().then((t) => {imageLabels = t.replaceAll("\n", " ").split(" ").filter((x) => {return x != ""})})
+			}
+		})();
+	}
 
 	const updateDataset = async (
 		datasetUploadFiles: FileList,
