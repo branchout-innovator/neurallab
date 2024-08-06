@@ -393,6 +393,21 @@
 		}
 	};
 
+	function findingDimensions(fulldimensions:number){
+			
+			imageWidth = Math.floor(Math.sqrt(fulldimensions));
+
+			while(imageWidth > 1){
+			if (fulldimensions%imageWidth == 0){
+				imageHeight = fulldimensions / imageWidth
+				return
+			}
+			else{
+			imageWidth = imageWidth - 1
+			}
+		}
+		}
+
 	$: {
 		// updateTFModel($model);
 	}
@@ -408,6 +423,7 @@
 	}
 
 	let datasetUploadFiles: FileList;
+	let labelFiles: FileList;
 
 	let dataset: Writable<tf.data.Dataset<tf.TensorContainer>> = writable();
 	setContext('dataset', dataset);
@@ -451,6 +467,9 @@
 			$featureCount = 0;
 
 			isImageDataset = Object.entries($csvColumnConfigs).length > 50;
+			if(isImageDataset){
+				findingDimensions(Object.entries($csvColumnConfigs).length-1)
+			}
 			console.log('image? ' + isImageDataset);
 
 			if (isImageDataset) {
@@ -503,7 +522,7 @@
 					addLayer('dense');
 				}
 			}
-		}
+		}	
 	};
 
 	$: {
@@ -791,12 +810,15 @@
 										max={5}
 										class="w-24"
 									/>
-									<br>
+									<br />
 								</div>
 							</div>
 							<br />
-							<div class="space-y-1">
-								<Label class="flex gap-2 text-xs">Choose Dataset</Label>
+							<div class="flex flex-row flex-wrap items-end gap-8">
+								<Label class="flex flex-col gap-2 text-xs">Choose Dataset</Label>
+								<Label class="flex flex-col gap-2 text-xs">Choose Labels</Label>
+							</div>
+							<div class="flex flex-row flex wrap items-end gap-2">
 								<Dialog.Root>
 									<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
 										>Upload CSV</Dialog.Trigger
@@ -891,23 +913,39 @@
 										</Dialog.Header>
 									</Dialog.Content>
 								</Dialog.Root>
-								<div class="flex flex-col gap-2">
-									<Label class="flex gap-2 text-xs">
-										<Activity class="h-4 w-4"></Activity>
-										Activation Function
-									</Label>
-									<Select.Root bind:selected={selectedActivation}>
-										<Select.Trigger class="w-[180px]">
-											<Select.Value></Select.Value>
-										</Select.Trigger>
-										<Select.Content>
-											<Select.Item value="relu">ReLU</Select.Item>
-											<Select.Item value="sigmoid">Sigmoid</Select.Item>
-											<Select.Item value="tanh">Tanh</Select.Item>
-											<Select.Item value="softmax">Softmax</Select.Item>
-										</Select.Content>
-									</Select.Root>
-								</div>
+								<Dialog.Root>
+									<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}>
+										Upload Labels
+									</Dialog.Trigger>
+									<Dialog.Content>
+										<Dialog.Header>
+											<Dialog.Title>Upload Text File</Dialog.Title>
+											<Dialog.Description class="flex flex-col gap-2">
+												<p>Upload a text file to be parsed</p>
+												<div class="flex flex-col">
+													<FileInput bind:files={labelFiles} />
+												</div>
+											</Dialog.Description>
+										</Dialog.Header>
+									</Dialog.Content>
+								</Dialog.Root>
+							</div>
+							<div class="flex flex-col gap-2">
+								<Label class="flex gap-2 text-xs">
+									<Activity class="h-4 w-4"></Activity>
+									Activation Function
+								</Label>
+								<Select.Root bind:selected={selectedActivation}>
+									<Select.Trigger class="w-[180px]">
+										<Select.Value></Select.Value>
+									</Select.Trigger>
+									<Select.Content>
+										<Select.Item value="relu">ReLU</Select.Item>
+										<Select.Item value="sigmoid">Sigmoid</Select.Item>
+										<Select.Item value="tanh">Tanh</Select.Item>
+										<Select.Item value="softmax">Softmax</Select.Item>
+									</Select.Content>
+								</Select.Root>
 							</div>
 							<br />
 							<div>
@@ -941,7 +979,7 @@
 					<div class="mb-3 flex flex-row flex-wrap items-end gap-4">
 						<div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">
-								Current Loss: {currentloss} 
+								Current Loss: {currentloss}
 							</Label>
 							<Button on:click={displayLoss}>
 								<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
@@ -954,7 +992,7 @@
 									<!-- <BackBone class="w-[250px] h-[250px]" image={sampleImage} rgb = {false}/> -->
 								</Popover.Content>
 							</Popover.Root>
-							
+
 							<div
 								id="losscard"
 								class="absolute z-50 h-fit max-h-none w-fit max-w-none translate-y-16"
@@ -1037,7 +1075,12 @@
 
 						<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
 							{#if tfModel}
-								<Features {columnNames} {currentExample} {isImageDataset} numchannels = {imageChannels} />
+								<Features
+									{columnNames}
+									{currentExample}
+									{isImageDataset}
+									numchannels={imageChannels}
+								/>
 								{#if $model.layers[0]?.inputShape}
 									{@const weights = getWeightsBetweenLayers(tfModel, 0)}
 									{#if weights}
@@ -1048,19 +1091,19 @@
 											{canvasWidth}
 										/>
 										{:else}
-										<ConnectionsVis
-											leftLayerHeights={getNodeYPositionsInput($model.layers[0].inputShape[0])}
-											rightLayerHeights={getNodeYPositions($model.layers[0])}
-											{canvasWidth}
-											{weights}
-										/>
+											<ConnectionsVis
+												leftLayerHeights={getNodeYPositionsInput($model.layers[0].inputShape[0])}
+												rightLayerHeights={getNodeYPositions($model.layers[0])}
+												{canvasWidth}
+												{weights}
+											/>
 										{/if}
 									{/if}
 								{/if}
 								{#each $model.layers as layer, i (i)}
 									<svelte:component
 										this={layerComponents[layer.type]}
-										layer = {layer}
+										{layer}
 										index={i}
 										model={tfModel}
 										layerName={tfModel.layers[i].name}
@@ -1070,7 +1113,7 @@
 										{columnNames}
 										{currentExample}
 										{dataset}
-										inputImage = {getImage(0)}
+										inputImage={getImage(0)}
 									></svelte:component>
 									{#if i < $model.layers.length - 1}
 										{@const leftLayerHeights = getNodeYPositions(layer)}
@@ -1091,11 +1134,13 @@
 												{weights}
 											/>
 										{:else}
-										<ConnectionsVis
+											<ConnectionsVis
 												{leftLayerHeights}
 												{rightLayerHeights}
-												canvasWidth= {($model.layers[i+1].type!="maxpooling")?canvasWidth:canvasWidth/3}
-												maxpool={$model.layers[i+1].type=="maxpooling"}
+												canvasWidth={$model.layers[i + 1].type != 'maxpooling'
+													? canvasWidth
+													: canvasWidth / 3}
+												maxpool={$model.layers[i + 1].type == 'maxpooling'}
 											/>
 										{/if}
 									{/if}
