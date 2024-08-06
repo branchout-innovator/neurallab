@@ -7,7 +7,7 @@ Maxima and minima are the highest and lowest values of a function within a speci
 <br>
 
 ## **Forms of Optimization Algorithms** 
-### Gradient descent: minimizes a function and finds the local minima of a differentiable function using the formula:  X=X-lr * d/dx f(X)
+#### Gradient descent: minimizes a function and finds the local minima of a differentiable function using the formula:  X=X-lr * d/dx f(X)
 * X is the input 
 * F(X) is the output based on X
 * LR is the learning rate which is what determines the size of each step to reach the minimum of the function 
