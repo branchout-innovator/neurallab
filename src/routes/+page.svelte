@@ -506,7 +506,7 @@
 				}
 			}
 
-			[imageWidth, imageHeight] = getClosestFactors($featureCount);
+			
 
 			if (hasLabel) {
 				const result = await loadUploadedCsv(
@@ -996,14 +996,6 @@
 							<Button on:click={displayLoss}>
 								<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
 							</Button>
-							<Popover.Root portal={null}>
-								<Popover.Trigger asChild let:builder>
-									<Button builders={[builder]} variant="outline">Open</Button>
-								</Popover.Trigger>
-								<Popover.Content>
-									<!-- <BackBone class="w-[250px] h-[250px]" image={sampleImage} rgb = {false}/> -->
-								</Popover.Content>
-							</Popover.Root>
 
 							<div
 								id="losscard"

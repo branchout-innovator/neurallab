@@ -119,19 +119,18 @@
 	h3 {
 		@apply text-lg;
 	}
-	p {
+	h4 {
+		@apply text-base;
+	}
+	h5 {
+		@apply text-base;
 		text-indent: 2.75rem;
-	}
-}
-@layer base {
-	ul, ol {
-	  list-style: revert;
-	  @apply list-inside;
-	  margin:4;
-	  padding: 4;
+		font-size: 1rem; /* 16px */
+line-height: 1.5rem;
 	}
 	p {
-		margin:4;
+		@apply text-base;
+		text-indent: 2.75rem;
 	}
 }
 
@@ -141,9 +140,4 @@ main {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
-}
-
-p {
-	font-size: 0.875rem/* 14px */;
-    line-height: 1.25rem/* 20px */;
 }
