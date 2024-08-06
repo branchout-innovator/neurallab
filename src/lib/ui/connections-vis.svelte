@@ -40,7 +40,6 @@
 	const updateSvg = async (weights: tf.Tensor) => {
 		if (!browser) return;
 		const weightsArray = (await weights.array()) as number[][];
-		console.log(weightsArray);
 		if (typeof weightsArray === 'number') return;
 		const maxWeight = getMaxAbsWeight(weightsArray);
 		const endHeight = remToPx(1.1);

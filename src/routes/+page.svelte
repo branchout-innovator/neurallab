@@ -494,7 +494,7 @@
 				}
 			}
 
-			[imageWidth, imageHeight] = getClosestFactors($featureCount);
+			
 
 			if (hasLabel) {
 				const result = await loadUploadedCsv(

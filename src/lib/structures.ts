@@ -214,7 +214,7 @@ export async function loadCsvDataset(
 			// column name) to array form.
 			let arrayXs: NestedArray = Object.values(xs) as number[];
 			const arrayYs = Object.values(ys) as number[];
-			if (imageWidth && imageHeight && imageChannels) {
+			if (imageWidth && imageHeight && imageChannels && imageWidth != 0 && imageHeight != 0 && imageChannels != 0) {
 				arrayXs = arrayXs.map((x) => {return (x as unknown as number>1)?(x as unknown as number)/256: x})
 				arrayXs = tf.reshape(arrayXs, [imageWidth, imageHeight, imageChannels]).arraySync();
 			}
