@@ -70,11 +70,11 @@
 	import Losschart from '$lib/ui/losschart.svelte';
 	import * as HoverCard from '$lib/components/ui/hover-card';
 	import LLM from '$lib/ui/llm.svelte';
-	import { create, all, reshape } from 'mathjs'
+	import { create, all, reshape } from 'mathjs';
 	import BackBone from '$lib/ui/bone.svelte';
-		import * as Popover from '$lib/components/ui/popover/index.js';
+	import * as Popover from '$lib/components/ui/popover/index.js';
 	import logo from '$lib/images/image0.png';
-	
+	import HomePage from '$lib/ui/home.svelte';
 
 	let isImageDataset = false;
 	let outputColumn = '';
@@ -162,7 +162,7 @@
 				break;
 			}
 			case 'maxpooling': {
-				if ($model.layers[$model.layers.length - 1].type != "conv2d") {
+				if ($model.layers[$model.layers.length - 1].type != 'conv2d') {
 					throw new Error(`max pooling initialized without conv layer`);
 				}
 				layer = {
@@ -393,20 +393,18 @@
 		}
 	};
 
-	function findingDimensions(fulldimensions:number){
-			
-			imageWidth = Math.floor(Math.sqrt(fulldimensions));
+	function findingDimensions(fulldimensions: number) {
+		imageWidth = Math.floor(Math.sqrt(fulldimensions));
 
-			while(imageWidth > 1){
-			if (fulldimensions%imageWidth == 0){
-				imageHeight = fulldimensions / imageWidth
-				return
-			}
-			else{
-			imageWidth = imageWidth - 1
+		while (imageWidth > 1) {
+			if (fulldimensions % imageWidth == 0) {
+				imageHeight = fulldimensions / imageWidth;
+				return;
+			} else {
+				imageWidth = imageWidth - 1;
 			}
 		}
-		}
+	}
 
 	$: {
 		// updateTFModel($model);
@@ -467,8 +465,8 @@
 			$featureCount = 0;
 
 			isImageDataset = Object.entries($csvColumnConfigs).length > 50;
-			if(isImageDataset){
-				findingDimensions(Object.entries($csvColumnConfigs).length-1)
+			if (isImageDataset) {
+				findingDimensions(Object.entries($csvColumnConfigs).length - 1);
 			}
 			console.log('image? ' + isImageDataset);
 
@@ -522,7 +520,7 @@
 					addLayer('dense');
 				}
 			}
-		}	
+		}
 	};
 
 	$: {
@@ -649,52 +647,89 @@
 
 		return [val, val2];
 	}
-  let myData: Array<{ [key: string]: string | number }> | null = null;
+	let myData: Array<{ [key: string]: string | number }> | null = null;
 
-  function handleFileSelect(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target && typeof e.target.result === 'string') {
-          const csvData = e.target.result;
-          parseCSV(csvData);
-        }
-      };
-      reader.readAsText(file);
-    }
-  }
-  
-  function parseCSV(csvData: string): void {
-    const parsedData = d3.csvParse(csvData, (d) => {
-      return Object.keys(d).reduce((acc, key) => {
-        acc[key] = isNaN(+d[key]!) ? d[key] : +d[key]!;
-        return acc;
-      }, {} as { [key: string]: string | number });
-    });
-
-    myData = parsedData;
-    myDataIsReady();
-  }
-
-  function myDataIsReady(): void {
-    console.log(myData);
-  }
-  let sampleImage: number[][] = [[]];
-  function getImage(index: number): number[][][] {
-	if (!myData) return [[[]]];
-	let temp = Array.from(Object.entries(myData[index]).values()).map((k) => {return k[1]}).slice(0, -1).filter((x) => {return typeof x == "number"}).map((x) => {return x/256});
-	if (temp.length == imageHeight * imageWidth)
-		return reshape(temp, [imageWidth, imageHeight, imageChannels]) as unknown as number[][][];
-	return [[]];
-  }
-
-  $: {
-	if (myData && imageHeight != 0 && imageWidth != 0) {
-		// sampleImage = getImage(0);
+	function handleFileSelect(event: Event) {
+		const input = event.target as HTMLInputElement;
+		if (input.files && input.files[0]) {
+			const file = input.files[0];
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				if (e.target && typeof e.target.result === 'string') {
+					const csvData = e.target.result;
+					parseCSV(csvData);
+				}
+			};
+			reader.readAsText(file);
+		}
 	}
-  }
+
+	function parseCSV(csvData: string): void {
+		const parsedData = d3.csvParse(csvData, (d) => {
+			return Object.keys(d).reduce(
+				(acc, key) => {
+					acc[key] = isNaN(+d[key]!) ? d[key] : +d[key]!;
+					return acc;
+				},
+				{} as { [key: string]: string | number }
+			);
+		});
+
+		myData = parsedData;
+		myDataIsReady();
+	}
+
+	function myDataIsReady(): void {
+		console.log(myData);
+	}
+	let sampleImage: number[][] = [[]];
+	function getImage(index: number): number[][][] {
+		if (!myData) return [[[]]];
+		let temp = Array.from(Object.entries(myData[index]).values())
+			.map((k) => {
+				return k[1];
+			})
+			.slice(0, -1)
+			.filter((x) => {
+				return typeof x == 'number';
+			})
+			.map((x) => {
+				return x / 256;
+			});
+		if (temp.length == imageHeight * imageWidth)
+			return reshape(temp, [imageWidth, imageHeight, imageChannels]) as unknown as number[][][];
+		return [[]];
+	}
+
+	$: {
+		if (myData && imageHeight != 0 && imageWidth != 0) {
+			// sampleImage = getImage(0);
+		}
+	}
+
+	const frameworks = [
+		{
+			value: 'sveltekit',
+			label: 'SvelteKit'
+		},
+		{
+			value: 'next',
+			label: 'Next.js'
+		},
+		{
+			value: 'astro',
+			label: 'Astro'
+		},
+		{
+			value: 'nuxt',
+			label: 'Nuxt.js'
+		}
+	];
+
+	var clicked = false;
+	function GTA() {
+		clicked = true;
+	}
 </script>
 
 <svelte:head>
@@ -703,261 +738,297 @@
 </svelte:head>
 <!--<div class="container flex h-full max-w-full flex-row gap-4">-->
 <Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row gap-4">
-	<Resizable.Pane defaultSize={25}>
-		<div class="container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
-			<div class="h-1/8 container flex w-full flex-row items-end">
-				<div class="flex h-full w-1/3">
-					<Button variant="outline" class="ml-auto h-full" size="icon" on:click={pageLeft}
-						>&lt;</Button
-					>
+	{#if clicked == false}
+		<Resizable.Pane defaultSize={25}>
+			<Card.Root class="h-full w-full">
+				<Card.Header>
+					<Card.Title>Create project</Card.Title>
+					<Card.Description>Educating people through interactive platforms</Card.Description>
+				</Card.Header>
+				<Card.Content>
+					<Label>About</Label>
+					<br />
+					<br />
+					NeuralLab is an interactive online platform designed to teach neural network concepts in artificial
+					intelligence. Through its interactive, accessible, and easy to learn neural network, it offers
+					lessons that enable learners to explore AI concepts at their own pace. The user-friendly interface
+					also allows visitors to apply their ideas using custom datasets for real-time training, promoting
+					both exploration and curiosity in AI.
+					<br />
+					<br>
+					<br>
+					<Label>What is a neural network?</Label>
+					<br />
+					<br />
+					Like the one on the right, neural networks are machine-learning models similar to the brain’s
+					structure. They consist of interconnected nodes (“neurons”) in layers. Data is received through
+					the input, ran through hidden layers, where it’s transformed via biases (helping fit data),
+					weights (helping make accurate predictions), and activation functions (to capture patterns),
+					and an output layer, producing the final classification. They have many uses, including image
+					recognition, language processing, and more.
+				</Card.Content>
+				<Card.Footer class="flex justify-between">
+					<Button on:click={GTA}>Go To Article</Button>
+				</Card.Footer>
+			</Card.Root>
+		</Resizable.Pane>
+	{:else}
+		<Resizable.Pane defaultSize={25}>
+			<div class="container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
+				<div class="h-1/8 container flex w-full flex-row items-end">
+					<div class="flex h-full w-1/3">
+						<Button variant="outline" class="ml-auto h-full" size="icon" on:click={pageLeft}
+							>&lt;</Button
+						>
+					</div>
+					<div class="w-1/3">
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger asChild let:builder>
+								<Button variant="outline" class="w-full" builders={[builder]}
+									>Article Sections</Button
+								>
+							</DropdownMenu.Trigger>
+							<DropdownMenu.Content>
+								<DropdownMenu.Label>Click for Pages</DropdownMenu.Label>
+								<DropdownMenu.Separator />
+								{#each articletitle as subcategory, j}
+									<DropdownMenu.Sub>
+										<DropdownMenu.SubTrigger>
+											<span>{subtitles[j]}</span>
+										</DropdownMenu.SubTrigger>
+										<DropdownMenu.SubContent class="w-full">
+											<DropdownMenu.RadioGroup bind:value={position}>
+												{#each subcategory as title, i}
+													<DropdownMenu.RadioItem
+														value={String(i + articletitle.slice(0, j).reduce(addLength, 0))}
+														>{title}</DropdownMenu.RadioItem
+													>
+												{/each}
+											</DropdownMenu.RadioGroup>
+										</DropdownMenu.SubContent>
+									</DropdownMenu.Sub>
+								{/each}
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
+					</div>
+					<div class="flex h-full w-1/3">
+						<Button variant="outline" class="mr-auto h-full" size="icon" on:click={pageRight}
+							>&gt;</Button
+						>
+					</div>
 				</div>
-				<div class="w-1/3">
-					<DropdownMenu.Root>
-						<DropdownMenu.Trigger asChild let:builder>
-							<Button variant="outline" class="w-full" builders={[builder]}>Article Sections</Button
-							>
-						</DropdownMenu.Trigger>
-						<DropdownMenu.Content>
-							<DropdownMenu.Label>Click for Pages</DropdownMenu.Label>
-							<DropdownMenu.Separator />
-							{#each articletitle as subcategory, j}
-								<DropdownMenu.Sub>
-									<DropdownMenu.SubTrigger>
-										<span>{subtitles[j]}</span>
-									</DropdownMenu.SubTrigger>
-									<DropdownMenu.SubContent class="w-full">
-										<DropdownMenu.RadioGroup bind:value={position}>
-											{#each subcategory as title, i}
-												<DropdownMenu.RadioItem
-													value={String(i + articletitle.slice(0, j).reduce(addLength, 0))}
-													>{title}</DropdownMenu.RadioItem
-												>
-											{/each}
-										</DropdownMenu.RadioGroup>
-									</DropdownMenu.SubContent>
-								</DropdownMenu.Sub>
-							{/each}
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
-				</div>
-				<div class="flex h-full w-1/3">
-					<Button variant="outline" class="mr-auto h-full" size="icon" on:click={pageRight}
-						>&gt;</Button
-					>
+				<span class="inline-block h-8 w-4" />
+				<Progress {value} />
+				<div id="article" class="flex w-full overflow-y-auto">
+					<div class="w-full p-4">
+						<h2
+							class="scroll-m-20 border-b pb-2 text-center text-2xl font-semibold tracking-tight transition-colors first:mt-0"
+						>
+							{articletitle.flat()[Number(position)]}
+						</h2>
+						<span class="inline-block h-4 w-4"></span>
+						<SvelteMarkdown {source} renderers={{ image: ImageComponent }} />
+					</div>
 				</div>
 			</div>
-			<span class="inline-block h-8 w-4" />
-			<Progress {value} />
-			<div id="article" class="flex w-full overflow-y-auto">
-				<div class="w-full p-4">
-					<h2
-						class="scroll-m-20 border-b pb-2 text-center text-2xl font-semibold tracking-tight transition-colors first:mt-0"
-					>
-						{articletitle.flat()[Number(position)]}
-					</h2>
-					<span class="inline-block h-4 w-4"></span>
-					<SvelteMarkdown {source} renderers={{ image: ImageComponent }} />
-				</div>
-			</div>
-		</div>
-	</Resizable.Pane>
-	<Resizable.Handle withHandle />
-	<Resizable.Pane defaultSize={60} class="p-4">
-		<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
-			<!-- Controls (header) -->
-			<Tabs.Root value="NL" class="h-auto w-full">
-				<Tabs.List class="grid w-full grid-cols-3">
-					<Tabs.Trigger value="NL">NeuralLab</Tabs.Trigger>
-					<Tabs.Trigger value="settings">Settings</Tabs.Trigger>
-					<Tabs.Trigger value="LLM">LLM</Tabs.Trigger>
-				</Tabs.List>
-				<Tabs.Content value="settings" class="h-full">
-					<Card.Root class="h-full">
-						<Card.Header>
-							<Card.Title>Settings</Card.Title>
-							<div class="float-left">Make changes to your settings here.</div>
-						</Card.Header>
-						<Card.Content class="space-y-3">
-							<div class="flex flex-1 items-start space-x-2">
-								<Label class="flex gap-2 text-xs">Choose Mode Here</Label>
-							</div>
-							<div>
-								<ThemeToggle></ThemeToggle>
-							</div>
-							<div class="grid w-1/3 grid-cols-2 items-center">
+		</Resizable.Pane>
+		<Resizable.Handle withHandle />
+		<Resizable.Pane defaultSize={60} class="p-4">
+			<div class="flex h-full max-w-full flex-grow flex-col gap-4 overflow-x-hidden py-4">
+				<!-- Controls (header) -->
+				<Tabs.Root value="NL" class="h-auto w-full">
+					<Tabs.List class="grid w-full grid-cols-3">
+						<Tabs.Trigger value="NL">NeuralLab</Tabs.Trigger>
+						<Tabs.Trigger value="settings">Settings</Tabs.Trigger>
+						<Tabs.Trigger value="LLM">LLM</Tabs.Trigger>
+					</Tabs.List>
+					<Tabs.Content value="settings" class="h-full">
+						<Card.Root class="h-full">
+							<Card.Header>
+								<Card.Title>Settings</Card.Title>
+								<div class="float-left">Make changes to your settings here.</div>
+							</Card.Header>
+							<Card.Content class="space-y-3">
+								<div class="flex flex-1 items-start space-x-2">
+									<Label class="flex gap-2 text-xs">Choose Mode Here</Label>
+								</div>
 								<div>
-									<Label class="flex gap-2 text-xs">Hardware</Label>
-									<Tooltip.Root>
-										<Tooltip.Trigger asChild>
-											<div class="flex h-9 flex-row flex-nowrap items-center space-x-2">
-												<Label for="hardware-backend">CPU</Label>
-												<Switch id="hardware-backend" bind:checked={useGPU} />
-												<Label for="hardware-backend">GPU</Label>
-											</div>
-										</Tooltip.Trigger>
-										<Tooltip.Content class="max-w-52">
-											GPU is recommended for large models but slower for small models.
-										</Tooltip.Content>
-									</Tooltip.Root>
+									<ThemeToggle></ThemeToggle>
 								</div>
-								<div class="flex flex-col gap-2">
-									<Label class="flex gap-2 text-xs">&#945; Alpha Level</Label>
-									<Input
-										type="number"
-										bind:value={alpha}
-										placeholder="0.01"
-										min={1}
-										max={5}
-										class="w-24"
-									/>
-									<br />
-								</div>
-							</div>
-							<br />
-							<div class="flex flex-row flex-wrap items-end gap-8">
-								<Label class="flex flex-col gap-2 text-xs">Choose Dataset</Label>
-								<Label class="flex flex-col gap-2 text-xs">Choose Labels</Label>
-							</div>
-							<div class="flex flex-row flex wrap items-end gap-2">
-								<Dialog.Root>
-									<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
-										>Upload CSV</Dialog.Trigger
-									>
-									<Dialog.Content>
-										<Dialog.Header>
-											<Dialog.Title>Upload CSV Dataset</Dialog.Title>
-											<Dialog.Description class="flex flex-col gap-2">
-												<p>Upload a dataset from a .csv file.</p>
-												<div class="flex flex-col">
-													<FileInput
-														id="dataset-upload"
-														class="w-64"
-														bind:files={datasetUploadFiles}
-														on:change={handleFileSelect}
-													/>
+								<div class="grid w-1/3 grid-cols-2 items-center">
+									<div>
+										<Label class="flex gap-2 text-xs">Hardware</Label>
+										<Tooltip.Root>
+											<Tooltip.Trigger asChild>
+												<div class="flex h-9 flex-row flex-nowrap items-center space-x-2">
+													<Label for="hardware-backend">CPU</Label>
+													<Switch id="hardware-backend" bind:checked={useGPU} />
+													<Label for="hardware-backend">GPU</Label>
 												</div>
-												<Input
-													placeholder="Enter Image Width"
-													class="w-64"
-													type="number"
-													bind:value={imageWidth}
-												/>
-												<Input
-													placeholder="Enter Image Height"
-													class="w-64"
-													type="number"
-													bind:value={imageHeight}
-												/>
-												<Input
-													placeholder="Enter Image Channels"
-													class="w-64"
-													type="number"
-													bind:value={imageChannels}
-												/>
-												{#if Object.entries($csvColumnConfigs).length > 0}
-													{#if isImageDataset}
-														<div class="flex flex-col gap-2">
-															<Label>Select Output Column</Label>
-															<Command.Root>
-																<Command.Input placeholder="Search output column..." />
-																<Command.List>
-																	<Command.Empty>No results found.</Command.Empty>
-																	{#each Object.keys($csvColumnConfigs).filter((col) => !col.includes('x')) as column}
-																		<Command.Item onSelect={() => (outputColumn = column)}>
-																			{column}
-																		</Command.Item>
-																	{/each}
-																</Command.List>
-															</Command.Root>
-														</div>
-													{:else}
-														<Table.Root>
-															<Table.Header>
-																<Table.Row>
-																	<Table.Head class="flex-grow">Column Name</Table.Head>
-																</Table.Row>
-															</Table.Header>
-															{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
-																<Table.Row>
-																	<Table.Cell class="font-medium">{column}</Table.Cell>
-																	<RadioGroup.Root
-																		bind:value={$csvColumnConfigs[column].isLabel}
-																		asChild
-																	>
-																		<Table.Cell>
-																			<div class="flex items-center space-x-2">
-																				<RadioGroup.Item value="false" id={`feature-${column}`}
-																				></RadioGroup.Item>
-																				<Label for={`feature-${column}`}>Input</Label>
-																			</div>
-																		</Table.Cell>
-																		<Table.Cell>
-																			<div class="flex items-center space-x-2">
-																				<RadioGroup.Item value="true" id={`label-${column}`}
-																				></RadioGroup.Item>
-																				<Label for={`label-${column}`}>Output</Label>
-																			</div>
-																		</Table.Cell>
-																	</RadioGroup.Root>
-																</Table.Row>
-															{/each}
-														</Table.Root>
-														{#if !hasLabel}
-															<p class="font-medium text-foreground">
-																Choose at least one column to use as output.
-															</p>
+											</Tooltip.Trigger>
+											<Tooltip.Content class="max-w-52">
+												GPU is recommended for large models but slower for small models.
+											</Tooltip.Content>
+										</Tooltip.Root>
+									</div>
+									<div class="flex flex-col gap-2">
+										<Label class="flex gap-2 text-xs">&#945; Alpha Level</Label>
+										<Input
+											type="number"
+											bind:value={alpha}
+											placeholder="0.01"
+											min={1}
+											max={5}
+											class="w-24"
+										/>
+										<br />
+									</div>
+								</div>
+								<br />
+								<div class="flex flex-row flex-wrap items-end gap-8">
+									<Label class="flex flex-col gap-2 text-xs">Choose Dataset</Label>
+									<Label class="flex flex-col gap-2 text-xs">Choose Labels</Label>
+								</div>
+								<div class="wrap flex flex-row items-end gap-2">
+									<Dialog.Root>
+										<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
+											>Upload CSV</Dialog.Trigger
+										>
+										<Dialog.Content>
+											<Dialog.Header>
+												<Dialog.Title>Upload CSV Dataset</Dialog.Title>
+												<Dialog.Description class="flex flex-col gap-2">
+													<p>Upload a dataset from a .csv file.</p>
+													<div class="flex flex-col">
+														<FileInput
+															id="dataset-upload"
+															class="w-64"
+															bind:files={datasetUploadFiles}
+															on:change={handleFileSelect}
+														/>
+													</div>
+													<Input
+														placeholder="Enter Image Width"
+														class="w-64"
+														type="number"
+														bind:value={imageWidth}
+													/>
+													<Input
+														placeholder="Enter Image Height"
+														class="w-64"
+														type="number"
+														bind:value={imageHeight}
+													/>
+													<Input
+														placeholder="Enter Image Channels"
+														class="w-64"
+														type="number"
+														bind:value={imageChannels}
+													/>
+													{#if Object.entries($csvColumnConfigs).length > 0}
+														{#if isImageDataset}
+															<div class="flex flex-col gap-2">
+																<Label>Select Output Column</Label>
+																<Command.Root>
+																	<Command.Input placeholder="Search output column..." />
+																	<Command.List>
+																		<Command.Empty>No results found.</Command.Empty>
+																		{#each Object.keys($csvColumnConfigs).filter((col) => !col.includes('x')) as column}
+																			<Command.Item onSelect={() => (outputColumn = column)}>
+																				{column}
+																			</Command.Item>
+																		{/each}
+																	</Command.List>
+																</Command.Root>
+															</div>
+														{:else}
+															<Table.Root>
+																<Table.Header>
+																	<Table.Row>
+																		<Table.Head class="flex-grow">Column Name</Table.Head>
+																	</Table.Row>
+																</Table.Header>
+																{#each Object.entries($csvColumnConfigs) as [column, config] (column)}
+																	<Table.Row>
+																		<Table.Cell class="font-medium">{column}</Table.Cell>
+																		<RadioGroup.Root
+																			bind:value={$csvColumnConfigs[column].isLabel}
+																			asChild
+																		>
+																			<Table.Cell>
+																				<div class="flex items-center space-x-2">
+																					<RadioGroup.Item value="false" id={`feature-${column}`}
+																					></RadioGroup.Item>
+																					<Label for={`feature-${column}`}>Input</Label>
+																				</div>
+																			</Table.Cell>
+																			<Table.Cell>
+																				<div class="flex items-center space-x-2">
+																					<RadioGroup.Item value="true" id={`label-${column}`}
+																					></RadioGroup.Item>
+																					<Label for={`label-${column}`}>Output</Label>
+																				</div>
+																			</Table.Cell>
+																		</RadioGroup.Root>
+																	</Table.Row>
+																{/each}
+															</Table.Root>
+															{#if !hasLabel}
+																<p class="font-medium text-foreground">
+																	Choose at least one column to use as output.
+																</p>
+															{/if}
 														{/if}
 													{/if}
-												{/if}
-											</Dialog.Description>
-										</Dialog.Header>
-									</Dialog.Content>
-								</Dialog.Root>
-								<Dialog.Root>
-									<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}>
-										Upload Labels
-									</Dialog.Trigger>
-									<Dialog.Content>
-										<Dialog.Header>
-											<Dialog.Title>Upload Text File</Dialog.Title>
-											<Dialog.Description class="flex flex-col gap-2">
-												<p>Upload a text file to be parsed</p>
-												<div class="flex flex-col">
-													<FileInput bind:files={labelFiles} />
-												</div>
-											</Dialog.Description>
-										</Dialog.Header>
-									</Dialog.Content>
-								</Dialog.Root>
-							</div>
-							<div class="flex flex-col gap-2">
-								<Label class="flex gap-2 text-xs">
-									<Activity class="h-4 w-4"></Activity>
-									Activation Function
-								</Label>
-								<Select.Root bind:selected={selectedActivation}>
-									<Select.Trigger class="w-[180px]">
-										<Select.Value></Select.Value>
-									</Select.Trigger>
-									<Select.Content>
-										<Select.Item value="relu">ReLU</Select.Item>
-										<Select.Item value="sigmoid">Sigmoid</Select.Item>
-										<Select.Item value="tanh">Tanh</Select.Item>
-										<Select.Item value="softmax">Softmax</Select.Item>
-									</Select.Content>
-								</Select.Root>
-							</div>
-							<br />
-							<div>
-								Domain: left bound: {domain[0] - 5}
-								right bound: {domain[1] - 5}
-								<Slider max="10" step="1" bind:value={domain} range slider />
-								Range: bottom bound: {range[0] - 5}
-								top bound: {range[1] - 5}
-								<Slider max="10" step="1" bind:value={range} range slider />
-								<!-- <Button on:click={heatmap.changeZoom(domain, range)}>Change Axes</Button> -->
-							</div>
-							<!-- <div class="flex flex-col gap-2">
+												</Dialog.Description>
+											</Dialog.Header>
+										</Dialog.Content>
+									</Dialog.Root>
+									<Dialog.Root>
+										<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}>
+											Upload Labels
+										</Dialog.Trigger>
+										<Dialog.Content>
+											<Dialog.Header>
+												<Dialog.Title>Upload Text File</Dialog.Title>
+												<Dialog.Description class="flex flex-col gap-2">
+													<p>Upload a text file to be parsed</p>
+													<div class="flex flex-col">
+														<FileInput bind:files={labelFiles} />
+													</div>
+												</Dialog.Description>
+											</Dialog.Header>
+										</Dialog.Content>
+									</Dialog.Root>
+								</div>
+								<div class="flex flex-col gap-2">
+									<Label class="flex gap-2 text-xs">
+										<Activity class="h-4 w-4"></Activity>
+										Activation Function
+									</Label>
+									<Select.Root bind:selected={selectedActivation}>
+										<Select.Trigger class="w-[180px]">
+											<Select.Value></Select.Value>
+										</Select.Trigger>
+										<Select.Content>
+											<Select.Item value="relu">ReLU</Select.Item>
+											<Select.Item value="sigmoid">Sigmoid</Select.Item>
+											<Select.Item value="tanh">Tanh</Select.Item>
+											<Select.Item value="softmax">Softmax</Select.Item>
+										</Select.Content>
+									</Select.Root>
+								</div>
+								<br />
+								<div>
+									Domain: left bound: {domain[0] - 5}
+									right bound: {domain[1] - 5}
+									<Slider max="10" step="1" bind:value={domain} range slider />
+									Range: bottom bound: {range[0] - 5}
+									top bound: {range[1] - 5}
+									<Slider max="10" step="1" bind:value={range} range slider />
+									<!-- <Button on:click={heatmap.changeZoom(domain, range)}>Change Axes</Button> -->
+								</div>
+								<!-- <div class="flex flex-col gap-2">
 								<Label class="flex gap-2 text-xs">Input</Label>
 								<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
 							</div>
@@ -965,43 +1036,43 @@
 								<Label class="flex gap-2 text-xs">Predicted Value</Label>
 								<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
 							</div> -->
-							<!--<div class="flex flex-col gap-2">
+								<!--<div class="flex flex-col gap-2">
 									<div></div>
 								</div>
 								<div class="flex flex-col gap-2"></div>
 								<div class="flex-1"></div>
 								<div class="flex flex-col gap-2"></div>-->
-							<br />
-						</Card.Content>
-					</Card.Root>
-				</Tabs.Content>
-				<Tabs.Content value="NL" class="h-full">
-					<div class="mb-3 flex flex-row flex-wrap items-end gap-4">
-						<div class="flex flex-col gap-2">
-							<Label class="flex gap-2 text-xs">
-								Current Loss: {currentloss}
-							</Label>
-							<Button on:click={displayLoss}>
-								<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
-							</Button>
+								<br />
+							</Card.Content>
+						</Card.Root>
+					</Tabs.Content>
+					<Tabs.Content value="NL" class="h-full">
+						<div class="mb-3 flex flex-row flex-wrap items-end gap-4">
+							<div class="flex flex-col gap-2">
+								<Label class="flex gap-2 text-xs">
+									Current Loss: {currentloss}
+								</Label>
+								<Button on:click={displayLoss}>
+									<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
+								</Button>
 
-							<div
-								id="losscard"
-								class="absolute z-50 h-fit max-h-none w-fit max-w-none translate-y-16"
-								style="visibility:hidden"
-							>
-								<Card.Root class="pt-6">
-									<Card.Content>
-										<Losschart
-											pageIdx={1}
-											class="h-60 w-80 rounded-[0.15rem]"
-											bind:this={losschart}
-										/>
-									</Card.Content>
-								</Card.Root>
+								<div
+									id="losscard"
+									class="absolute z-50 h-fit max-h-none w-fit max-w-none translate-y-16"
+									style="visibility:hidden"
+								>
+									<Card.Root class="pt-6">
+										<Card.Content>
+											<Losschart
+												pageIdx={1}
+												class="h-60 w-80 rounded-[0.15rem]"
+												bind:this={losschart}
+											/>
+										</Card.Content>
+									</Card.Root>
+								</div>
 							</div>
-						</div>
-						<!-- <div class="flex flex-col gap-2">
+							<!-- <div class="flex flex-col gap-2">
 							<Label class="flex gap-2 text-xs">Input</Label>
 							<Input type="number" bind:value={testPred} placeholder="2" class="w-24" />
 						</div>
@@ -1009,148 +1080,152 @@
 							<Label class="flex gap-2 text-xs">Predicted Value</Label>
 							<p class="h-9 text-center text-sm leading-9">{predictedVal}</p>
 						</div> -->
-						<div class="flex flex-col gap-2"></div>
-						<div class="flex flex-col gap-2"></div>
-						<div class="flex-1"></div>
-						<div class="flex flex-col gap-2">
-							<Label class="flex gap-2 text-xs">Refresh</Label>
-							<Button on:click={refreshModel}>
-								<RefreshCw class="mr-0 h-4 w-4" />
-							</Button>
-						</div>
-						<div class="flex flex-col gap-2">
-							<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
-							<Button on:click={trainModel}>
-								{#if isTraining}
-									<CirclePause class="mr-2 h-4 w-4"></CirclePause>
-									Pause
-								{:else}
-									<Brain class="mr-2 h-4 w-4"></Brain>
-									Train
-								{/if}
-							</Button>
-						</div>
-					</div>
-					<div
-						class="flex w-full flex-col gap-6 overflow-x-auto overflow-y-hidden rounded-lg border p-1 text-sm"
-					>
-						<div class="ml-auto mr-auto flex flex-row items-center">
-							<DropdownMenu.Root>
-								<DropdownMenu.Trigger>
-									<Button variant="ghost" size="icon" class="h-8 w-8">
-										<Plus class="h-4 w-4"></Plus>
-									</Button>
-								</DropdownMenu.Trigger>
-								<DropdownMenu.Content>
-									<DropdownMenu.Group>
-										<DropdownMenu.Item on:click={() => addLayer('dense')}>Dense</DropdownMenu.Item>
-										<DropdownMenu.Item
-											on:click={() => {
-												addLayer('conv2d');
-												addLayer('maxpooling');
-											}}>Convolutional</DropdownMenu.Item
-										>
-										<DropdownMenu.Item on:click={() => addLayer('flatten')}
-											>Flatten</DropdownMenu.Item
-										>
-									</DropdownMenu.Group>
-								</DropdownMenu.Content>
-							</DropdownMenu.Root>
-
-							<Button variant="ghost" size="icon" class="h-8 w-8" on:click={removeLayer}>
-								<Minus class="h-4 w-4"></Minus>
-							</Button>
-							<span class="ml-2 leading-none text-muted-foreground"
-								>{$model.layers.length} Layers</span
-							>
-						</div>
-
-						<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
-							{#if tfModel}
-								<Features
-									{columnNames}
-									{currentExample}
-									{isImageDataset}
-									numchannels={imageChannels}
-								/>
-								{#if $model.layers[0]?.inputShape}
-									{@const weights = getWeightsBetweenLayers(tfModel, 0)}
-									{#if weights}
-										{#if ['conv2d', 'maxpooling', 'flatten'].includes($model.layers[0].type)}
-										<ConnectionsVis
-											leftLayerHeights={getNodeYPositionsInput(imageChannels)}
-											rightLayerHeights={getNodeYPositions($model.layers[0])}
-											{canvasWidth}
-										/>
-										{:else}
-											<ConnectionsVis
-												leftLayerHeights={getNodeYPositionsInput($model.layers[0].inputShape[0])}
-												rightLayerHeights={getNodeYPositions($model.layers[0])}
-												{canvasWidth}
-												{weights}
-											/>
-										{/if}
+							<div class="flex flex-col gap-2"></div>
+							<div class="flex flex-col gap-2"></div>
+							<div class="flex-1"></div>
+							<div class="flex flex-col gap-2">
+								<Label class="flex gap-2 text-xs">Refresh</Label>
+								<Button on:click={refreshModel}>
+									<RefreshCw class="mr-0 h-4 w-4" />
+								</Button>
+							</div>
+							<div class="flex flex-col gap-2">
+								<Label class="flex gap-2 text-xs">Epoch: {currentEpoch}</Label>
+								<Button on:click={trainModel}>
+									{#if isTraining}
+										<CirclePause class="mr-2 h-4 w-4"></CirclePause>
+										Pause
+									{:else}
+										<Brain class="mr-2 h-4 w-4"></Brain>
+										Train
 									{/if}
-								{/if}
-								{#each $model.layers as layer, i (i)}
-									<svelte:component
-										this={layerComponents[layer.type]}
-										{layer}
-										index={i}
-										model={tfModel}
-										layerName={tfModel.layers[i].name}
-										tfLayer={tfModel.layers[i]}
-										{domain}
-										{range}
+								</Button>
+							</div>
+						</div>
+						<div
+							class="flex w-full flex-col gap-6 overflow-x-auto overflow-y-hidden rounded-lg border p-1 text-sm"
+						>
+							<div class="ml-auto mr-auto flex flex-row items-center">
+								<DropdownMenu.Root>
+									<DropdownMenu.Trigger>
+										<Button variant="ghost" size="icon" class="h-8 w-8">
+											<Plus class="h-4 w-4"></Plus>
+										</Button>
+									</DropdownMenu.Trigger>
+									<DropdownMenu.Content>
+										<DropdownMenu.Group>
+											<DropdownMenu.Item on:click={() => addLayer('dense')}>Dense</DropdownMenu.Item
+											>
+											<DropdownMenu.Item
+												on:click={() => {
+													addLayer('conv2d');
+													addLayer('maxpooling');
+												}}>Convolutional</DropdownMenu.Item
+											>
+											<DropdownMenu.Item on:click={() => addLayer('flatten')}
+												>Flatten</DropdownMenu.Item
+											>
+										</DropdownMenu.Group>
+									</DropdownMenu.Content>
+								</DropdownMenu.Root>
+
+								<Button variant="ghost" size="icon" class="h-8 w-8" on:click={removeLayer}>
+									<Minus class="h-4 w-4"></Minus>
+								</Button>
+								<span class="ml-2 leading-none text-muted-foreground"
+									>{$model.layers.length} Layers</span
+								>
+							</div>
+
+							<div class="ml-auto mr-auto flex flex-grow flex-row items-start">
+								{#if tfModel}
+									<Features
 										{columnNames}
 										{currentExample}
-										{dataset}
-										inputImage={getImage(0)}
-									></svelte:component>
-									{#if i < $model.layers.length - 1}
-										{@const leftLayerHeights = getNodeYPositions(layer)}
-										{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
-										{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
-										{#if ['conv2d', 'maxpooling'].includes($model.layers[i].type)}
-											<ConnectionsVis
-													{leftLayerHeights}
-													{rightLayerHeights}
-													canvasWidth= {($model.layers[i+1].type!="maxpooling")?canvasWidth:canvasWidth/3}
-													maxpool={$model.layers[i+1].type=="maxpooling"}
+										{isImageDataset}
+										numchannels={imageChannels}
+									/>
+									{#if $model.layers[0]?.inputShape}
+										{@const weights = getWeightsBetweenLayers(tfModel, 0)}
+										{#if weights}
+											{#if ['conv2d', 'maxpooling', 'flatten'].includes($model.layers[0].type)}
+												<ConnectionsVis
+													leftLayerHeights={getNodeYPositionsInput(imageChannels)}
+													rightLayerHeights={getNodeYPositions($model.layers[0])}
+													{canvasWidth}
 												/>
-										{:else if weights}
-											<ConnectionsVis
-												{leftLayerHeights}
-												{rightLayerHeights}
-												{canvasWidth}
-												{weights}
-											/>
-										{:else}
-											<ConnectionsVis
-												{leftLayerHeights}
-												{rightLayerHeights}
-												canvasWidth={$model.layers[i + 1].type != 'maxpooling'
-													? canvasWidth
-													: canvasWidth / 3}
-												maxpool={$model.layers[i + 1].type == 'maxpooling'}
-											/>
+											{:else}
+												<ConnectionsVis
+													leftLayerHeights={getNodeYPositionsInput($model.layers[0].inputShape[0])}
+													rightLayerHeights={getNodeYPositions($model.layers[0])}
+													{canvasWidth}
+													{weights}
+												/>
+											{/if}
 										{/if}
 									{/if}
-								{/each}
-								<Labels
-									{columnNames}
-									{currentExample}
-									tfLayer={tfModel.layers[tfModel.layers.length - 1]}
-								/>
-							{/if}
+									{#each $model.layers as layer, i (i)}
+										<svelte:component
+											this={layerComponents[layer.type]}
+											{layer}
+											index={i}
+											model={tfModel}
+											layerName={tfModel.layers[i].name}
+											tfLayer={tfModel.layers[i]}
+											{domain}
+											{range}
+											{columnNames}
+											{currentExample}
+											{dataset}
+											inputImage={getImage(0)}
+										></svelte:component>
+										{#if i < $model.layers.length - 1}
+											{@const leftLayerHeights = getNodeYPositions(layer)}
+											{@const rightLayerHeights = getNodeYPositions($model.layers[i + 1])}
+											{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
+											{#if ['conv2d', 'maxpooling'].includes($model.layers[i].type)}
+												<ConnectionsVis
+													{leftLayerHeights}
+													{rightLayerHeights}
+													canvasWidth={$model.layers[i + 1].type != 'maxpooling'
+														? canvasWidth
+														: canvasWidth / 3}
+													maxpool={$model.layers[i + 1].type == 'maxpooling'}
+												/>
+											{:else if weights}
+												<ConnectionsVis
+													{leftLayerHeights}
+													{rightLayerHeights}
+													{canvasWidth}
+													{weights}
+												/>
+											{:else}
+												<ConnectionsVis
+													{leftLayerHeights}
+													{rightLayerHeights}
+													canvasWidth={$model.layers[i + 1].type != 'maxpooling'
+														? canvasWidth
+														: canvasWidth / 3}
+													maxpool={$model.layers[i + 1].type == 'maxpooling'}
+												/>
+											{/if}
+										{/if}
+									{/each}
+									<Labels
+										{columnNames}
+										{currentExample}
+										tfLayer={tfModel.layers[tfModel.layers.length - 1]}
+									/>
+								{/if}
+							</div>
 						</div>
-					</div>
-				</Tabs.Content>
-				<Tabs.Content value="LLM" class="h-full">
-					<LLM />
-				</Tabs.Content>
-			</Tabs.Root>
-		</div>
-	</Resizable.Pane>
-	<!--</div>-->
+					</Tabs.Content>
+					<Tabs.Content value="LLM" class="h-full">
+						<LLM />
+					</Tabs.Content>
+				</Tabs.Root>
+			</div>
+		</Resizable.Pane>
+		<!--</div>-->
+	{/if}
 </Resizable.PaneGroup>
