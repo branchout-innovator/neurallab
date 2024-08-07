@@ -70,11 +70,10 @@
 	import Losschart from '$lib/ui/losschart.svelte';
 	import * as HoverCard from '$lib/components/ui/hover-card';
 	import LLM from '$lib/ui/llm.svelte';
-	import { create, all, reshape } from 'mathjs'
+	import { create, all, reshape } from 'mathjs';
 	import BackBone from '$lib/ui/bone.svelte';
-		import * as Popover from '$lib/components/ui/popover/index.js';
+	import * as Popover from '$lib/components/ui/popover/index.js';
 	import logo from '$lib/images/image0.png';
-	
 
 	let isImageDataset = false;
 	let outputColumn = '';
@@ -162,7 +161,7 @@
 				break;
 			}
 			case 'maxpooling': {
-				if ($model.layers[$model.layers.length - 1].type != "conv2d") {
+				if ($model.layers[$model.layers.length - 1].type != 'conv2d') {
 					throw new Error(`max pooling initialized without conv layer`);
 				}
 				layer = {
@@ -393,20 +392,18 @@
 		}
 	};
 
-	function findingDimensions(fulldimensions:number){
-			
-			imageWidth = Math.floor(Math.sqrt(fulldimensions));
+	function findingDimensions(fulldimensions: number) {
+		imageWidth = Math.floor(Math.sqrt(fulldimensions));
 
-			while(imageWidth > 1){
-			if (fulldimensions%imageWidth == 0){
-				imageHeight = fulldimensions / imageWidth
-				return
-			}
-			else{
-			imageWidth = imageWidth - 1
+		while (imageWidth > 1) {
+			if (fulldimensions % imageWidth == 0) {
+				imageHeight = fulldimensions / imageWidth;
+				return;
+			} else {
+				imageWidth = imageWidth - 1;
 			}
 		}
-		}
+	}
 
 	$: {
 		// updateTFModel($model);
@@ -467,8 +464,8 @@
 			$featureCount = 0;
 
 			isImageDataset = Object.entries($csvColumnConfigs).length > 50;
-			if(isImageDataset){
-				findingDimensions(Object.entries($csvColumnConfigs).length-1)
+			if (isImageDataset) {
+				findingDimensions(Object.entries($csvColumnConfigs).length - 1);
 			}
 			console.log('image? ' + isImageDataset);
 
@@ -522,7 +519,7 @@
 					addLayer('dense');
 				}
 			}
-		}	
+		}
 	};
 
 	$: {
@@ -649,52 +646,84 @@
 
 		return [val, val2];
 	}
-  let myData: Array<{ [key: string]: string | number }> | null = null;
+	let myData: Array<{ [key: string]: string | number }> | null = null;
 
-  function handleFileSelect(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target && typeof e.target.result === 'string') {
-          const csvData = e.target.result;
-          parseCSV(csvData);
-        }
-      };
-      reader.readAsText(file);
-    }
-  }
-  
-  function parseCSV(csvData: string): void {
-    const parsedData = d3.csvParse(csvData, (d) => {
-      return Object.keys(d).reduce((acc, key) => {
-        acc[key] = isNaN(+d[key]!) ? d[key] : +d[key]!;
-        return acc;
-      }, {} as { [key: string]: string | number });
-    });
-
-    myData = parsedData;
-    myDataIsReady();
-  }
-
-  function myDataIsReady(): void {
-    console.log(myData);
-  }
-  let sampleImage: number[][] = [[]];
-  function getImage(index: number): number[][][] {
-	if (!myData) return [[[]]];
-	let temp = Array.from(Object.entries(myData[index]).values()).map((k) => {return k[1]}).slice(0, -1).filter((x) => {return typeof x == "number"}).map((x) => {return x/256});
-	if (temp.length == imageHeight * imageWidth)
-		return reshape(temp, [imageWidth, imageHeight, imageChannels]) as unknown as number[][][];
-	return [[]];
-  }
-
-  $: {
-	if (myData && imageHeight != 0 && imageWidth != 0) {
-		// sampleImage = getImage(0);
+	function handleFileSelect(event: Event) {
+		const input = event.target as HTMLInputElement;
+		if (input.files && input.files[0]) {
+			const file = input.files[0];
+			const reader = new FileReader();
+			reader.onload = (e) => {
+				if (e.target && typeof e.target.result === 'string') {
+					const csvData = e.target.result;
+					parseCSV(csvData);
+				}
+			};
+			reader.readAsText(file);
+		}
 	}
-  }
+
+	function parseCSV(csvData: string): void {
+		const parsedData = d3.csvParse(csvData, (d) => {
+			return Object.keys(d).reduce(
+				(acc, key) => {
+					acc[key] = isNaN(+d[key]!) ? d[key] : +d[key]!;
+					return acc;
+				},
+				{} as { [key: string]: string | number }
+			);
+		});
+
+		myData = parsedData;
+		myDataIsReady();
+	}
+
+	function myDataIsReady(): void {
+		console.log(myData);
+	}
+	let sampleImage: number[][] = [[]];
+	function getImage(index: number): number[][][] {
+		if (!myData) return [[[]]];
+		let temp = Array.from(Object.entries(myData[index]).values())
+			.map((k) => {
+				return k[1];
+			})
+			.slice(0, -1)
+			.filter((x) => {
+				return typeof x == 'number';
+			})
+			.map((x) => {
+				return x / 256;
+			});
+		if (temp.length == imageHeight * imageWidth)
+			return reshape(temp, [imageWidth, imageHeight, imageChannels]) as unknown as number[][][];
+		return [[]];
+	}
+
+	$: {
+		if (myData && imageHeight != 0 && imageWidth != 0) {
+			// sampleImage = getImage(0);
+		}
+	}
+
+	const frameworks = [
+		{
+			value: 'sveltekit',
+			label: 'SvelteKit'
+		},
+		{
+			value: 'next',
+			label: 'Next.js'
+		},
+		{
+			value: 'astro',
+			label: 'Astro'
+		},
+		{
+			value: 'nuxt',
+			label: 'Nuxt.js'
+		}
+	];
 </script>
 
 <svelte:head>
@@ -704,6 +733,19 @@
 <!--<div class="container flex h-full max-w-full flex-row gap-4">-->
 <Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row gap-4">
 	<Resizable.Pane defaultSize={25}>
+		<!-- <div class = "collapse">
+		<Card.Root class = "w-full h-full">
+			<Card.Header>
+				<Card.Title>Main page YAY!</Card.Title>
+			</Card.Header>
+			<Card.Content>
+				
+			</Card.Content>
+			<Card.Footer class="flex justify-between">
+				<Button builders={[builder]}>mbro why doeshting this work</Button>
+			</Card.Footer>
+		</Card.Root>
+	</div> -->
 		<div class="container flex h-full w-full flex-col overflow-y-hidden px-0 py-4">
 			<div class="h-1/8 container flex w-full flex-row items-end">
 				<div class="flex h-full w-1/3">
@@ -712,6 +754,7 @@
 					>
 				</div>
 				<div class="w-1/3">
+					
 					<DropdownMenu.Root>
 						<DropdownMenu.Trigger asChild let:builder>
 							<Button variant="outline" class="w-full" builders={[builder]}>Article Sections</Button
@@ -749,7 +792,9 @@
 			<span class="inline-block h-8 w-4" />
 			<Progress {value} />
 			<div id="article" class="flex w-full overflow-y-auto">
+				
 				<div class="w-full p-4">
+					
 					<h2
 						class="scroll-m-20 border-b pb-2 text-center text-2xl font-semibold tracking-tight transition-colors first:mt-0"
 					>
@@ -818,7 +863,7 @@
 								<Label class="flex flex-col gap-2 text-xs">Choose Dataset</Label>
 								<Label class="flex flex-col gap-2 text-xs">Choose Labels</Label>
 							</div>
-							<div class="flex flex-row flex wrap items-end gap-2">
+							<div class="wrap flex flex-row items-end gap-2">
 								<Dialog.Root>
 									<Dialog.Trigger class={buttonVariants({ variant: 'outline' })}
 										>Upload CSV</Dialog.Trigger
@@ -984,14 +1029,6 @@
 							<Button on:click={displayLoss}>
 								<TrendingDown class="mr-2 h-4 w-4" /> Loss Graph
 							</Button>
-							<Popover.Root portal={null}>
-								<Popover.Trigger asChild let:builder>
-									<Button builders={[builder]} variant="outline">Open</Button>
-								</Popover.Trigger>
-								<Popover.Content>
-									<!-- <BackBone class="w-[250px] h-[250px]" image={sampleImage} rgb = {false}/> -->
-								</Popover.Content>
-							</Popover.Root>
 
 							<div
 								id="losscard"
@@ -1085,11 +1122,11 @@
 									{@const weights = getWeightsBetweenLayers(tfModel, 0)}
 									{#if weights}
 										{#if ['conv2d', 'maxpooling', 'flatten'].includes($model.layers[0].type)}
-										<ConnectionsVis
-											leftLayerHeights={getNodeYPositionsInput(imageChannels)}
-											rightLayerHeights={getNodeYPositions($model.layers[0])}
-											{canvasWidth}
-										/>
+											<ConnectionsVis
+												leftLayerHeights={getNodeYPositionsInput(imageChannels)}
+												rightLayerHeights={getNodeYPositions($model.layers[0])}
+												{canvasWidth}
+											/>
 										{:else}
 											<ConnectionsVis
 												leftLayerHeights={getNodeYPositionsInput($model.layers[0].inputShape[0])}
@@ -1121,11 +1158,13 @@
 										{@const weights = getWeightsBetweenLayers(tfModel, i + 1)}
 										{#if ['conv2d', 'maxpooling'].includes($model.layers[i].type)}
 											<ConnectionsVis
-													{leftLayerHeights}
-													{rightLayerHeights}
-													canvasWidth= {($model.layers[i+1].type!="maxpooling")?canvasWidth:canvasWidth/3}
-													maxpool={$model.layers[i+1].type=="maxpooling"}
-												/>
+												{leftLayerHeights}
+												{rightLayerHeights}
+												canvasWidth={$model.layers[i + 1].type != 'maxpooling'
+													? canvasWidth
+													: canvasWidth / 3}
+												maxpool={$model.layers[i + 1].type == 'maxpooling'}
+											/>
 										{:else if weights}
 											<ConnectionsVis
 												{leftLayerHeights}
