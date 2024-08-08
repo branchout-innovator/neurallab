@@ -7,6 +7,8 @@
 	export let columnNames: string[];
 	export let currentExample: { xs: number[]; ys: number[] } | null;
 	export let tfLayer: tf.layers.Layer;
+	export let isImageDataset = false;
+	export let labellist: string[] = [];
 
 	const csvColumnConfigs: Writable<{
 		[key: string]: { isLabel: 'true' | 'false' };
@@ -26,6 +28,18 @@
 
 <div class="flex flex-col items-start gap-2 rounded-lg py-2 text-card-foreground">
 	<h5 class="mb-9 text-sm">&nbsp;</h5>
+	{#if isImageDataset}
+		{#each labellist as feature}
+			<div class="flex flex-row items-center">
+				<div class="w-6 border-b border-muted-foreground"></div>
+				<div
+				class="flex flex-row items-start justify-center text-nowrap rounded bg-muted px-2 py-1 font-medium"
+			>
+					<span class="text-xs">{feature}</span>
+				</div>
+			</div>
+		{/each}
+	{:else}
 	{#each inputFeatures as feature, nodeIndex (nodeIndex)}
 		{@const predictionVal =
 			$sampledOutputs[tfLayer.name] && $sampledOutputs[tfLayer.name].values[nodeIndex]}
@@ -49,4 +63,5 @@
 			</div>
 		</div>
 	{/each}
+	{/if}
 </div>
