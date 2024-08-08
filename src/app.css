@@ -22,10 +22,10 @@
 
 @layer base {
 	:root {
-		--background: 0 0% 100%;
-		--foreground: 240 10% 3.9%;
+		--background: 33 20% 88%;
+		--foreground: 32 5% 45%;
 	 
-		--muted: 240 4.8% 95.9%;
+		--muted: 48 33% 94%;
 		--muted-foreground: 240 3.8% 46.1%;
 
 		--line-color: 240 10% 3.9%;
@@ -33,20 +33,20 @@
 		--popover: 0 0% 100%;
 		--popover-foreground: 240 10% 3.9%;
 	 
-		--card: 0 0% 100%;
+		--card: 48 33% 94%;
 		--card-foreground: 240 10% 3.9%;
 	 
 		--border: 240 5.9% 90%;
-		--input: 240 5.9% 90%;
+		--input: 33 20% 80%;
 	 
-		--primary: 240 5.9% 10%;
-		--primary-foreground: 0 0% 98%;
+		--primary: 48 33% 94%;
+		--primary-foreground: 240 10% 3.9%;
 	 
 		--secondary: 240 4.8% 95.9%;
-		--secondary-foreground: 240 5.9% 10%;
+		--secondary-foreground: 240 10% 3.9%;
 	 
-		--accent: 240 4.8% 95.9%;
-		--accent-foreground: 240 5.9% 10%;
+		--accent: 48 33% 94%;
+		--accent-foreground: 240 10% 3.9%;
 	 
 		--destructive: 0 84.2% 60.2%;
 		--destructive-foreground: 0 0% 98%;
@@ -61,40 +61,40 @@
 	  }
 	 
 	  .dark {
-		--background: 240 10% 3.9%;
-		--foreground: 0 0% 98%;
+		--background: 193 9% 15%;
+		--foreground: 33 20% 88%;
 	 
-		--muted: 240 3.7% 15.9%;
-		--muted-foreground: 240 5% 64.9%;
+		--muted: 215 43% 10%;
+		--muted-foreground: 33 20% 88%;
 
 		--line-color: 0 0% 98%;
 	 
-		--popover: 240 10% 3.9%;
+		--popover: 215 43% 10%;
 		--popover-foreground: 0 0% 98%;
 	 
-		--card: 240 10% 3.9%;
-		--card-foreground: 0 0% 98%;
+		--card: 215 43% 10%;
+		--card-foreground: 33 20% 88%;
 	 
 		--border: 240 3.7% 15.9%;
-		--input: 240 3.7% 15.9%;
+		--input: 193 8% 39%;
 	 
-		--primary: 0 0% 98%;
+		--primary: 33 20% 88%;
 		--primary-foreground: 240 5.9% 10%;
 	 
 		--secondary: 240 3.7% 15.9%;
 		--secondary-foreground: 0 0% 98%;
 	 
-		--accent: 240 3.7% 15.9%;
-		--accent-foreground: 0 0% 98%;
+		--accent: 33 20% 88%;
+		--accent-foreground: 215 43% 16%;
 	 
 		--destructive: 0 62.8% 30.6%;
 		--destructive-foreground: 0 85.7% 97.3%;
 	 
 		--ring: 240 3.7% 15.9%;
 
-		--track-bg: #ffffff;
+		--track-bg: #f1eaea;
   		--progress-bg: #a7a7a7;
-  		--thumb-bg: #b9b9b9;
+  		--thumb-bg: #ada2a2;
 	  }
 }
 
@@ -123,10 +123,10 @@
 		@apply text-base;
 	}
 	h5 {
-		@apply text-base;
-		text-indent: 2.75rem;
-		font-size: 1rem; /* 16px */
-line-height: 1.5rem;
+		@apply text-4xl;
+	}
+	h6 {
+		@apply text-6xl;
 	}
 	p {
 		@apply text-base;

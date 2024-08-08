@@ -93,7 +93,7 @@
     }
 </script>
 
-<div class="flex flex-col items-center gap-2 rounded-lg border bg-card p-2 text-card-foreground">
+<div class="flex flex-col items-center gap-1 rounded-lg border bg-card p-2 text-card-foreground">
 	<Button variant="ghost" size="icon" class="h-6 w-6" on:click={() => setUnits(layer.units + 1)}>
 		<Plus class="h-4 w-4"></Plus>
 	</Button>
@@ -106,22 +106,22 @@
 		<Minus class="h-4 w-4"></Minus>
 	</Button>
 	{#each { length: layer.units } as _, nodeIndex (nodeIndex)}
-		<div class="relative flex h-6 w-6 items-center justify-center">
+		<div class="relative flex h-10 w-10 items-center justify-center">
 			<HoverCard.Root>
 				<HoverCard.Trigger>
 					{#if isEqual($model.layers[0]?.inputShape, [1])}
 						<PredictionCurve
 							{nodeIndex}
 							layerName={tfLayer.name}
-							class="h-5 w-5 rounded-[0.15rem]"
+							class="h-8 w-8 rounded-[0.15rem]"
 						/>
 					{:else if isEqual($model.layers[0]?.inputShape, [2])}
-						<Heatmap {nodeIndex} layerName={tfLayer.name} class="h-5 w-5 rounded-[0.15rem]" />
+						<Heatmap {nodeIndex} layerName={tfLayer.name} class="h-8 w-8 rounded-[0.15rem]" />
 					{:else}
 						<ActivationColor
 							{nodeIndex}
 							layerName={tfLayer.name}
-							class="h-5 w-5 rounded-[0.15rem]"
+							class="h-8 w-8 rounded-[0.15rem]"
 						/>
 					{/if}
 				</HoverCard.Trigger>
