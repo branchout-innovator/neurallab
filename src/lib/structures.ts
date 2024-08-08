@@ -185,11 +185,13 @@ export const loadUploadedCsv = async (
 	},
 	imageWidth?: number,
 	imageHeight?: number,
-	imageChannels?: number
+	imageChannels?: number,
+	hasImageLabels?: boolean,
+	totalLabels?: number
 ) => {
 	const url = URL.createObjectURL(csvFile);
 
-	return await loadCsvDataset(url, columnConfigs, imageWidth, imageHeight, imageChannels);
+	return await loadCsvDataset(url, columnConfigs, imageWidth, imageHeight, imageChannels, hasImageLabels, totalLabels);
 };
 
 export async function loadCsvDataset(
@@ -199,7 +201,9 @@ export async function loadCsvDataset(
 	},
 	imageWidth?: number,
 	imageHeight?: number,
-	imageChannels?: number
+	imageChannels?: number,
+	hasImageLabels?: boolean,
+	totalLabels?: number
 ) {
 	const csvDataset = tf.data.csv(url, {
 		columnConfigs
@@ -213,12 +217,19 @@ export async function loadCsvDataset(
 			// Convert xs(features) and ys(labels) from object form (keyed by
 			// column name) to array form.
 			let arrayXs: NestedArray = Object.values(xs) as number[];
-			const arrayYs = Object.values(ys) as number[];
+			let arrayYs = Object.values(ys) as number[];
 			if (imageWidth && imageHeight && imageChannels && imageWidth != 0 && imageHeight != 0 && imageChannels != 0) {
 				arrayXs = arrayXs.map((x) => {return (x as unknown as number>1)?(x as unknown as number)/256: x})
 				arrayXs = tf.reshape(arrayXs, [imageWidth, imageHeight, imageChannels]).arraySync();
 			}
-			return { xs: arrayXs, ys: arrayYs };
+			let newYs;
+			if (hasImageLabels && totalLabels) {
+				newYs = tf.oneHot(arrayYs, totalLabels);
+			}
+			else {
+				newYs = arrayYs;
+			}
+			return { xs: arrayXs, ys: newYs };
 		});
 	// .batch(64);
 

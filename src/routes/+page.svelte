@@ -139,7 +139,7 @@
 
 	setContext('model', model);
 
-	const addLayer = (type: LayerType) => {
+	const addLayer = (type: LayerType, units?: number) => {
 		// if (lastLayer.type === 'dense')
 		// 	($model.layers[$model.layers.length - 1] as DenseLayer).activation =
 		// 		selectedActivation.value as ActivationIdentifier;
@@ -148,8 +148,11 @@
 			case 'dense': {
 				layer = {
 					type: 'dense',
-					units: 1
+					units: (units)?units:1,
 				} as DenseLayer;
+				if (hasImageLabel) {
+					(layer as DenseLayer).activation = "softmax";
+				}
 				break;
 			}
 			case 'conv2d': {
@@ -451,7 +454,7 @@
 	let hasLabel = false;
 	let featureCount: Writable<number> = writable(-1);
 	let hasImageLabel = false;
-	let imageLabels: string[];
+	let imageLabels: string[] = [];
 
 	$: {
 		(async () => {
@@ -469,7 +472,10 @@
 		},
 		imageWidth?: number,
 		imageHeight?: number,
-		imageChannels?: number
+		imageChannels?: number,
+		hasImageLabel?: boolean,
+		numLabels?: number
+		
 	) => {
 		if (datasetUploadFiles && datasetUploadFiles.length) {
 			const config: {
@@ -506,15 +512,15 @@
 				}
 			}
 
-			
-
 			if (hasLabel) {
 				const result = await loadUploadedCsv(
 					datasetUploadFiles[0],
 					config,
 					imageWidth,
 					imageHeight,
-					imageChannels
+					imageChannels,
+					hasImageLabel,
+					numLabels
 				);
 				$dataset = result.dataset;
 				columnNames = result.columnNames;
@@ -531,7 +537,21 @@
 					addLayer('conv2d');
 					addLayer('maxpooling');
 					addLayer('flatten');
-					addLayer('dense');
+					
+					if (hasImageLabel) {
+						if (numLabels) {
+							addLayer('dense', numLabels);
+						}
+					}
+					else {
+						addLayer('dense');
+					}
+				}
+				if (hasImageLabel) {
+					$model.loss = "categoricalCrossentropy";
+				}
+				else {
+					$model.loss = "meanSquaredError";
 				}
 			}
 		}	
@@ -539,7 +559,7 @@
 
 	$: {
 		outputColumn;
-		updateDataset(datasetUploadFiles, $csvColumnConfigs, imageWidth, imageHeight, imageChannels);
+		updateDataset(datasetUploadFiles, $csvColumnConfigs, imageWidth, imageHeight, imageChannels, hasImageLabel, imageLabels.length);
 	}
 
 	function pageLeft() {
@@ -1153,6 +1173,8 @@
 									{columnNames}
 									{currentExample}
 									tfLayer={tfModel.layers[tfModel.layers.length - 1]}
+									{isImageDataset}
+									labellist={imageLabels}
 								/>
 							{/if}
 						</div>
