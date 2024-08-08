@@ -123,10 +123,10 @@
 		@apply text-base;
 	}
 	h5 {
-		@apply text-base;
-		text-indent: 2.75rem;
-		font-size: 1rem; /* 16px */
-line-height: 1.5rem;
+		@apply text-4xl;
+	}
+	h6 {
+		@apply text-6xl;
 	}
 	p {
 		@apply text-base;
