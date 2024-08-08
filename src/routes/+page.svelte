@@ -32,6 +32,7 @@
 	import Activity from 'lucide-svelte/icons/activity';
 	import RefreshCw from 'lucide-svelte/icons/refresh-cw';
 	import TrendingDown from 'lucide-svelte/icons/trending-down';
+	import Instagram from 'lucide-svelte/icons/instagram'
 	import { writable, type Writable } from 'svelte/store';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { toast } from 'svelte-sonner';
@@ -57,6 +58,8 @@
 	import mark3 from '$lib/articles/article3.md?raw';
 	import mark4 from '$lib/articles/article4.md?raw';
 	import mark5 from '$lib/articles/article5.md?raw';
+	import main from '$lib/articles/articlemain.md?raw';
+	import footer from '$lib/articles/footer.md?raw';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import * as Tabs from '$lib/components/ui/tabs/index.js';
@@ -139,7 +142,7 @@
 
 	setContext('model', model);
 
-	const addLayer = (type: LayerType) => {
+	const addLayer = (type: LayerType, units?: number) => {
 		// if (lastLayer.type === 'dense')
 		// 	($model.layers[$model.layers.length - 1] as DenseLayer).activation =
 		// 		selectedActivation.value as ActivationIdentifier;
@@ -148,8 +151,11 @@
 			case 'dense': {
 				layer = {
 					type: 'dense',
-					units: 1
+					units: (units)?units:1,
 				} as DenseLayer;
+				if (hasImageLabel) {
+					(layer as DenseLayer).activation = "softmax";
+				}
 				break;
 			}
 			case 'conv2d': {
@@ -449,7 +455,7 @@
 	let hasLabel = false;
 	let featureCount: Writable<number> = writable(-1);
 	let hasImageLabel = false;
-	let imageLabels: string[];
+	let imageLabels: string[] = [];
 
 	$: {
 		(async () => {
@@ -467,7 +473,10 @@
 		},
 		imageWidth?: number,
 		imageHeight?: number,
-		imageChannels?: number
+		imageChannels?: number,
+		hasImageLabel?: boolean,
+		numLabels?: number
+		
 	) => {
 		if (datasetUploadFiles && datasetUploadFiles.length) {
 			const config: {
@@ -504,15 +513,15 @@
 				}
 			}
 
-			
-
 			if (hasLabel) {
 				const result = await loadUploadedCsv(
 					datasetUploadFiles[0],
 					config,
 					imageWidth,
 					imageHeight,
-					imageChannels
+					imageChannels,
+					hasImageLabel,
+					numLabels
 				);
 				$dataset = result.dataset;
 				columnNames = result.columnNames;
@@ -529,7 +538,21 @@
 					addLayer('conv2d');
 					addLayer('maxpooling');
 					addLayer('flatten');
-					addLayer('dense');
+					
+					if (hasImageLabel) {
+						if (numLabels) {
+							addLayer('dense', numLabels);
+						}
+					}
+					else {
+						addLayer('dense');
+					}
+				}
+				if (hasImageLabel) {
+					$model.loss = "categoricalCrossentropy";
+				}
+				else {
+					$model.loss = "meanSquaredError";
 				}
 			}
 		}
@@ -537,7 +560,7 @@
 
 	$: {
 		outputColumn;
-		updateDataset(datasetUploadFiles, $csvColumnConfigs, imageWidth, imageHeight, imageChannels);
+		updateDataset(datasetUploadFiles, $csvColumnConfigs, imageWidth, imageHeight, imageChannels, hasImageLabel, imageLabels.length);
 	}
 
 	function pageLeft() {
@@ -752,36 +775,10 @@
 <Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row gap-4">
 	{#if clicked == false}
 		<Resizable.Pane defaultSize={25}>
-			<Card.Root class="h-full w-full">
-				<Card.Header>
-					<Card.Title>Create project</Card.Title>
-					<Card.Description>Educating people through interactive platforms</Card.Description>
-				</Card.Header>
-				<Card.Content>
-					<Label>About</Label>
-					<br />
-					<br />
-					NeuralLab is an interactive online platform designed to teach neural network concepts in artificial
-					intelligence. Through its interactive, accessible, and easy to learn neural network, it offers
-					lessons that enable learners to explore AI concepts at their own pace. The user-friendly interface
-					also allows visitors to apply their ideas using custom datasets for real-time training, promoting
-					both exploration and curiosity in AI.
-					<br />
-					<br>
-					<br>
-					<Label>What is a neural network?</Label>
-					<br />
-					<br />
-					Like the one on the right, neural networks are machine-learning models similar to the brain’s
-					structure. They consist of interconnected nodes (“neurons”) in layers. Data is received through
-					the input, ran through hidden layers, where it’s transformed via biases (helping fit data),
-					weights (helping make accurate predictions), and activation functions (to capture patterns),
-					and an output layer, producing the final classification. They have many uses, including image
-					recognition, language processing, and more.
-				</Card.Content>
-				<Card.Footer class="flex justify-between">
-					<Button on:click={GTA}>Go To Article</Button>
-				</Card.Footer>
+			<Card.Root class="h-full w-full p-16">
+					<SvelteMarkdown source = {main} />
+					<Button on:click={GTA} style="width: 400px; height: 100px; background: #e7e1da; font-weight: bold; font-size: 50px; margin-bottom: 45px; margin-top: 20px;" >Explore More!</Button>
+					<SvelteMarkdown source = {footer} />
 			</Card.Root>
 		</Resizable.Pane>
 	{:else}
