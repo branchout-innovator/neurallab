@@ -32,6 +32,7 @@
 	import Activity from 'lucide-svelte/icons/activity';
 	import RefreshCw from 'lucide-svelte/icons/refresh-cw';
 	import TrendingDown from 'lucide-svelte/icons/trending-down';
+	import Instagram from 'lucide-svelte/icons/instagram'
 	import { writable, type Writable } from 'svelte/store';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { toast } from 'svelte-sonner';
@@ -756,7 +757,7 @@
 		<Resizable.Pane defaultSize={25}>
 			<Card.Root class="h-full w-full p-16">
 					<SvelteMarkdown source = {main} />
-					<Button on:click={GTA} style="width: 400px; height: 100px; background: #e7e1da; font-weight: bold; font-size: 50px; margin-bottom: 45px; margin-top: 20px;">Explore More!</Button>
+					<Button on:click={GTA} style="width: 400px; height: 100px; background: #e7e1da; font-weight: bold; font-size: 50px; margin-bottom: 45px; margin-top: 20px;" >Explore More!</Button>
 					<SvelteMarkdown source = {footer} />
 			</Card.Root>
 		</Resizable.Pane>

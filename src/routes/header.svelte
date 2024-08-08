@@ -13,6 +13,8 @@
 	import DrawerFooter from '$lib/components/ui/drawer/drawer-footer.svelte';
 	import DrawerTitle from '$lib/components/ui/drawer/drawer-title.svelte';
 	import DrawerDescription from '$lib/components/ui/drawer/drawer-description.svelte';
+	import Mail from 'lucide-svelte/icons/Mail';
+	import Globe from 'lucide-svelte/icons/Globe';
 	
 	</script>
 	
@@ -32,8 +34,12 @@
 	<DrawerHeader>
 	<DrawerTitle>About NeuralLab</DrawerTitle>
 	<br>
-	<DrawerDescription>NeuralLab is an interactive online platform designed to teach neural network concepts in artificial intelligence. Through its interactive, accessible, and easy to learn neural network, it offers clear, accessible lessons that cater to learners of all ages, enabling them to explore AI concepts at their own pace. The user-friendly interface also allows visitors to apply their ideas using custom datasets for real-time training, promoting both exploration and curiosity in AI.</DrawerDescription>
-	</DrawerHeader>
+	<DrawerDescription>NeuralLab was created by BranchOut! students, a 21st Century Multicultural STEM Education Project, aiming to promote STEM education and close achievement gaps by promoting cultural understanding and civic engagement.</DrawerDescription>
+	<DrawerDescription></DrawerDescription>
+	<DrawerDescription></DrawerDescription>
+	<DrawerDescription><Mail class="mr-2 h-4 w-4 float-left"></Mail>velbranchout@gmail.com</DrawerDescription>
+	<DrawerDescription><Globe class="mr-2 h-4 w-4 float-left"></Globe>velbranchout.org</DrawerDescription>
+</DrawerHeader>
 	<div class="p-4 pb-0">
 	<div class="flex items-center justify-center space-x-2">
 	</div>
