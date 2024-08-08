@@ -57,6 +57,9 @@
 	import mark3 from '$lib/articles/article3.md?raw';
 	import mark4 from '$lib/articles/article4.md?raw';
 	import mark5 from '$lib/articles/article5.md?raw';
+	import mark6 from '$lib/articles/article6.md?raw';
+	import mark7 from '$lib/articles/article7.md?raw';
+	import mark8 from '$lib/articles/article8.md?raw';
 	import main from '$lib/articles/articlemain.md?raw';
 	import footer from '$lib/articles/footer.md?raw';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
@@ -553,7 +556,8 @@
 			'What are Neural Networks? (Basics of Neural Networks)',
 			'What are Activation Functions?',
 			'What are Loss Functions? (Neural Nets)',
-			'Optimization Algorithms'
+			'Optimization Algorithms',
+			'Backtracking'
 		],
 		[
 			'Basics of CNNs',
@@ -567,7 +571,7 @@
 		'Convolutional Neural Networks (CNNs)',
 		'Recurrent Neural Networks (RNNs)'
 	];
-	let pagetext = [mark, mark2, mark3, mark4, mark5];
+	let pagetext = [mark, mark2, mark3, mark4, mark5, mark6, mark7, mark8];
 	$: source = pagetext[Number(position)];
 	function changePage(d: number) {
 		let pageNum = Number(position);
