@@ -775,7 +775,7 @@
 <Resizable.PaneGroup direction="horizontal" class="container flex h-full max-w-full flex-row gap-4">
 	{#if clicked == false}
 		<Resizable.Pane defaultSize={25}>
-			<Card.Root class="h-full w-full p-16">
+			<Card.Root class="h-full w-full p-16" style="overflow-y:auto;">
 					<SvelteMarkdown source = {main} />
 					<Button on:click={GTA} style="width: 400px; height: 100px; background: #e7e1da; font-weight: bold; font-size: 50px; margin-bottom: 45px; margin-top: 20px;" >Explore More!</Button>
 					<SvelteMarkdown source = {footer} />
