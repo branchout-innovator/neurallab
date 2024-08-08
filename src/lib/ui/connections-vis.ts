@@ -12,7 +12,7 @@ export const getNodeYPositions = (layer: Layer): number[] => {
 			else {
 				units = denseLayer.units;
 			}
-			const nodeSpacing = remToPx(2);
+			const nodeSpacing = remToPx(2.7);
 			return Array.from({ length: units }, (_, i) => i * nodeSpacing + nodeSpacing / 2);
 		}
 		case 'flatten': {
@@ -20,12 +20,12 @@ export const getNodeYPositions = (layer: Layer): number[] => {
 		}
 		case 'maxpooling': {
 			const denseLayer = layer as MaxPoolingLayer;
-			const nodeSpacing = remToPx(2);
+			const nodeSpacing = remToPx(2.7);
 			return Array.from({ length: denseLayer.convlyr.filters }, (_, i) => i * nodeSpacing + nodeSpacing / 2);
 		}
 		case 'conv2d': {
 			const denseLayer = layer as Conv2DLayer;
-			const nodeSpacing = remToPx(2);
+			const nodeSpacing = remToPx(2.7);
 			return Array.from({ length: denseLayer.filters }, (_, i) => i * nodeSpacing + nodeSpacing / 2);
 		}
 		case 'dropout': {
@@ -33,7 +33,7 @@ export const getNodeYPositions = (layer: Layer): number[] => {
 		}
 		case 'lstm': {
 			const lstmLayer = layer as LSTMLayer;
-			const nodeSpacing = remToPx(3.8);
+			const nodeSpacing = remToPx(2.7); //3.8?
 			const offset = 28;
 			return Array.from({ length: Math.min(lstmLayer.timestep, 10) }, (_, i) => i * nodeSpacing + nodeSpacing / 2-offset);
 		}
@@ -53,6 +53,6 @@ export const handler = (pos: number[], times: number): number[] => {
 }
 
 export const getNodeYPositionsInput = (features: number): number[] => {
-	const nodeSpacing = remToPx(2);
+	const nodeSpacing = remToPx(2.7);
 	return Array.from({ length: features }, (_, i) => i * nodeSpacing + nodeSpacing / 2);
 };
