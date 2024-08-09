@@ -43,7 +43,7 @@
 
 </script>
 
-<div class="flex flex-col items-end gap-2 rounded-lg py-2 text-card-foreground">
+<div class="flex flex-col items-end gap-3 rounded-lg py-2 text-card-foreground">
 	<h5 class="mb-9 text-sm">&nbsp;</h5>
 	{#if isImageDataset}
 		{#each channelnames as feature}
@@ -59,7 +59,7 @@
 		{#each labels as feature}
 			<div class="flex flex-row items-center">
 				<div
-					class="flex items-center justify-start text-nowrap rounded bg-muted px-2 py-1 font-medium"
+					class="flex items-center justify-start text-nowrap rounded bg-muted px-2 py-2 font-medium"
 				>
 					<span class="text-xs">{feature.name + (feature.value ? `: ${feature.value}` : '')}</span>
 				</div>
