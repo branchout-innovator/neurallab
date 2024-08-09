@@ -829,9 +829,11 @@
 							>&gt;</Button
 						>
 					</div>
+				</div>		
+				<div class="inline-block flex-row h-[10px] w-full">
+					<div class="w-full h-[8px]"/>
+					<Progress {value} class="h-[4px]"/>
 				</div>
-				<span class="inline-block h-8 w-4" />
-				<Progress {value} />
 				<div id="article" class="flex w-full overflow-y-auto">
 					<div class="w-full p-4">
 						<h2
