@@ -611,7 +611,7 @@
 			'What are Activation Functions?',
 			'What are Loss Functions? (Neural Nets)',
 			'Optimization Algorithms',
-			'Backtracking',
+			'Backtracking'
 		],
 		[
 			'Basics of CNNs',
@@ -623,7 +623,7 @@
 			'Basics of RNNs',
 			'Long Short-Term Memory (LSTM) networks',
 			'Gated Recurrent Units (GRUs)',
-			'Applications of RNNs in time-series data and sequence prediction',
+			'Applications of RNNs in time-series data and sequence prediction'
 		],
 		[
 			'Data cleaning and preprocessing techniques',
@@ -661,7 +661,7 @@
 	$: {
 		source = pagetext[Number(position)];
 		if (clicked) {
-			document.getElementById("article")?.scrollTo({ top: 0, behavior: "instant" });
+			document.getElementById('article')?.scrollTo({ top: 0, behavior: 'instant' });
 		}
 	}
 	function changePage(d: number) {
@@ -854,7 +854,13 @@
 				<img
 					src="static/articleimages/clearlogo.png"
 					alt="drawing"
-					class="clearlogo"
+					class="clearlogo block dark:hidden"
+					style="width:150px; margin-left:150px"
+				/>
+				<img
+					src="static/articleimages/clearlogodark.png"
+					alt="drawing"
+					class="clearlogo hidden dark:block"
 					style="width:150px; margin-left:150px"
 				/>
 				<div style="margin-top:-120px"><SvelteMarkdown source={main} /></div>
@@ -910,10 +916,10 @@
 							>&gt;</Button
 						>
 					</div>
-				</div>		
-				<div class="inline-block flex-row h-[10px] w-full">
-					<div class="w-full h-[8px]"/>
-					<Progress {value} class="h-[4px]"/>
+				</div>
+				<div class="inline-block h-[10px] w-full flex-row">
+					<div class="h-[8px] w-full" />
+					<Progress {value} class="h-[4px]" />
 				</div>
 				<div id="article" class="flex w-full overflow-y-auto">
 					<div class="w-full p-4">
