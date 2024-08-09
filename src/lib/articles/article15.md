@@ -6,6 +6,8 @@ Normalization is a technique that can be used in data preprocessing in order to 
 
 2 of the most common normalization techniques used are min and max scaling, which assists the data set when shifting and rescaling attribute values in order for them to range from 0-1.
 
+<br>
+
 ## **Standardization scaling**
 Standardization is a scaling technique in which the values are centered around the mean with a unit of standard deviation. **Z score normalization** is the change of features by subtracting from the mean and dividing by standard deviation. Unlike normalization standardization is not affected by outliers due to the lack of a predefined range of transformed features.
 

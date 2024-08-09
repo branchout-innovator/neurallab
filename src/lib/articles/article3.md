@@ -27,7 +27,7 @@ L~δ~(y~i~-ŷ~i~) = {(1/2)(y~i~-ŷ~i~)for |y~i~-ŷ~i~| ≤ δ
 
 <br>
 
-![Image0](/articleimages/image0)
+![Image1](/static/articleimages/image1)
 
 <br>
 
@@ -54,7 +54,7 @@ Loss = Σmax(0, 1 - y~i~\*ŷ~i~)
 
 <br>
 
-![Image1](/articleimages/image1)
+![Image2](/static/articleimages/image2)
 
 <br>
 
