@@ -1,4 +1,4 @@
-#### CNNs, or Convolutional Neural Networks, are a type of neural net designed specifically for visual data, such as images. For example, they can be used to identify objects within images, locate objects within images, divide images into sections, and identify individuals through facial recognition. 
+ #### CNNs, or Convolutional Neural Networks, are a type of neural net designed specifically for visual data, such as images. For example, they can be used to identify objects within images, locate objects within images, divide images into sections, and identify individuals through facial recognition. 
 
 <br>
 

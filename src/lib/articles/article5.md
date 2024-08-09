@@ -1,31 +1,20 @@
- #### CNNs, or Convolutional Neural Networks, are a type of neural net designed specifically for visual data, such as images. For example, they can be used to identify objects within images, locate objects within images, divide images into sections, and identify individuals through facial recognition. 
+## What is backtracking?
 
 <br>
 
-#### **CNNs are composed of 3 main layers:**
-* Convolutional Layers
-* Pooling Layers
-* Fully Connected Layers
+Backtracking, or backpropagation, is a key process in training neural networks. It involves taking the error rate from forward propagation and feeding this loss backward through the network layers to adjust the weights. This process often involves using the chain rule and other calculus-derived methods. 
+
+<!-- ![Image0](/static/articleimages/loss_functions/image0) -->
 
 <br>
 
-#### **Steps for training CNNs:**
-* Gather data, ensuring images are correctly labeled
-* Resize and normalize data
-* Augmentation (transforming images to increase diversity and reduce overfitting)
-* Define the input shape
-* Add convolutional layers (filters (kernels) which slide across images summing up elements to produce single value, kernel size - dimensions of the filter, where smaller kernels capture finer details, strides determine how many units the filter moves at a time)
-* Add pooling layers (Max Pooling - takes maximum value from patches of feature map, Average Pooling - takes average value from patches of feature map)
-* Add 1+ dense layers near the end
-* For the classification output layer, add a dense layer with a number of neurons equal to the number of classes (with softmax activation)
-* Compile model - define loss function (categorical cross-entropy for classification), optimizer (Adam, SGD, etc. ), and metrics (evaluates performance)
-* Training the model - batch size (number of samples processed during each parameter update) and epochs (number of complete passes through the dataset)
-* Evaluate the model - Use a validation data set to check the model for overfitting, then test with a new data set after. 
-* Adjust the learning rate to improve convergence, regularize the model, and experiment with other hyperparameters to improve the model. 
+### Steps of backtracking
+Forward Propagation: Input data passes through the network to produce an output.
+Loss Calculation: The difference between the predicted output and the actual target (loss) is calculated.
+Backward Propagation: The loss is propagated back through the network, updating the weights to minimize the error.
 
 <br>
 
-### *References*
-
-https://www.ibm.com/topics/convolutional-neural-networks
-https://www.techtarget.com/searchenterpriseai/definition/convolutional-neural-network
+### References
+Backpropagation Process in Deep Neural Network - javatpoint. (n.d.). Javatpoint. Retrieved August 6, 2024, from https://www.javatpoint.com/pytorch-backpropagation-process-in-deep-neural-network
+Fang, X. (2017, November 13). Understanding deep learning via backtracking and deconvolution - Journal of Big Data. Journal of Big Data. Retrieved August 6, 2024, from https://journalofbigdata.springeropen.com/articles/10.1186/s40537-017-0101-8
