@@ -593,7 +593,13 @@
 		'Recurrent Neural Networks (RNNs)'
 	];
 	let pagetext = [mark, mark2, mark3, mark4, mark5, mark6, mark7, mark8];
-	$: source = pagetext[Number(position)];
+	let source: string;
+	$: {
+		source = pagetext[Number(position)];
+		if (clicked) {
+			document.getElementById("article")?.scrollTo({ top: 0, behavior: "instant" });
+		}
+	}
 	function changePage(d: number) {
 		let pageNum = Number(position);
 		if ((pageNum != 0 || d != -1) && (pageNum != pagetext.length - 1 || d != 1)) {
