@@ -144,3 +144,9 @@ main {
 	display: flex;
 	flex-direction: column;
 }
+
+.clearlogo {
+	position: relative;
+	top: -140px;
+	right: -300px;
+}
