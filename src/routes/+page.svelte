@@ -71,6 +71,14 @@
 	import mark17 from '$lib/articles/article17.md?raw';
 	import mark18 from '$lib/articles/article18.md?raw';
 	import mark19 from '$lib/articles/article19.md?raw';
+	import mark20 from '$lib/articles/article20.md?raw';
+	import mark21 from '$lib/articles/article21.md?raw';
+	import mark22 from '$lib/articles/article22.md?raw';
+	import mark23 from '$lib/articles/article23.md?raw';
+	import mark24 from '$lib/articles/article24.md?raw';
+	import mark25 from '$lib/articles/article25.md?raw';
+	import mark26 from '$lib/articles/article26.md?raw';
+	import mark27 from '$lib/articles/article27.md?raw';
 	import main from '$lib/articles/articlemain.md?raw';
 	import title from '$lib/articles/titlemain.md?raw';
 	import footer from '$lib/articles/footer.md?raw';
@@ -625,6 +633,18 @@
 			'Basics of image recognition',
 			'Image Classification Datasets and Characteristics',
 			'Transfer learning for image recognition'
+		],
+		[
+			'Deep learning frameworks (TensorFlow)',
+			'Web framework (SvelteKit)',
+			'Libraries for data manipulation (NumPy, pandas)',
+			'Visualization tools (d3.js)'
+		],
+		[
+			'Model training techniques',
+			'Overfitting and underfitting',
+			'Cross-validation techniques',
+			'Evaluation metrics'
 		]
 	];
 	let subtitles = [
@@ -633,9 +653,17 @@
 		'Recurrent Neural Networks (RNNs)',
 		'Data Uploading and Preprocessing',
 		'Image Recognition',
+		'Software Frameworks and Libraries',
+		'Model Training and Evaluation'
 	];
-	let pagetext = [mark, mark2, mark3, mark4, mark5, mark6, mark7, mark8, mark9, mark10, mark11, mark12, mark13, mark14, mark15, mark17, mark18, mark19];
-	$: source = pagetext[Number(position)];
+	let pagetext = [mark, mark2, mark3, mark4, mark5, mark6, mark7, mark8, mark9, mark10, mark11, mark12, mark13, mark14, mark15, mark17, mark18, mark19, mark20, mark21, mark22, mark23, mark24, mark25, mark26, mark27];
+	let source: string;
+	$: {
+		source = pagetext[Number(position)];
+		if (clicked) {
+			document.getElementById("article")?.scrollTo({ top: 0, behavior: "instant" });
+		}
+	}
 	function changePage(d: number) {
 		let pageNum = Number(position);
 		if ((pageNum != 0 || d != -1) && (pageNum != pagetext.length - 1 || d != 1)) {

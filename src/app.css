@@ -110,8 +110,11 @@
 		@apply list-inside;
 		text-indent: 1.5rem;
 	}
-	ul ul {
+	ul ul, ul ol, ol ul, ol ol {
 		text-indent: 3rem;
+	}
+	ul ul ul, ul ul ol, ul ol ul, ul ol ol, ol ul ul, ol ul ol, ol ol ul, ol ol ol{
+		text-indent: 4.5rem;
 	}
 	h1 {
 		@apply text-2xl;
