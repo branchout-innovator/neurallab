@@ -1,5 +1,7 @@
 #### Backtracking, or backpropagation, is a key process in training neural networks. It involves taking the error rate from forward propagation and feeding this loss backward through the network layers to adjust the weights. This process often involves using the chain rule and other calculus-derived methods. 
 
+<br>
+
 ![Image3](/static/articleimages/image3)
 
 <br>
