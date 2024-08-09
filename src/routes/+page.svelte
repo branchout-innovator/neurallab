@@ -32,7 +32,7 @@
 	import Activity from 'lucide-svelte/icons/activity';
 	import RefreshCw from 'lucide-svelte/icons/refresh-cw';
 	import TrendingDown from 'lucide-svelte/icons/trending-down';
-	import Instagram from 'lucide-svelte/icons/instagram'
+	import Instagram from 'lucide-svelte/icons/instagram';
 	import { writable, type Writable } from 'svelte/store';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import { toast } from 'svelte-sonner';
@@ -62,6 +62,7 @@
 	import mark7 from '$lib/articles/article7.md?raw';
 	import mark8 from '$lib/articles/article8.md?raw';
 	import main from '$lib/articles/articlemain.md?raw';
+	import title from '$lib/articles/titlemain.md?raw';
 	import footer from '$lib/articles/footer.md?raw';
 	import ChevronLeft from 'lucide-svelte/icons/chevron-left';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
@@ -154,10 +155,10 @@
 			case 'dense': {
 				layer = {
 					type: 'dense',
-					units: (units)?units:1,
+					units: units ? units : 1
 				} as DenseLayer;
 				if (hasImageLabel) {
-					(layer as DenseLayer).activation = "softmax";
+					(layer as DenseLayer).activation = 'softmax';
 				}
 				break;
 			}
@@ -431,7 +432,6 @@
 
 	let datasetUploadFiles: FileList;
 	let labelFiles: FileList;
-	
 
 	let dataset: Writable<tf.data.Dataset<tf.TensorContainer>> = writable();
 	setContext('dataset', dataset);
@@ -464,7 +464,17 @@
 		(async () => {
 			if (labelFiles && labelFiles.length > 0) {
 				hasImageLabel = true;
-				labelFiles.item(0)?.text().then((t) => {imageLabels = t.replaceAll("\n", " ").split(" ").filter((x) => {return x != ""})})
+				labelFiles
+					.item(0)
+					?.text()
+					.then((t) => {
+						imageLabels = t
+							.replaceAll('\n', ' ')
+							.split(' ')
+							.filter((x) => {
+								return x != '';
+							});
+					});
 			}
 		})();
 	}
@@ -479,7 +489,6 @@
 		imageChannels?: number,
 		hasImageLabel?: boolean,
 		numLabels?: number
-		
 	) => {
 		if (datasetUploadFiles && datasetUploadFiles.length) {
 			const config: {
@@ -541,21 +550,19 @@
 					addLayer('conv2d');
 					addLayer('maxpooling');
 					addLayer('flatten');
-					
+
 					if (hasImageLabel) {
 						if (numLabels) {
 							addLayer('dense', numLabels);
 						}
-					}
-					else {
+					} else {
 						addLayer('dense');
 					}
 				}
 				if (hasImageLabel) {
-					$model.loss = "categoricalCrossentropy";
-				}
-				else {
-					$model.loss = "meanSquaredError";
+					$model.loss = 'categoricalCrossentropy';
+				} else {
+					$model.loss = 'meanSquaredError';
 				}
 			}
 		}
@@ -563,7 +570,15 @@
 
 	$: {
 		outputColumn;
-		updateDataset(datasetUploadFiles, $csvColumnConfigs, imageWidth, imageHeight, imageChannels, hasImageLabel, imageLabels.length);
+		updateDataset(
+			datasetUploadFiles,
+			$csvColumnConfigs,
+			imageWidth,
+			imageHeight,
+			imageChannels,
+			hasImageLabel,
+			imageLabels.length
+		);
 	}
 
 	function pageLeft() {
@@ -593,7 +608,13 @@
 		'Recurrent Neural Networks (RNNs)'
 	];
 	let pagetext = [mark, mark2, mark3, mark4, mark5, mark6, mark7, mark8];
-	$: source = pagetext[Number(position)];
+	let source: string;
+	$: {
+		source = pagetext[Number(position)];
+		if (clicked) {
+			document.getElementById("article")?.scrollTo({ top: 0, behavior: "instant" });
+		}
+	}
 	function changePage(d: number) {
 		let pageNum = Number(position);
 		if ((pageNum != 0 || d != -1) && (pageNum != pagetext.length - 1 || d != 1)) {
@@ -780,9 +801,20 @@
 	{#if clicked == false}
 		<Resizable.Pane defaultSize={25}>
 			<Card.Root class="h-full w-full p-16" style="overflow-y:auto;">
-					<SvelteMarkdown source = {main} />
-					<Button on:click={GTA} style="width: 400px; height: 100px; background: #e7e1da; font-weight: bold; font-size: 50px; margin-bottom: 45px; margin-top: 20px;" >Explore More!</Button>
-					<SvelteMarkdown source = {footer} />
+				<div class="pr-96"><SvelteMarkdown source={title} /></div>
+				<img
+					src="static/articleimages/clearlogo.png"
+					alt="drawing"
+					class="clearlogo"
+					style="width:150px; margin-left:150px"
+				/>
+				<div style="margin-top:-120px"><SvelteMarkdown source={main} /></div>
+				<Button
+					on:click={GTA}
+					style="width: 195px; height: 85px; background: #e7e1da; font-weight: bold; font-size: 25px; margin-bottom: 45px; margin-top: 20px;"
+					>Explore More!</Button
+				>
+				<SvelteMarkdown source={footer} />
 			</Card.Root>
 		</Resizable.Pane>
 	{:else}
@@ -829,9 +861,11 @@
 							>&gt;</Button
 						>
 					</div>
+				</div>		
+				<div class="inline-block flex-row h-[10px] w-full">
+					<div class="w-full h-[8px]"/>
+					<Progress {value} class="h-[4px]"/>
 				</div>
-				<span class="inline-block h-8 w-4" />
-				<Progress {value} />
 				<div id="article" class="flex w-full overflow-y-auto">
 					<div class="w-full p-4">
 						<h2

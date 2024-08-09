@@ -30,7 +30,14 @@
 		<nav
 			class="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6"
 		>
-			<Button on:click={() => reloadPage()} variant="ghost">HomePage</Button>
+		<img
+					src="static/articleimages/clearlogobanner.png"
+					alt="toplogo"
+					class="a"
+					style="width:35px; margin-left:15px"
+				/>
+		
+		<Button on:click={() => reloadPage()} variant="ghost">HomePage</Button>
 
 			<div class="fixed-top">
 				<DrawerRoot>
@@ -43,13 +50,14 @@
 								<DrawerTitle>About NeuralLab</DrawerTitle>
 								<br />
 								<DrawerDescription
-									>NeuralLab is an interactive online platform designed to teach neural network
-									concepts in artificial intelligence. Through its interactive, accessible, and easy
-									to learn neural network, it offers clear, accessible lessons that cater to
-									learners of all ages, enabling them to explore AI concepts at their own pace. The
-									user-friendly interface also allows visitors to apply their ideas using custom
-									datasets for real-time training, promoting both exploration and curiosity in AI.</DrawerDescription
+									>NeuralLab was created by BranchOut! students, a 21st Century Multicultural STEM Education Project, aiming to promote STEM education and close achievement gaps by promoting cultural understanding and civic engagement.</DrawerDescription
 								>
+								<DrawerDescription
+									><Mail class="mr-2 h-4 w-4 float-left"></Mail>velbranchout@gmail.com</DrawerDescription
+								>
+								<DrawerDescription
+								><Globe class="mr-2 h-4 w-4 float-left"></Globe>velbranchout.org</DrawerDescription
+							>
 							</DrawerHeader>
 							<div class="p-4 pb-0">
 								<div class="flex items-center justify-center space-x-2"></div>

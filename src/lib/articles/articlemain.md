@@ -1,9 +1,3 @@
-###### **NeuralLab**
-
-<br>
-
-## *Educating people through interactive platforms*
-
 <br>
 
 ##### About
@@ -18,6 +12,6 @@
 
 <br>
 
-# Like the one on the right, neural networks are machine-learning models similar to the brain’s structure. They consist of interconnected nodes (“neurons”) in layers. Data is received through the input, ran through hidden layers, where it’s transformed via biases (helping fit data), weights (helping make accurate predictions), and activation functions (to capture patterns), and an output layer, producing the final classification. They have many uses, including image recognition, language processing, and more.
+# Like the one you will be exploring, neural networks are machine-learning models similar to the brain’s structure. They consist of interconnected nodes (“neurons”) in layers. Data is received through the input, ran through hidden layers, where it’s transformed via biases (helping fit data), weights (helping make accurate predictions), and activation functions (to capture patterns), and an output layer, producing the final classification. They have many uses, including image recognition, language processing, and more.
 
 <br>

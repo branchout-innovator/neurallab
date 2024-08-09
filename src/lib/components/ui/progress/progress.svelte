@@ -11,11 +11,11 @@
 </script>
 
 <ProgressPrimitive.Root
-	class={cn("relative h-2 w-full overflow-hidden rounded-full bg-foreground/20", className)}
+	class={cn("relative h-[10px] w-full overflow-hidden rounded-full bg-foreground/20", className)}
 	{...$$restProps}
 >
 	<div
-		class="h-full w-full flex-1 bg-foreground transition-all"
+		class="h-[10px] w-full flex-1 bg-foreground transition-all"
 		style={`transform: translateX(-${100 - (100 * (value ?? 0)) / (max ?? 1)}%)`}
 	></div>
 </ProgressPrimitive.Root>
