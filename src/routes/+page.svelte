@@ -637,7 +637,13 @@
 		'Image Recognition',
 	];
 	let pagetext = [mark, mark2, mark3, mark4, mark5, mark6, mark7, mark8, mark9, mark10, mark11, mark12, mark13, mark14, mark15, mark16, mark17, mark18, mark19];
-	$: source = pagetext[Number(position)];
+	let source: string;
+	$: {
+		source = pagetext[Number(position)];
+		if (clicked) {
+			document.getElementById("article")?.scrollTo({ top: 0, behavior: "instant" });
+		}
+	}
 	function changePage(d: number) {
 		let pageNum = Number(position);
 		if ((pageNum != 0 || d != -1) && (pageNum != pagetext.length - 1 || d != 1)) {
