@@ -62,6 +62,9 @@ Ant colony optimization can be useful when addressing routing problems
 
 ### *References*
 Guide, S. (n.d.). Understanding Optimization Algorithms in Machine Learning | by Supriya Secherla. Towards Data Science. Retrieved July 16, 2024, from https://towardsdatascience.com/understanding-optimization-algorithms-in-machine-learning-edfdb4df766b
+
 Optimization Algorithms. (n.d.). Complexica. Retrieved July 16, 2024, from https://www.complexica.com/narrow-ai-glossary/optimization-algorithms
+
 What is Adam Optimizer? (2024, April 26). Analytics Vidhya. Retrieved July 16, 2024, from https://www.analyticsvidhya.com/blog/2023/09/what-is-adam-optimizer/#
+
 BISWA NATH DATTA, CHAPTER 13 - NUMERICAL SOLUTIONS AND CONDITIONING OF ALGEBRAIC RICCATI EQUATIONS, Editor(s): BISWA NATH DATTA, Numerical Methods for Linear Control Systems, Academic Press, 2004, Pages 519-599, ISBN 9780122035906, https://doi.org/10.1016/B978-012203590-6/50017-3. (https://www.sciencedirect.com/science/article/pii/B9780122035906500173)
