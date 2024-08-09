@@ -1,8 +1,8 @@
-## Cross-validation techniques
-
 #### Cross-validation is a technique used to assess how well a neural network generalizes new data. This helps ensure that a neural network doesn’t just memorize a specific data set and instead learns and performs well given various data subsets. There are several cross-validation techniques used with neural networks: 
 
 <!-- ![Image0](/static/articleimages/cross_validation/cross_val_kfold) -->
+
+<br>
 
 * K-fold and variations: there are three key steps in this cross-validation technique: 
   * Entire dataset is split into “k” subjects, or folds. If folds often preserve the proportion of class distributions (category or set of data), then it’s called stratified K-fold cross-validation
