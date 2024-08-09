@@ -2,6 +2,10 @@
 
 <br>
 
+![Image0](/static/articleimages/image0)
+
+<br>
+
 ## **Network Layers**
 
 <br>

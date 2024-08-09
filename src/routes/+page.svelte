@@ -68,7 +68,6 @@
 	import mark13 from '$lib/articles/article13.md?raw';
 	import mark14 from '$lib/articles/article14.md?raw';
 	import mark15 from '$lib/articles/article15.md?raw';
-	import mark16 from '$lib/articles/article16.md?raw';
 	import mark17 from '$lib/articles/article17.md?raw';
 	import mark18 from '$lib/articles/article18.md?raw';
 	import mark19 from '$lib/articles/article19.md?raw';
@@ -621,7 +620,6 @@
 		[
 			'Data cleaning and preprocessing techniques',
 			'Normalization and standardization',
-			'Data augmentation techniques'
 		],
 		[
 			'Basics of image recognition',
@@ -636,7 +634,7 @@
 		'Data Uploading and Preprocessing',
 		'Image Recognition',
 	];
-	let pagetext = [mark, mark2, mark3, mark4, mark5, mark6, mark7, mark8, mark9, mark10, mark11, mark12, mark13, mark14, mark15, mark16, mark17, mark18, mark19];
+	let pagetext = [mark, mark2, mark3, mark4, mark5, mark6, mark7, mark8, mark9, mark10, mark11, mark12, mark13, mark14, mark15, mark17, mark18, mark19];
 	$: source = pagetext[Number(position)];
 	function changePage(d: number) {
 		let pageNum = Number(position);
