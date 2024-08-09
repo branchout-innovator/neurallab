@@ -61,6 +61,17 @@
 	import mark6 from '$lib/articles/article6.md?raw';
 	import mark7 from '$lib/articles/article7.md?raw';
 	import mark8 from '$lib/articles/article8.md?raw';
+	import mark9 from '$lib/articles/article9.md?raw';
+	import mark10 from '$lib/articles/article10.md?raw';
+	import mark11 from '$lib/articles/article11.md?raw';
+	import mark12 from '$lib/articles/article12.md?raw';
+	import mark13 from '$lib/articles/article13.md?raw';
+	import mark14 from '$lib/articles/article14.md?raw';
+	import mark15 from '$lib/articles/article15.md?raw';
+	import mark16 from '$lib/articles/article16.md?raw';
+	import mark17 from '$lib/articles/article17.md?raw';
+	import mark18 from '$lib/articles/article18.md?raw';
+	import mark19 from '$lib/articles/article19.md?raw';
 	import main from '$lib/articles/articlemain.md?raw';
 	import title from '$lib/articles/titlemain.md?raw';
 	import footer from '$lib/articles/footer.md?raw';
@@ -593,28 +604,40 @@
 			'What are Activation Functions?',
 			'What are Loss Functions? (Neural Nets)',
 			'Optimization Algorithms',
-			'Backtracking'
+			'Backtracking',
 		],
 		[
 			'Basics of CNNs',
 			'Convolutional Layers',
 			'Pooling Layers',
 			'LeNet and advanced CNN architectures'
+		],
+		[
+			'Basics of RNNs',
+			'Long Short-Term Memory (LSTM) networks',
+			'Gated Recurrent Units (GRUs)',
+			'Applications of RNNs in time-series data and sequence prediction',
+		],
+		[
+			'Data cleaning and preprocessing techniques',
+			'Normalization and standardization',
+			'Data augmentation techniques'
+		],
+		[
+			'Basics of image recognition',
+			'Image Classification Datasets and Characteristics',
+			'Transfer learning for image recognition'
 		]
 	];
 	let subtitles = [
 		'Fundamentals of Neural Networks',
 		'Convolutional Neural Networks (CNNs)',
-		'Recurrent Neural Networks (RNNs)'
+		'Recurrent Neural Networks (RNNs)',
+		'Data Uploading and Preprocessing',
+		'Image Recognition',
 	];
-	let pagetext = [mark, mark2, mark3, mark4, mark5, mark6, mark7, mark8];
-	let source: string;
-	$: {
-		source = pagetext[Number(position)];
-		if (clicked) {
-			document.getElementById("article")?.scrollTo({ top: 0, behavior: "instant" });
-		}
-	}
+	let pagetext = [mark, mark2, mark3, mark4, mark5, mark6, mark7, mark8, mark9, mark10, mark11, mark12, mark13, mark14, mark15, mark16, mark17, mark18, mark19];
+	$: source = pagetext[Number(position)];
 	function changePage(d: number) {
 		let pageNum = Number(position);
 		if ((pageNum != 0 || d != -1) && (pageNum != pagetext.length - 1 || d != 1)) {

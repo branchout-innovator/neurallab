@@ -1,5 +1,3 @@
-## What are Convolutional Layers?
-
 <br>
 
 Convolutional layers are a key innovation in convolutional neural networks (CNNs). They are the first layer in CNNs, followed by pooling layers and fully-connected (FC) layers. Most computation occurs in the convolutional layers, where data, often with grid-like topology is processed. Convolutional layers analyze these data sets using inputs, a filter, and a feature map.
@@ -32,7 +30,7 @@ As the amounts of layers increase the am\nalysis gets more and more complicated.
 
 <br>
 
-### References
+### *References*
 Darwish, D. (2024, January 22). Improving Techniques for Convolutional Neural Networks Performance. European Journal of Electrical Engineering and Computer Science. Retrieved July 17, 2024, from https://www.ejece.org/index.php/ejece/article/view/596
 What are Convolutional Neural Networks? (n.d.). IBM. Retrieved July 17, 2024, from https://www.ibm.com/topics/convolutional-neural-networks
 

@@ -58,4 +58,5 @@ Neural networks analyze large amounts of data, recognizing patterns and correlat
 
 ### *References*
 Hardesty, L. (2017, April 14). Explained: Neural networks | MIT News | Massachusetts Institute of Technology. MIT News. Retrieved July 16, 2024, from https://news.mit.edu/2017/explained-neural-networks-deep-learning-0414
+
 What is a Neural Network? (n.d.). IBM. Retrieved July 16, 2024, from https://www.ibm.com/topics/neural-networks
