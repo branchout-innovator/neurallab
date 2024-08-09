@@ -58,6 +58,9 @@
 	import mark3 from '$lib/articles/article3.md?raw';
 	import mark4 from '$lib/articles/article4.md?raw';
 	import mark5 from '$lib/articles/article5.md?raw';
+	import mark6 from '$lib/articles/article6.md?raw';
+	import mark7 from '$lib/articles/article7.md?raw';
+	import mark8 from '$lib/articles/article8.md?raw';
 	import main from '$lib/articles/articlemain.md?raw';
 	import title from '$lib/articles/titlemain.md?raw';
 	import footer from '$lib/articles/footer.md?raw';
@@ -589,7 +592,8 @@
 			'What are Neural Networks? (Basics of Neural Networks)',
 			'What are Activation Functions?',
 			'What are Loss Functions? (Neural Nets)',
-			'Optimization Algorithms'
+			'Optimization Algorithms',
+			'Backtracking'
 		],
 		[
 			'Basics of CNNs',
@@ -603,7 +607,7 @@
 		'Convolutional Neural Networks (CNNs)',
 		'Recurrent Neural Networks (RNNs)'
 	];
-	let pagetext = [mark, mark2, mark3, mark4, mark5];
+	let pagetext = [mark, mark2, mark3, mark4, mark5, mark6, mark7, mark8];
 	$: source = pagetext[Number(position)];
 	function changePage(d: number) {
 		let pageNum = Number(position);
@@ -851,9 +855,11 @@
 							>&gt;</Button
 						>
 					</div>
+				</div>		
+				<div class="inline-block flex-row h-[10px] w-full">
+					<div class="w-full h-[8px]"/>
+					<Progress {value} class="h-[4px]"/>
 				</div>
-				<span class="inline-block h-8 w-4" />
-				<Progress {value} />
 				<div id="article" class="flex w-full overflow-y-auto">
 					<div class="w-full p-4">
 						<h2
