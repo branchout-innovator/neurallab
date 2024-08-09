@@ -13,11 +13,7 @@
 
 ## Detection Method: K-fold cross-validation
 
-<br>
-
-![Image0](/static/articleimages/overfitting_and_underfitting)
-
-<br>
+<!-- ![Image0](/static/articleimages/overfitting_and_underfitting) -->
 
 #### In k-fold cross-validation, data is split equally into subsets, known as “folds.” In each interaction, one of the k-folds will act as the test set, while the remaining folds train the model. Once all interactions and scores have been evaluated, the scores are averaged to determine an overall assessment.
 
