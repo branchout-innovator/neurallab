@@ -16,7 +16,7 @@ Selects the maximum value from each patch of the feature map. This helps in capt
 Example: For a 2x2 window, the maximum value in that window is selected.
 ### Global pooling
 Applies a pooling operation over the entire feature map, reducing it to a single value per feature map.
-![Image1](/static/articleimages/activation_functions/image1)
+<!-- ![Image1](/static/articleimages/activation_functions/image1) -->
 
 <br>
 

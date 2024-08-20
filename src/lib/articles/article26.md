@@ -1,10 +1,6 @@
-## Cross-validation techniques
-
 #### Cross-validation is a technique used to assess how well a neural network generalizes new data. This helps ensure that a neural network doesn’t just memorize a specific data set and instead learns and performs well given various data subsets. There are several cross-validation techniques used with neural networks: 
 
-<br>
-
-![Image0](/static/articleimages/cross_validation/cross_val_kfold)
+<!-- ![Image0](/static/articleimages/cross_validation/cross_val_kfold) -->
 
 <br>
 
@@ -14,8 +10,7 @@
   * Performance is calculated based on performance metrics (ie. accuracy, precision, recall, etc.) for each “k” set, then the average of these metrics are calculated and the k-score is given
   * LOOCV (leave one out cross validation) is an extreme k-fold in which only one sample is used as a test set and the rest are used to train the model (ie. k=n)
 
-<br>
-![Image0](/static/articleimages/cross_validation/cross_val_tseries)
+<!-- ![Image0](/static/articleimages/cross_validation/cross_val_tseries) -->
 <br>
 
 * Time-series cross-validation is tailored for time-series data where order of observations is crucial. It respects the sequential nature of data. They’re used to make predictions. Here are some key steps to do this: 

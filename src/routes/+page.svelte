@@ -68,7 +68,6 @@
 	import mark13 from '$lib/articles/article13.md?raw';
 	import mark14 from '$lib/articles/article14.md?raw';
 	import mark15 from '$lib/articles/article15.md?raw';
-	import mark16 from '$lib/articles/article16.md?raw';
 	import mark17 from '$lib/articles/article17.md?raw';
 	import mark18 from '$lib/articles/article18.md?raw';
 	import mark19 from '$lib/articles/article19.md?raw';
@@ -612,7 +611,7 @@
 			'What are Activation Functions?',
 			'What are Loss Functions? (Neural Nets)',
 			'Optimization Algorithms',
-			'Backtracking',
+			'Backtracking'
 		],
 		[
 			'Basics of CNNs',
@@ -624,12 +623,11 @@
 			'Basics of RNNs',
 			'Long Short-Term Memory (LSTM) networks',
 			'Gated Recurrent Units (GRUs)',
-			'Applications of RNNs in time-series data and sequence prediction',
+			'Applications of RNNs in time-series data and sequence prediction'
 		],
 		[
 			'Data cleaning and preprocessing techniques',
 			'Normalization and standardization',
-			'Data augmentation techniques'
 		],
 		[
 			'Basics of image recognition',
@@ -658,12 +656,12 @@
 		'Software Frameworks and Libraries',
 		'Model Training and Evaluation'
 	];
-	let pagetext = [mark, mark2, mark3, mark4, mark5, mark6, mark7, mark8, mark9, mark10, mark11, mark12, mark13, mark14, mark15, mark16, mark17, mark18, mark19, mark20, mark21, mark22, mark23, mark24, mark25, mark26, mark27];
+	let pagetext = [mark, mark2, mark3, mark4, mark5, mark6, mark7, mark8, mark9, mark10, mark11, mark12, mark13, mark14, mark15, mark17, mark18, mark19, mark20, mark21, mark22, mark23, mark24, mark25, mark26, mark27];
 	let source: string;
 	$: {
 		source = pagetext[Number(position)];
 		if (clicked) {
-			document.getElementById("article")?.scrollTo({ top: 0, behavior: "instant" });
+			document.getElementById('article')?.scrollTo({ top: 0, behavior: 'instant' });
 		}
 	}
 	function changePage(d: number) {
@@ -854,9 +852,15 @@
 			<Card.Root class="h-full w-full p-16" style="overflow-y:auto;">
 				<div class="pr-96"><SvelteMarkdown source={title} /></div>
 				<img
-					src="static/articleimages/clearlogo.png"
+					src="/articleimages/clearlogo.png"
+					alt=""
+					class="clearlogo block dark:hidden"
+					style="width:150px; margin-left:150px"
+				/>
+				<img
+					src="/articleimages/clearlogodark.png"
 					alt="drawing"
-					class="clearlogo"
+					class="clearlogo hidden dark:block"
 					style="width:150px; margin-left:150px"
 				/>
 				<div style="margin-top:-120px"><SvelteMarkdown source={main} /></div>
@@ -912,10 +916,10 @@
 							>&gt;</Button
 						>
 					</div>
-				</div>		
-				<div class="inline-block flex-row h-[10px] w-full">
-					<div class="w-full h-[8px]"/>
-					<Progress {value} class="h-[4px]"/>
+				</div>
+				<div class="inline-block h-[10px] w-full flex-row">
+					<div class="h-[8px] w-full" />
+					<Progress {value} class="h-[4px]" />
 				</div>
 				<div id="article" class="flex w-full overflow-y-auto">
 					<div class="w-full p-4">

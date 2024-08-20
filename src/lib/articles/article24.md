@@ -1,10 +1,6 @@
-## Model Training Techniques
-
 #### Neural network training requires numerous iterations. Each time, a pass through a model’s layers is executed to compute an output for each training example, then a pass backwards is executed to see how each parameter affects the final output. This is calculated by computing a “gradient” in response to each parameter. The average gradient is passed through an optimization algorithm which shows new parameters, and gradually, over many iterations, the model improves. 
 
-<br>
-
-![Image0](/static/articleimages/model_training_technique)
+<!-- ![Image0](/static/articleimages/model_training_technique) -->
 
 <br>
 

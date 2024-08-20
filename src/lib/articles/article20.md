@@ -1,5 +1,3 @@
-
-
 #### Deep learning is essentially a subset of machine learning which relies on structures similar to the human brain (neural networks).
 
 <br>
