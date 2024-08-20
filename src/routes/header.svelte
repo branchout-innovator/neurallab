@@ -13,8 +13,7 @@
 	import DrawerFooter from '$lib/components/ui/drawer/drawer-footer.svelte';
 	import DrawerTitle from '$lib/components/ui/drawer/drawer-title.svelte';
 	import DrawerDescription from '$lib/components/ui/drawer/drawer-description.svelte';
-	import Mail from 'lucide-svelte/icons/Mail';
-	import Globe from 'lucide-svelte/icons/Globe';
+	import { Mail, Globe } from 'lucide-svelte';
 	import { goto, invalidate } from '$app/navigation';
 
 	function reloadPage() {
